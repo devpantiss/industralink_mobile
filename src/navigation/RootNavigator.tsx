@@ -13,6 +13,8 @@ import { useUiStore } from '../store/uiStore';
 import { ToastContainer } from '../components/ui/Toast';
 import { OfflineBanner } from '../components/layout/OfflineBanner';
 import '../lib/i18n';
+import { USE_MOCKS } from '../api/client';
+import type { Role } from '../types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -78,6 +80,19 @@ export const RootNavigator: React.FC = () => {
 
   useEffect(() => {
     loadPrefs().finally(() => initAuth());
+  }, []);
+
+  // Demo links (mock data only): industrialink://demo/worker | employer | admin signs in as that role.
+  useEffect(() => {
+    if (!USE_MOCKS) return;
+    const handle = (url: string | null) => {
+      const path = url ? Linking.parse(url).path ?? '' : '';
+      const m = path.match(/^demo\/(worker|employer|admin)$/);
+      if (m) useAuthStore.getState().loginAsDemo(m[1] as Role);
+    };
+    Linking.getInitialURL().then(handle);
+    const sub = Linking.addEventListener('url', (e) => handle(e.url));
+    return () => sub.remove();
   }, []);
 
   const navigationTheme = theme === 'dark' ? {

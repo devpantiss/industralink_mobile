@@ -30,8 +30,11 @@ import {
   MessageCircle,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
+import Animated, { useSharedValue, useAnimatedScrollHandler, useAnimatedStyle, interpolate, Extrapolation } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { WorkerStackParamList } from '../../navigation/types';
 import { SegmentedTabs } from '../../components/ui/SegmentedTabs';
+import { FONT } from '../../theme/fonts';
 import { Screen } from '../../components/layout/Screen';
 import { CompanyLogo } from '../../components/domain/CompanyLogo';
 import { BenefitChips, jobTypeText, payShort, walkInWhen } from '../../components/domain/JobBits';
@@ -50,6 +53,19 @@ type NavProps = NativeStackNavigationProp<WorkerStackParamList>;
 export const JobDetailScreen: React.FC = () => {
   const route = useRoute<RouteProps>();
   const navigation = useNavigation<NavProps>();
+  const insets = useSafeAreaInsets();
+  // Top bar shows the job title only once the big title has scrolled away.
+  const scrollY = useSharedValue(0);
+  const onScroll = useAnimatedScrollHandler((e) => {
+    scrollY.value = e.contentOffset.y;
+  });
+  const barTitleStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(scrollY.value, [50, 90], [0, 1], Extrapolation.CLAMP),
+    transform: [{ translateY: interpolate(scrollY.value, [50, 90], [6, 0], Extrapolation.CLAMP) }],
+  }));
+  const barLineStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(scrollY.value, [0, 24], [0, 1], Extrapolation.CLAMP),
+  }));
   const { colors } = useUiStore();
   const qc = useQueryClient();
   const { jobId } = route.params;
@@ -124,18 +140,31 @@ export const JobDetailScreen: React.FC = () => {
   return (
     <Screen edges={['top']}>
       {/* Top Navigation Bar */}
-      <View style={[styles.topBar, { borderBottomColor: colors.border, backgroundColor: colors.surface }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.navBackBtn}>
-          <ChevronLeft size={24} color={colors.ink} />
+      <View style={[styles.topBar, { backgroundColor: colors.canvas }]}>
+        <Animated.View style={[styles.topBarLine, { backgroundColor: colors.border }, barLineStyle]} />
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={[styles.navBackBtn, { backgroundColor: colors.surfaceMuted }]}
+          accessibilityLabel={t('Back')}
+        >
+          <ChevronLeft size={22} color={colors.ink} />
         </TouchableOpacity>
-        <Text style={[styles.navBarTitle, { color: colors.ink }]} numberOfLines={1}>
+        <Animated.Text style={[styles.navBarTitle, { color: colors.ink }, barTitleStyle]} numberOfLines={1}>
           {job.title}
-        </Text>
+        </Animated.Text>
         <View style={styles.navActions}>
-          <TouchableOpacity onPress={handleShare} style={styles.navActionBtn}>
+          <TouchableOpacity
+            onPress={handleShare}
+            style={[styles.navActionBtn, { backgroundColor: colors.surfaceMuted }]}
+            accessibilityLabel={t('Share job')}
+          >
             <Share2 size={18} color={colors.inkSecondary} />
           </TouchableOpacity>
-          <TouchableOpacity onPress={handleToggleSave} style={styles.navActionBtn}>
+          <TouchableOpacity
+            onPress={handleToggleSave}
+            style={[styles.navActionBtn, { backgroundColor: colors.surfaceMuted }]}
+            accessibilityLabel={job.saved ? t('Remove from saved') : t('Save job')}
+          >
             <Bookmark
               size={18}
               color={job.saved ? colors.primary : colors.inkSecondary}
@@ -145,7 +174,12 @@ export const JobDetailScreen: React.FC = () => {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <Animated.ScrollView
+        onScroll={onScroll}
+        scrollEventThrottle={16}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: 100 + insets.bottom }]}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Header Block */}
         <View style={styles.headerBlock}>
           <CompanyLogo job={job} size="lg" />
@@ -435,10 +469,15 @@ export const JobDetailScreen: React.FC = () => {
             </Text>
           </TouchableOpacity>
         </View>
-      </ScrollView>
+      </Animated.ScrollView>
 
       {/* Sticky Bottom Action Bar */}
-      <View style={[styles.bottomBar, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
+      <View
+        style={[
+          styles.bottomBar,
+          { backgroundColor: colors.surface, borderTopColor: colors.border, paddingBottom: Math.max(insets.bottom, 12) },
+        ]}
+      >
         {closed ? (
           <View style={[styles.closedBar, { backgroundColor: colors.surfaceStrong }]}>
             <Text style={[styles.closedText, { color: colors.inkMuted }]}>
@@ -545,27 +584,42 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   topBar: {
-    height: 52,
+    height: 56,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    gap: 8,
+    gap: 10,
+  },
+  topBarLine: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: StyleSheet.hairlineWidth,
   },
   navBackBtn: {
-    padding: 6,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   navBarTitle: {
     flex: 1,
+    fontFamily: FONT,
     fontSize: 15,
     fontWeight: '700',
   },
   navActions: {
     flexDirection: 'row',
-    gap: 6,
+    gap: 8,
   },
   navActionBtn: {
-    padding: 8,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   scrollContent: {
     padding: 16,

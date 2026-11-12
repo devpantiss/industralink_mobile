@@ -1,13 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  RefreshControl,
-  Switch,
-  ActivityIndicator,
-} from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Switch } from 'react-native';
 import { Text, TextInput } from '../../components/ui/Text';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -21,90 +13,74 @@ import {
   MessageCircle,
   Briefcase,
   ChevronRight,
-  ShieldCheck,
+  X,
+  Send,
+  Bookmark,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
-import type { WorkerStackParamList } from '../../navigation/types';
-import { ListSkeleton } from '../../components/ui/Skeleton';
+import type { WorkerStackParamList, WorkerTabParamList } from '../../navigation/types';
+import { ListSkeleton, Skeleton } from '../../components/ui/Skeleton';
 import { Screen } from '../../components/layout/Screen';
 import { AppHeader } from '../../components/layout/AppHeader';
 import { JobCard } from '../../components/domain/JobCard';
 import { Avatar } from '../../components/ui/Avatar';
 import { Hero } from '../../components/ui/Hero';
+import { PressableScale } from '../../components/ui/PressableScale';
 import { workerApi } from '../../api/workerApi';
 import { queryKeys } from '../../api/keys';
 import { useUiStore } from '../../store/uiStore';
 import { useAuthStore } from '../../store/authStore';
-import { TRADE_LABEL, EXPERIENCE_LABEL } from '../../lib/labels';
+import { TRADE_LABEL } from '../../lib/labels';
 import { formatDateTime } from '../../lib/format';
 import { t } from '../../lib/i18n';
-import { spacing } from '../../theme/spacing';
 import type { JobForWorker } from '../../types';
+import type { TileColors } from '../../theme/colors';
 
 type NavigationProp = NativeStackNavigationProp<WorkerStackParamList>;
 
+/**
+ * Worker home, phone layout. Order follows what a worker needs first:
+ * search, the next interview, quick counts, profile progress, then matching jobs.
+ */
 export const WorkerHomeScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
-  const { colors } = useUiStore();
-  const { user } = useAuthStore();
+  const colors = useUiStore((s) => s.colors);
+  const user = useAuthStore((s) => s.user);
   const qc = useQueryClient();
 
   const [q, setQ] = useState('');
-  const [isVoiceListening, setIsVoiceListening] = useState(false);
+  const [listening, setListening] = useState(false);
   const [waAlerts, setWaAlerts] = useState(true);
 
-  // Queries
-  const summaryQuery = useQuery({
-    queryKey: queryKeys.worker.summary,
-    queryFn: () => workerApi.getSummary(),
-  });
+  const goTab = (screen: keyof WorkerTabParamList) => navigation.navigate('WorkerTabs', { screen });
 
-  const profileQuery = useQuery({
-    queryKey: queryKeys.worker.profile,
-    queryFn: () => workerApi.getProfile(),
-  });
-
+  const summaryQuery = useQuery({ queryKey: queryKeys.worker.summary, queryFn: () => workerApi.getSummary() });
+  const profileQuery = useQuery({ queryKey: queryKeys.worker.profile, queryFn: () => workerApi.getProfile() });
   const trade = profileQuery.data?.trade;
-
   const forYouQuery = useQuery({
     queryKey: queryKeys.worker.jobs({ forYou: trade }),
     queryFn: () => workerApi.searchJobs({ trade, sort: 'nearest' }),
     enabled: profileQuery.isSuccess,
   });
-
   const latestQuery = useQuery({
     queryKey: queryKeys.worker.jobs({ latest: true }),
     queryFn: () => workerApi.searchJobs({ sort: 'newest' }),
   });
 
-  const appsQuery = useQuery({
-    queryKey: queryKeys.worker.applications,
-    queryFn: () => workerApi.getApplications(),
-  });
-
-  // Toggle Save Job Mutation
   const saveMutation = useMutation({
     mutationFn: (job: JobForWorker) => workerApi.toggleSaveJob(job.id, !job.saved),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.worker.all });
-    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: queryKeys.worker.all }),
   });
 
-  // Combine jobs: forYou trade matching + latest, avoiding duplicates
+  // Jobs for your trade first, then other new jobs, without repeats.
   const allJobs = useMemo(() => {
     const seen = new Set<string>();
-    const list: JobForWorker[] = [];
-    for (const j of [...(forYouQuery.data?.items ?? []), ...(latestQuery.data?.items ?? [])]) {
-      if (!seen.has(j.id)) {
-        seen.add(j.id);
-        list.push(j);
-      }
-    }
-    return list;
+    return [...(forYouQuery.data?.items ?? []), ...(latestQuery.data?.items ?? [])].filter(
+      (j) => !seen.has(j.id) && !!seen.add(j.id)
+    );
   }, [forYouQuery.data, latestQuery.data]);
 
-  // Filtered jobs matching query `q`
-  const filteredJobs = useMemo(() => {
+  const jobs = useMemo(() => {
     const s = q.trim().toLowerCase();
     if (!s) return allJobs;
     return allJobs.filter((j) =>
@@ -114,65 +90,50 @@ export const WorkerHomeScreen: React.FC = () => {
 
   const summary = summaryQuery.data;
   const profile = profileQuery.data;
-  const firstName = (user?.name || profile?.name || 'Worker').split(' ')[0];
+  const firstName = (user?.name || profile?.name || '').split(' ')[0];
+  const jobsLoading = latestQuery.isLoading || (profileQuery.isSuccess && forYouQuery.isLoading);
 
-  const handleVoiceSearch = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    if (!isVoiceListening) {
-      setIsVoiceListening(true);
-      // Mock voice input
-      setTimeout(() => {
-        setQ('Welder');
-        setIsVoiceListening(false);
-      }, 1500);
-    } else {
-      setIsVoiceListening(false);
-    }
+  const onVoice = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+    if (listening) return setListening(false);
+    setListening(true);
+    // Demo: real speech-to-text needs a native module (planned with the backend).
+    setTimeout(() => {
+      setQ(trade ? t(TRADE_LABEL[trade]) : 'Welder');
+      setListening(false);
+    }, 1500);
   };
 
-  const isRefreshing =
-    summaryQuery.isRefetching || profileQuery.isRefetching || forYouQuery.isRefetching || latestQuery.isRefetching;
-
-  const handleRefresh = () => {
+  const refreshing = summaryQuery.isRefetching || latestQuery.isRefetching || forYouQuery.isRefetching;
+  const onRefresh = () => {
     summaryQuery.refetch();
     profileQuery.refetch();
     forYouQuery.refetch();
     latestQuery.refetch();
-    appsQuery.refetch();
   };
 
-  // Stage counts for application distribution mini bar chart
-  const stages = [
-    { key: 'applied', label: t('Applied'), color: colors.tiles.blue.text },
-    { key: 'shortlisted', label: t('Shortlisted'), color: colors.primary },
-    { key: 'interview', label: t('Interview'), color: colors.tiles.purple.text },
-    { key: 'offer', label: t('Offer'), color: colors.tiles.green.text },
-  ];
-  const appsList = appsQuery.data ?? [];
-  const stageCounts = stages.map(
-    (st) => appsList.filter((a) => a.stage === st.key || (st.key === 'offer' && a.stage === 'hired')).length
-  );
-  const maxStageCount = Math.max(1, ...stageCounts);
+  const openNextStep = () => {
+    const link = summary?.nextStep?.link ?? '';
+    const id = link.includes('application') ? link.split('/').pop() : undefined;
+    if (id) navigation.navigate('ApplicationDetail', { applicationId: id });
+    else goTab('Applications');
+  };
 
   return (
     <Screen edges={['top']}>
       <AppHeader />
 
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
         refreshControl={
-          <RefreshControl
-            refreshing={isRefreshing}
-            onRefresh={handleRefresh}
-            tintColor={colors.primary}
-            colors={[colors.primary]}
-          />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} colors={[colors.primary]} />
         }
       >
-        {/* Welcome Header */}
+        {/* Banner with search */}
         <Hero
-          eyebrow={t('Hi {name}', { name: firstName })}
+          eyebrow={firstName ? t('Hi {name}', { name: firstName }) : undefined}
           title={t("Let's find your next job.")}
           subtitle={
             trade && profile?.location
@@ -182,290 +143,152 @@ export const WorkerHomeScreen: React.FC = () => {
                 })
               : t('New verified jobs are added every day.')
           }
-        />
+        >
+          <View style={styles.searchRow}>
+            <View style={[styles.searchBar, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              <Search size={18} color={colors.inkMuted} />
+              <TextInput
+                value={q}
+                onChangeText={setQ}
+                placeholder={t('Trade, company or city')}
+                placeholderTextColor={colors.inkMuted}
+                returnKeyType="search"
+                accessibilityLabel={t('Search jobs')}
+                style={[styles.searchInput, { color: colors.ink }]}
+              />
+              {q.length > 0 && (
+                <TouchableOpacity onPress={() => setQ('')} hitSlop={8} accessibilityLabel={t('Clear search')}>
+                  <X size={16} color={colors.inkMuted} />
+                </TouchableOpacity>
+              )}
+              <TouchableOpacity
+                onPress={onVoice}
+                accessibilityLabel={listening ? t('Stop listening') : t('Search by voice')}
+                style={[styles.micBtn, { backgroundColor: listening ? colors.dangerFg : colors.surfaceMuted }]}
+              >
+                <Mic size={18} color={listening ? '#FFFFFF' : colors.ink} />
+              </TouchableOpacity>
+            </View>
+            <TouchableOpacity
+              onPress={() => goTab('FindJobs')}
+              accessibilityLabel={t('More filters')}
+              style={[styles.filterBtn, { backgroundColor: colors.inkFill }]}
+            >
+              <SlidersHorizontal size={18} color={colors.onInk} />
+            </TouchableOpacity>
+          </View>
+          {listening && (
+            <Text style={[styles.listening, { color: colors.dangerFg }]}>{t('Listening… say a trade or city')}</Text>
+          )}
+        </Hero>
 
-        {/* Next Step Appointment Urgent Banner */}
+        {/* Next interview / step */}
         {summary?.nextStep && (
-          <TouchableOpacity
-            activeOpacity={0.85}
-            onPress={() => {
-              if (summary.nextStep?.link.includes('application')) {
-                const id = summary.nextStep.link.split('/').pop();
-                if (id) {
-                  navigation.navigate('ApplicationDetail', { applicationId: id });
-                }
-              } else {
-                navigation.navigate('WorkerTabs', { screen: 'Applications' } as any);
-              }
-            }}
-            style={[styles.nextStepBanner, { backgroundColor: colors.tiles.purple.bg }]}
+          <PressableScale
+            onPress={openNextStep}
+            style={[styles.nextStep, { backgroundColor: colors.tiles.purple.bg }]}
+            accessibilityLabel={t(summary.nextStep.title)}
           >
-            <CalendarClock size={20} color={colors.tiles.purple.text} style={styles.nextStepIcon} />
-            <View style={styles.nextStepContent}>
-              <Text style={[styles.nextStepTitle, { color: colors.tiles.purple.text }]}>
+            <View style={[styles.nextIcon, { backgroundColor: colors.surface }]}>
+              <CalendarClock size={20} color={colors.tiles.purple.text} />
+            </View>
+            <View style={styles.flex}>
+              <Text style={[styles.nextTitle, { color: colors.tiles.purple.text }]}>
                 {t(summary.nextStep.title)}
-                {summary.nextStep.at ? ` · ${formatDateTime(summary.nextStep.at)}` : ''}
               </Text>
-              <Text style={[styles.nextStepSubtitle, { color: colors.tiles.purple.text }]}>
+              {summary.nextStep.at && (
+                <Text style={[styles.nextWhen, { color: colors.tiles.purple.text }]}>
+                  {formatDateTime(summary.nextStep.at)}
+                </Text>
+              )}
+              <Text style={[styles.nextSub, { color: colors.tiles.purple.text }]} numberOfLines={2}>
                 {summary.nextStep.subtitle}
               </Text>
             </View>
-            <View style={styles.nextStepAction}>
-              <Text style={[styles.nextStepActionText, { color: colors.tiles.purple.text }]}>
-                {t('View')}
-              </Text>
-              <ArrowRight size={14} color={colors.tiles.purple.text} />
-            </View>
-          </TouchableOpacity>
+            <ChevronRight size={20} color={colors.tiles.purple.text} />
+          </PressableScale>
         )}
 
-        {/* Search Bar & Result Pill */}
-        <View style={styles.searchSection}>
-          <View
-            style={[
-              styles.searchBar,
-              { backgroundColor: colors.surfaceMuted, borderColor: colors.border },
-            ]}
-          >
-            <Search size={18} color={colors.inkMuted} />
-            <TextInput
-              value={q}
-              onChangeText={setQ}
-              placeholder={t('Search welder, driver, fitter, company…')}
-              placeholderTextColor={colors.inkMuted}
-              style={[styles.searchInput, { color: colors.ink }]}
-            />
-            {q.length > 0 && (
-              <TouchableOpacity onPress={() => setQ('')} style={{ padding: 4 }}>
-                <Text style={{ color: colors.inkMuted, fontSize: 13, fontWeight: '700' }}>✕</Text>
-              </TouchableOpacity>
-            )}
-            <TouchableOpacity
-              onPress={handleVoiceSearch}
-              style={[
-                styles.micBtn,
-                { backgroundColor: isVoiceListening ? colors.dangerFg : 'transparent' },
-              ]}
-            >
-              <Mic
-                size={18}
-                color={isVoiceListening ? '#FFFFFF' : colors.inkSecondary}
+        {/* Quick counts */}
+        <View style={styles.stats}>
+          {summary ? (
+            <>
+              <StatTile
+                tone={colors.tiles.blue}
+                icon={<Send size={16} color={colors.tiles.blue.text} />}
+                value={summary.activeApplications}
+                label={t('Applied')}
+                onPress={() => goTab('Applications')}
               />
-            </TouchableOpacity>
-          </View>
-
-          <TouchableOpacity
-            onPress={() => navigation.navigate('WorkerTabs', { screen: 'FindJobs' } as any)}
-            style={[styles.filterBtn, { backgroundColor: colors.surfaceMuted, borderColor: colors.border }]}
-          >
-            <SlidersHorizontal size={18} color={colors.ink} />
-          </TouchableOpacity>
-        </View>
-
-        {/* Result Counter Pill */}
-        <View style={styles.resultPillRow}>
-          <View style={[styles.resultPill, { backgroundColor: colors.inkFill }]}>
-            <Text style={[styles.resultPillTitle, { color: colors.onInk }]}>
-              {q ? t('Search result') : t('Jobs for you')}
-            </Text>
-            <Text style={[styles.resultPillCount, { color: 'rgba(255, 255, 255, 0.75)' }]}>
-              {filteredJobs.length === 1
-                ? t('{n} job found', { n: filteredJobs.length })
-                : t('{n} jobs found', { n: filteredJobs.length })}
-            </Text>
-          </View>
-        </View>
-
-        {/* Worker Profile Card with Strength Bar */}
-        <View style={[styles.profileCard, { backgroundColor: colors.surfaceMuted, borderColor: colors.border }]}>
-          <View style={styles.profileHeaderRow}>
-            <Avatar name={user?.name || profile?.name || 'Worker'} size="lg" />
-            <View style={styles.profileHeaderInfo}>
-              <View style={styles.profileNameLine}>
-                <Text style={[styles.profileName, { color: colors.ink }]} numberOfLines={1}>
-                  {user?.name || profile?.name}
-                </Text>
-                <ShieldCheck size={16} color={colors.primary} />
-              </View>
-              <Text style={[styles.profileTrade, { color: colors.inkSecondary }]}>
-                {profile?.trade ? t(TRADE_LABEL[profile.trade]) : t('Worker')}
-                {profile?.experience ? ` · ${t(EXPERIENCE_LABEL[profile.experience])}` : ''}
-              </Text>
-              {profile?.location && (
-                <Text style={[styles.profileLocation, { color: colors.inkMuted }]}>
-                  {profile.location.city}, {profile.location.state}
-                </Text>
-              )}
-            </View>
-            <TouchableOpacity
-              onPress={() => navigation.navigate('WorkerTabs', { screen: 'WorkerProfile' } as any)}
-              style={[styles.editProfileBtn, { borderColor: colors.border, backgroundColor: colors.surface }]}
-            >
-              <Text style={[styles.editProfileBtnText, { color: colors.primary }]}>{t('Edit')}</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Profile Strength Progress Bar */}
-          {summary && (
-            <View style={[styles.strengthSection, { borderTopColor: colors.border }]}>
-              <View style={styles.strengthHeader}>
-                <Text style={[styles.strengthTitle, { color: colors.inkSecondary }]}>
-                  {t('Profile strength')}
-                </Text>
-                <Text style={[styles.strengthPercent, { color: colors.ink }]}>
-                  {summary.profileStrength}%
-                </Text>
-              </View>
-              <View style={[styles.progressBarTrack, { backgroundColor: colors.surfaceStrong }]}>
-                <View
-                  style={[
-                    styles.progressBarFill,
-                    {
-                      width: `${summary.profileStrength}%`,
-                      backgroundColor: colors.primary,
-                    },
-                  ]}
-                />
-              </View>
-              {summary.profileHint && (
-                <TouchableOpacity
-                  onPress={() => navigation.navigate('WorkerTabs', { screen: 'WorkerProfile' } as any)}
-                  style={styles.hintLink}
-                >
-                  <Text style={[styles.hintText, { color: colors.primary }]}>
-                    {t('Next: {item}', { item: t(summary.profileHint) })} →
-                  </Text>
-                </TouchableOpacity>
-              )}
-            </View>
+              <StatTile
+                tone={colors.tiles.purple}
+                icon={<CalendarClock size={16} color={colors.tiles.purple.text} />}
+                value={summary.interviews}
+                label={t('Interviews')}
+                onPress={() => goTab('Applications')}
+              />
+              <StatTile
+                tone={colors.tiles.green}
+                icon={<Bookmark size={16} color={colors.tiles.green.text} />}
+                value={summary.saved}
+                label={t('Saved')}
+                onPress={() => goTab('SavedJobs')}
+              />
+            </>
+          ) : (
+            [0, 1, 2].map((i) => <Skeleton key={i} height={86} radius={14} style={styles.flex} />)
           )}
         </View>
 
-        {/* 4 MiniStat Cards Grid */}
-        <View style={styles.statsGrid}>
-          <TouchableOpacity
-            onPress={() => navigation.navigate('WorkerTabs', { screen: 'Applications' } as any)}
-            style={[styles.statTile, { backgroundColor: colors.surfaceMuted, borderColor: colors.border }]}
+        {/* Profile progress (hidden once complete) */}
+        {summary && summary.profileStrength < 100 && (
+          <PressableScale
+            onPress={() => goTab('WorkerProfile')}
+            style={[styles.profileCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
           >
-            <Text style={[styles.statLabel, { color: colors.inkSecondary }]}>{t('Applied')}</Text>
-            <Text style={[styles.statNumber, { color: colors.ink }]}>
-              {summary?.activeApplications ?? 0}
-            </Text>
-            <Text style={[styles.statUnit, { color: colors.inkMuted }]}>{t('active')}</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => navigation.navigate('WorkerTabs', { screen: 'Applications' } as any)}
-            style={[styles.statTile, { backgroundColor: colors.surfaceMuted, borderColor: colors.border }]}
-          >
-            <Text style={[styles.statLabel, { color: colors.inkSecondary }]}>{t('Interviews')}</Text>
-            <Text style={[styles.statNumber, { color: colors.ink }]}>
-              {summary?.interviews ?? 0}
-            </Text>
-            <Text style={[styles.statUnit, { color: colors.inkMuted }]}>{t('coming up')}</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => navigation.navigate('WorkerTabs', { screen: 'SavedJobs' } as any)}
-            style={[styles.statTile, { backgroundColor: colors.surfaceMuted, borderColor: colors.border }]}
-          >
-            <Text style={[styles.statLabel, { color: colors.inkSecondary }]}>{t('Saved')}</Text>
-            <Text style={[styles.statNumber, { color: colors.ink }]}>
-              {summary?.saved ?? 0}
-            </Text>
-            <Text style={[styles.statUnit, { color: colors.inkMuted }]}>{t('jobs')}</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => navigation.navigate('WorkerTabs', { screen: 'WorkerProfile' } as any)}
-            style={[styles.statTile, { backgroundColor: colors.surfaceMuted, borderColor: colors.border }]}
-          >
-            <Text style={[styles.statLabel, { color: colors.inkSecondary }]}>{t('Experience')}</Text>
-            <Text style={[styles.statNumberText, { color: colors.ink }]}>
-              {profile?.experience ? t(EXPERIENCE_LABEL[profile.experience]) : '—'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* Application Stage Distribution Bar Chart */}
-        <View style={[styles.chartCard, { backgroundColor: colors.surfaceMuted, borderColor: colors.border }]}>
-          <View style={styles.chartHeader}>
-            <View style={[styles.dotIndicator, { backgroundColor: colors.primary }]} />
-            <Text style={[styles.chartTitle, { color: colors.inkSecondary }]}>
-              {t('Your applications distribution')}
-            </Text>
-          </View>
-          <View style={styles.barsContainer}>
-            {stages.map((st, i) => (
-              <View key={st.key} style={styles.barItem}>
-                <View style={styles.barLabelRow}>
-                  <Text style={[styles.barStageText, { color: colors.inkSecondary }]}>
-                    {st.label}
+            <View style={styles.profileTop}>
+              <Avatar name={user?.name || profile?.name || 'Worker'} size="md" />
+              <View style={styles.flex}>
+                <Text style={[styles.profileTitle, { color: colors.ink }]}>
+                  {t('Profile {n}% complete', { n: summary.profileStrength })}
+                </Text>
+                {summary.profileHint && (
+                  <Text style={[styles.profileHint, { color: colors.inkSecondary }]} numberOfLines={2}>
+                    {t('Next: {item}', { item: t(summary.profileHint) })}
                   </Text>
-                  <Text style={[styles.barCountText, { color: colors.ink }]}>
-                    {stageCounts[i]}
-                  </Text>
-                </View>
-                <View style={[styles.barTrack, { backgroundColor: colors.surfaceStrong }]}>
-                  <View
-                    style={[
-                      styles.barFill,
-                      {
-                        width: `${(stageCounts[i]! / maxStageCount) * 100}%`,
-                        backgroundColor: st.color,
-                      },
-                    ]}
-                  />
-                </View>
+                )}
               </View>
-            ))}
-          </View>
-        </View>
+              <ChevronRight size={18} color={colors.inkMuted} />
+            </View>
+            <View style={[styles.track, { backgroundColor: colors.surfaceStrong }]}>
+              <View style={[styles.fill, { width: `${summary.profileStrength}%`, backgroundColor: colors.primary }]} />
+            </View>
+          </PressableScale>
+        )}
 
-        {/* WhatsApp Job Alerts Toggle Card */}
-        <View style={[styles.waCard, { backgroundColor: colors.surfaceMuted, borderColor: colors.border }]}>
-          <View style={[styles.waIconBox, { backgroundColor: colors.tiles.green.bg }]}>
-            <MessageCircle size={22} color={colors.tiles.green.text} />
-          </View>
-          <View style={styles.waContent}>
-            <Text style={[styles.waTitle, { color: colors.ink }]}>
-              {t('Job alerts on WhatsApp')}
+        {/* Jobs */}
+        <View style={styles.sectionHead}>
+          <View style={styles.flex}>
+            <Text style={[styles.sectionTitle, { color: colors.ink }]} accessibilityRole="header">
+              {q ? t('Search result') : t('Jobs for you')}
             </Text>
-            <Text style={[styles.waDesc, { color: colors.inkMuted }]}>
-              {t('New jobs for your trade, near you')}
-            </Text>
+            {!jobsLoading && (
+              <Text style={[styles.sectionSub, { color: colors.inkMuted }]}>
+                {jobs.length === 1 ? t('{n} job found', { n: 1 }) : t('{n} jobs found', { n: jobs.length })}
+              </Text>
+            )}
           </View>
-          <Switch
-            value={waAlerts}
-            onValueChange={(val) => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              setWaAlerts(val);
-            }}
-            trackColor={{ false: colors.borderStrong, true: colors.primary }}
-            thumbColor="#FFFFFF"
-          />
-        </View>
-
-        {/* Job Recommendations Section Header */}
-        <View style={styles.jobsSectionHeader}>
-          <Text style={[styles.sectionHeading, { color: colors.ink }]}>
-            {q ? t('Search Results') : t('Recommended for you')}
-          </Text>
-          <TouchableOpacity
-            onPress={() => navigation.navigate('WorkerTabs', { screen: 'FindJobs' } as any)}
-            style={styles.seeAllBtn}
-          >
+          <TouchableOpacity onPress={() => goTab('FindJobs')} style={styles.seeAll} hitSlop={8}>
             <Text style={[styles.seeAllText, { color: colors.primary }]}>{t('See all')}</Text>
             <ChevronRight size={16} color={colors.primary} />
           </TouchableOpacity>
         </View>
 
-        {/* Jobs Feed */}
-        {forYouQuery.isLoading || latestQuery.isLoading ? (
+        {jobsLoading ? (
           <ListSkeleton />
-        ) : filteredJobs.length === 0 ? (
-          <View style={[styles.emptyContainer, { backgroundColor: colors.surfaceMuted }]}>
-            <Briefcase size={36} color={colors.inkMuted} />
+        ) : jobs.length === 0 ? (
+          <View style={[styles.empty, { backgroundColor: colors.surfaceMuted }]}>
+            <Briefcase size={32} color={colors.inkMuted} />
             <Text style={[styles.emptyTitle, { color: colors.ink }]}>
               {q ? t('No jobs match "{q}"', { q }) : t('No jobs yet')}
             </Text>
@@ -474,7 +297,7 @@ export const WorkerHomeScreen: React.FC = () => {
             </Text>
           </View>
         ) : (
-          filteredJobs.map((j) => (
+          jobs.map((j) => (
             <JobCard
               key={j.id}
               job={j}
@@ -485,360 +308,129 @@ export const WorkerHomeScreen: React.FC = () => {
           ))
         )}
 
-        {filteredJobs.length > 0 && (
-          <TouchableOpacity
-            style={[styles.bottomAllBtn, { borderColor: colors.border }]}
-            onPress={() => navigation.navigate('WorkerTabs', { screen: 'FindJobs' } as any)}
-          >
-            <Text style={[styles.bottomAllText, { color: colors.primary }]}>
-              {t('See all jobs')}
-            </Text>
+        {!jobsLoading && jobs.length > 0 && (
+          <TouchableOpacity style={[styles.allBtn, { borderColor: colors.border }]} onPress={() => goTab('FindJobs')}>
+            <Text style={[styles.allBtnText, { color: colors.primary }]}>{t('See all jobs')}</Text>
             <ArrowRight size={16} color={colors.primary} />
           </TouchableOpacity>
         )}
+
+        {/* WhatsApp alerts */}
+        <View style={[styles.waCard, { backgroundColor: colors.surfaceMuted }]}>
+          <View style={[styles.waIcon, { backgroundColor: colors.tiles.green.bg }]}>
+            <MessageCircle size={22} color={colors.tiles.green.text} />
+          </View>
+          <View style={styles.flex}>
+            <Text style={[styles.waTitle, { color: colors.ink }]}>{t('Job alerts on WhatsApp')}</Text>
+            <Text style={[styles.waDesc, { color: colors.inkSecondary }]}>{t('New jobs for your trade, near you')}</Text>
+          </View>
+          <Switch
+            value={waAlerts}
+            onValueChange={(v) => {
+              Haptics.selectionAsync().catch(() => {});
+              setWaAlerts(v);
+            }}
+            trackColor={{ false: colors.borderStrong, true: colors.primary }}
+            thumbColor="#FFFFFF"
+            accessibilityLabel={t('Job alerts on WhatsApp')}
+          />
+        </View>
       </ScrollView>
     </Screen>
   );
 };
 
+function StatTile({
+  tone,
+  icon,
+  value,
+  label,
+  onPress,
+}: {
+  tone: TileColors;
+  icon: React.ReactNode;
+  value: number;
+  label: string;
+  onPress: () => void;
+}) {
+  return (
+    <PressableScale
+      onPress={onPress}
+      style={[styles.stat, { backgroundColor: tone.bg }]}
+      accessibilityLabel={`${label}: ${value}`}
+    >
+      {icon}
+      <Text style={[styles.statValue, { color: tone.text }]}>{value}</Text>
+      <Text style={[styles.statLabel, { color: tone.text }]} numberOfLines={1}>
+        {label}
+      </Text>
+    </PressableScale>
+  );
+}
+
 const styles = StyleSheet.create({
-  scrollContent: {
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 48,
-  },
-  welcomeBlock: {
-    marginBottom: 14,
-  },
-  welcomeTitle: {
-    fontSize: 22,
-    fontWeight: '800',
-    letterSpacing: -0.3,
-    lineHeight: 28,
-  },
-  welcomeSubtitle: {
-    fontSize: 13.5,
-    marginTop: 4,
-    lineHeight: 18,
-  },
-  nextStepBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 14,
-    borderRadius: 14,
-    marginBottom: 16,
-    gap: 12,
-  },
-  nextStepIcon: {
-    marginTop: 1,
-  },
-  nextStepContent: {
-    flex: 1,
-  },
-  nextStepTitle: {
-    fontSize: 13.5,
-    fontWeight: '700',
-  },
-  nextStepSubtitle: {
-    fontSize: 12,
-    marginTop: 2,
-  },
-  nextStepAction: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  nextStepActionText: {
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  searchSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: 12,
-  },
+  scroll: { padding: 16, paddingBottom: 40 },
+  flex: { flex: 1 },
+
+  searchRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   searchBar: {
     flex: 1,
-    height: 48,
-    borderRadius: 24,
+    height: 52,
+    borderRadius: 26,
     borderWidth: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    gap: 10,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 14,
-  },
-  micBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  filterBtn: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    borderWidth: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  resultPillRow: {
-    flexDirection: 'row',
-    marginBottom: 16,
-  },
-  resultPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 999,
-  },
-  resultPillTitle: {
-    fontSize: 13.5,
-    fontWeight: '700',
-  },
-  resultPillCount: {
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  profileCard: {
-    borderRadius: 16,
-    borderWidth: 1,
-    padding: 16,
-    marginBottom: 14,
-  },
-  profileHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  profileHeaderInfo: {
-    flex: 1,
-  },
-  profileNameLine: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-  },
-  profileName: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  profileTrade: {
-    fontSize: 12.5,
-    marginTop: 2,
-  },
-  profileLocation: {
-    fontSize: 11.5,
-    marginTop: 1,
-  },
-  editProfileBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 999,
-    borderWidth: 1,
-  },
-  editProfileBtnText: {
-    fontSize: 12.5,
-    fontWeight: '600',
-  },
-  strengthSection: {
-    borderTopWidth: StyleSheet.hairlineWidth,
-    paddingTop: 12,
-    marginTop: 14,
-  },
-  strengthHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  strengthTitle: {
-    fontSize: 12.5,
-    fontWeight: '600',
-  },
-  strengthPercent: {
-    fontSize: 12.5,
-    fontWeight: '700',
-  },
-  progressBarTrack: {
-    height: 6,
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  progressBarFill: {
-    height: '100%',
-    borderRadius: 3,
-  },
-  hintLink: {
-    marginTop: 6,
-  },
-  hintText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  statsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-    marginBottom: 14,
-  },
-  statTile: {
-    flexGrow: 1,
-    flexBasis: '45%',
-    paddingVertical: 16,
-    paddingHorizontal: 8,
-    borderRadius: 14,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  statLabel: {
-    fontSize: 12,
-    fontWeight: '500',
-  },
-  statNumber: {
-    fontSize: 24,
-    fontWeight: '800',
-    marginTop: 2,
-    lineHeight: 28,
-  },
-  statNumberText: {
-    fontSize: 14,
-    fontWeight: '700',
-    marginTop: 6,
-  },
-  statUnit: {
-    fontSize: 11,
-    marginTop: 1,
-  },
-  chartCard: {
-    borderRadius: 16,
-    borderWidth: 1,
-    padding: 16,
-    marginBottom: 14,
-  },
-  chartHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    paddingLeft: 16,
+    paddingRight: 6,
     gap: 8,
-    marginBottom: 14,
   },
-  dotIndicator: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  chartTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  barsContainer: {
-    gap: 10,
-  },
-  barItem: {
-    gap: 4,
-  },
-  barLabelRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  barStageText: {
-    fontSize: 12,
-  },
-  barCountText: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  barTrack: {
-    height: 7,
-    borderRadius: 4,
-    overflow: 'hidden',
-  },
-  barFill: {
-    height: '100%',
-    borderRadius: 4,
-  },
-  waCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 14,
-    borderRadius: 16,
-    borderWidth: 1,
-    gap: 12,
-    marginBottom: 20,
-  },
-  waIconBox: {
-    width: 42,
-    height: 42,
+  searchInput: { flex: 1, fontSize: 15, paddingVertical: 0 },
+  micBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  filterBtn: { width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center' },
+  listening: { fontSize: 13, fontWeight: '600', marginTop: 8 },
+
+  nextStep: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: 16, padding: 14, marginBottom: 14 },
+  nextIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  nextTitle: { fontSize: 15, fontWeight: '700' },
+  nextWhen: { fontSize: 14, fontWeight: '600', marginTop: 2 },
+  nextSub: { fontSize: 13, lineHeight: 18, marginTop: 2, opacity: 0.9 },
+
+  stats: { flexDirection: 'row', gap: 10, marginBottom: 14 },
+  stat: { flex: 1, borderRadius: 14, paddingVertical: 12, paddingHorizontal: 12, minHeight: 86 },
+  statValue: { fontSize: 26, lineHeight: 30, fontWeight: '800', marginTop: 6, fontVariant: ['tabular-nums'] },
+  statLabel: { fontSize: 12.5, fontWeight: '600' },
+
+  profileCard: { borderRadius: 16, borderWidth: 1, padding: 14, marginBottom: 20 },
+  profileTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  profileTitle: { fontSize: 15, fontWeight: '700' },
+  profileHint: { fontSize: 13, lineHeight: 18, marginTop: 2 },
+  track: { height: 6, borderRadius: 3, overflow: 'hidden', marginTop: 12 },
+  fill: { height: '100%', borderRadius: 3 },
+
+  sectionHead: { flexDirection: 'row', alignItems: 'flex-end', marginBottom: 12 },
+  sectionTitle: { fontSize: 20, lineHeight: 26, fontWeight: '800', letterSpacing: -0.3 },
+  sectionSub: { fontSize: 13, marginTop: 2 },
+  seeAll: { flexDirection: 'row', alignItems: 'center', gap: 2, paddingVertical: 4 },
+  seeAllText: { fontSize: 14, fontWeight: '700' },
+
+  empty: { borderRadius: 16, padding: 28, alignItems: 'center', gap: 6 },
+  emptyTitle: { fontSize: 16, fontWeight: '700', textAlign: 'center', marginTop: 4 },
+  emptyDesc: { fontSize: 14, textAlign: 'center' },
+
+  allBtn: {
+    height: 48,
     borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  waContent: {
-    flex: 1,
-  },
-  waTitle: {
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  waDesc: {
-    fontSize: 12,
-    marginTop: 2,
-  },
-  jobsSectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  sectionHeading: {
-    fontSize: 18,
-    fontWeight: '800',
-    letterSpacing: -0.2,
-  },
-  seeAllBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 2,
-  },
-  seeAllText: {
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  emptyContainer: {
-    padding: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    gap: 8,
-  },
-  emptyTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    marginTop: 6,
-  },
-  emptyDesc: {
-    fontSize: 13,
-    textAlign: 'center',
-  },
-  bottomAllBtn: {
-    flexDirection: 'row',
-    height: 48,
-    borderRadius: 14,
     borderWidth: 1,
-    justifyContent: 'center',
+    flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginTop: 6,
+    justifyContent: 'center',
+    gap: 6,
+    marginTop: 4,
   },
-  bottomAllText: {
-    fontSize: 14,
-    fontWeight: '700',
-  },
+  allBtnText: { fontSize: 15, fontWeight: '700' },
+
+  waCard: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: 16, padding: 14, marginTop: 20 },
+  waIcon: { width: 44, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  waTitle: { fontSize: 15, fontWeight: '700' },
+  waDesc: { fontSize: 13, marginTop: 2 },
 });
