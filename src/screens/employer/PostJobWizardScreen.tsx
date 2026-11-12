@@ -254,7 +254,7 @@ export const PostJobWizardScreen: React.FC = () => {
         {step === 0 && (
           <View style={styles.stepBody}>
             {/* Quick Templates Strip */}
-            <View style={styles.templatesBox}>
+            <View style={[styles.templatesBox, { borderColor: colors.border }]}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 8 }}>
                 <Sparkles size={16} color={colors.accent} />
                 <Text style={[styles.templatesHeading, { color: colors.ink }]}>
@@ -735,7 +735,6 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: '#E6E8EC',
   },
   templatesHeading: {
     fontSize: 13,

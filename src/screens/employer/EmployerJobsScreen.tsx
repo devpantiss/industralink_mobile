@@ -12,6 +12,8 @@ import { useNavigation } from '@react-navigation/native';
 import { useQuery } from '@tanstack/react-query';
 import { Plus, Users, ChevronRight, Briefcase } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
+import { ListSkeleton } from '../../components/ui/Skeleton';
+import { SegmentedTabs } from '../../components/ui/SegmentedTabs';
 import { Screen } from '../../components/layout/Screen';
 import { AppHeader } from '../../components/layout/AppHeader';
 import { CompanyLogo } from '../../components/domain/CompanyLogo';
@@ -79,58 +81,21 @@ export const EmployerJobsScreen: React.FC = () => {
         </View>
 
         {/* 3 Tabs */}
-        <View style={[styles.tabsWrap, { backgroundColor: colors.surfaceMuted, borderColor: colors.border }]}>
-          {[
-            { key: 'active' as const, label: t('Active'), count: activeJobs.length },
-            { key: 'draft' as const, label: t('Draft'), count: draftJobs.length },
-            { key: 'closed' as const, label: t('Closed'), count: closedJobs.length },
-          ].map((tItem) => {
-            const isSelected = tab === tItem.key;
-            return (
-              <TouchableOpacity
-                key={tItem.key}
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  setTab(tItem.key);
-                }}
-                style={[
-                  styles.tabItem,
-                  isSelected && { backgroundColor: colors.surface, borderColor: colors.border },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.tabText,
-                    { color: isSelected ? colors.primary : colors.inkSecondary, fontWeight: isSelected ? '700' : '600' },
-                  ]}
-                >
-                  {tItem.label}
-                </Text>
-                <View
-                  style={[
-                    styles.countPill,
-                    { backgroundColor: isSelected ? colors.primarySoft : colors.surfaceStrong },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.countPillText,
-                      { color: isSelected ? colors.primary : colors.inkMuted },
-                    ]}
-                  >
-                    {tItem.count}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+        <SegmentedTabs
+          variant="underline"
+          style={styles.tabsWrap}
+          value={tab}
+          onChange={setTab}
+          items={[
+            { key: 'active', label: t('Active'), count: activeJobs.length },
+            { key: 'draft', label: t('Draft'), count: draftJobs.length },
+            { key: 'closed', label: t('Closed'), count: closedJobs.length },
+          ]}
+        />
 
         {/* Jobs List */}
         {isLoading ? (
-          <View style={{ paddingVertical: 40, alignItems: 'center' }}>
-            <ActivityIndicator size="large" color={colors.primary} />
-          </View>
+          <ListSkeleton />
         ) : currentList.length === 0 ? (
           <View style={[styles.emptyBox, { backgroundColor: colors.surfaceMuted }]}>
             <Briefcase size={36} color={colors.inkMuted} />
@@ -241,10 +206,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   tabsWrap: {
-    flexDirection: 'row',
-    borderRadius: 14,
-    borderWidth: 1,
-    padding: 3,
+    marginBottom: 16,
   },
   tabItem: {
     flex: 1,

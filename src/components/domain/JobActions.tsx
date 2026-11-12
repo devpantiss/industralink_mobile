@@ -14,6 +14,7 @@ import * as Haptics from 'expo-haptics';
 import { workerApi } from '../../api/workerApi';
 import { queryKeys } from '../../api/keys';
 import { useUiStore } from '../../store/uiStore';
+import { Sheet } from '../ui/Sheet';
 import { t } from '../../lib/i18n';
 import type { ReportReason } from '../../types';
 import { formatPhone } from '../../lib/format';
@@ -71,26 +72,12 @@ export const ApplyModal: React.FC<ApplyModalProps> = ({
   };
 
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={handleClose}>
-      <View style={styles.modalOverlay}>
-        <View style={[styles.sheetContainer, { backgroundColor: colors.surface }]}>
-          {/* Header */}
-          <View style={[styles.sheetHeader, { borderBottomColor: colors.border }]}>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.sheetTitle, { color: colors.ink }]}>
-                {doneId ? t('Applied!') : t('Apply Now')}
-              </Text>
-              {!doneId && (
-                <Text style={[styles.sheetSubtitle, { color: colors.inkSecondary }]} numberOfLines={1}>
-                  {title}
-                </Text>
-              )}
-            </View>
-            <TouchableOpacity onPress={handleClose} style={styles.closeBtn}>
-              <X size={20} color={colors.inkMuted} />
-            </TouchableOpacity>
-          </View>
-
+    <Sheet
+      visible={visible}
+      onClose={handleClose}
+      title={doneId ? t('Applied!') : t('Apply Now')}
+      subtitle={doneId ? undefined : title}
+    >
           {doneId ? (
             <View style={styles.successBody}>
               <View style={[styles.successIconCircle, { backgroundColor: colors.successBg }]}>
@@ -124,7 +111,7 @@ export const ApplyModal: React.FC<ApplyModalProps> = ({
               </View>
             </View>
           ) : (
-            <ScrollView contentContainerStyle={styles.sheetBody}>
+            <View>
               <Text style={[styles.fieldTitle, { color: colors.ink }]}>
                 {t('What should we send?')}
               </Text>
@@ -201,11 +188,9 @@ export const ApplyModal: React.FC<ApplyModalProps> = ({
                   <Text style={styles.primaryBtnText}>{t('Send application')}</Text>
                 )}
               </TouchableOpacity>
-            </ScrollView>
+            </View>
           )}
-        </View>
-      </View>
-    </Modal>
+    </Sheet>
   );
 };
 
@@ -240,16 +225,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({ visible, onClose, jobI
   };
 
   return (
-    <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
-      <View style={styles.modalOverlay}>
-        <View style={[styles.reportCard, { backgroundColor: colors.surface }]}>
-          <View style={styles.reportHeader}>
-            <ShieldAlert size={24} color={colors.dangerFg} />
-            <Text style={[styles.reportTitle, { color: colors.ink }]}>
-              {t('Report this job')}
-            </Text>
-          </View>
-
+    <Sheet visible={visible} onClose={onClose} title={t('Report this job')}>
           {submitted ? (
             <View style={{ paddingVertical: 20, alignItems: 'center' }}>
               <CheckCircle2 size={36} color={colors.successFg} />
@@ -258,7 +234,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({ visible, onClose, jobI
               </Text>
             </View>
           ) : (
-            <ScrollView style={{ maxHeight: 380 }}>
+            <View>
               <Text style={[styles.reportDesc, { color: colors.inkSecondary }]}>
                 {t("Our team checks every report. The company won't see your name.")}
               </Text>
@@ -312,11 +288,9 @@ export const ReportModal: React.FC<ReportModalProps> = ({ visible, onClose, jobI
                   <Text style={styles.primaryBtnText}>{t('Send report')}</Text>
                 </TouchableOpacity>
               </View>
-            </ScrollView>
+            </View>
           )}
-        </View>
-      </View>
-    </Modal>
+    </Sheet>
   );
 };
 

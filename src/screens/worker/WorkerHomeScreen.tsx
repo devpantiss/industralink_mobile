@@ -25,6 +25,7 @@ import {
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import type { WorkerStackParamList } from '../../navigation/types';
+import { ListSkeleton } from '../../components/ui/Skeleton';
 import { Screen } from '../../components/layout/Screen';
 import { AppHeader } from '../../components/layout/AppHeader';
 import { JobCard } from '../../components/domain/JobCard';
@@ -461,9 +462,7 @@ export const WorkerHomeScreen: React.FC = () => {
 
         {/* Jobs Feed */}
         {forYouQuery.isLoading || latestQuery.isLoading ? (
-          <View style={{ paddingVertical: 40, alignItems: 'center' }}>
-            <ActivityIndicator size="large" color={colors.primary} />
-          </View>
+          <ListSkeleton />
         ) : filteredJobs.length === 0 ? (
           <View style={[styles.emptyContainer, { backgroundColor: colors.surfaceMuted }]}>
             <Briefcase size={36} color={colors.inkMuted} />

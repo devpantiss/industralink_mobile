@@ -21,6 +21,7 @@ import {
   Building2,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
+import { ListSkeleton } from '../../components/ui/Skeleton';
 import { Screen } from '../../components/layout/Screen';
 import { AppHeader } from '../../components/layout/AppHeader';
 import { Avatar } from '../../components/ui/Avatar';
@@ -108,9 +109,7 @@ export const VerificationsQueueScreen: React.FC = () => {
 
         {/* List of pending companies */}
         {isLoading ? (
-          <View style={{ paddingVertical: 40, alignItems: 'center' }}>
-            <ActivityIndicator size="large" color={colors.primary} />
-          </View>
+          <ListSkeleton />
         ) : pendingList.length === 0 ? (
           <View style={[styles.emptyBox, { backgroundColor: colors.surfaceMuted }]}>
             <BadgeCheck size={36} color={colors.primary} />

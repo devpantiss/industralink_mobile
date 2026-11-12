@@ -11,6 +11,7 @@ import { Text, TextInput } from '../../components/ui/Text';
 import { useNavigation } from '@react-navigation/native';
 import { useQuery } from '@tanstack/react-query';
 import { Search, ChevronRight, UserSearch } from 'lucide-react-native';
+import { ListSkeleton } from '../../components/ui/Skeleton';
 import { Screen } from '../../components/layout/Screen';
 import { AppHeader } from '../../components/layout/AppHeader';
 import { Avatar } from '../../components/ui/Avatar';
@@ -137,9 +138,7 @@ export const CandidatesScreen: React.FC = () => {
         }
       >
         {isLoading ? (
-          <View style={{ paddingVertical: 40, alignItems: 'center' }}>
-            <ActivityIndicator size="large" color={colors.primary} />
-          </View>
+          <ListSkeleton />
         ) : filtered.length === 0 ? (
           <View style={[styles.emptyBox, { backgroundColor: colors.surfaceMuted }]}>
             <UserSearch size={36} color={colors.inkMuted} />

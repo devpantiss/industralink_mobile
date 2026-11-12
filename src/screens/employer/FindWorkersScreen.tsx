@@ -19,6 +19,7 @@ import {
   X,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
+import { ListSkeleton } from '../../components/ui/Skeleton';
 import { Screen } from '../../components/layout/Screen';
 import { AppHeader } from '../../components/layout/AppHeader';
 import { Avatar } from '../../components/ui/Avatar';
@@ -154,9 +155,7 @@ export const FindWorkersScreen: React.FC = () => {
 
         {/* Workers List */}
         {isLoading ? (
-          <View style={{ paddingVertical: 40, alignItems: 'center' }}>
-            <ActivityIndicator size="large" color={colors.primary} />
-          </View>
+          <ListSkeleton />
         ) : filtered.length === 0 ? (
           <View style={[styles.emptyBox, { backgroundColor: colors.surfaceMuted }]}>
             <UserSearch size={36} color={colors.inkMuted} />

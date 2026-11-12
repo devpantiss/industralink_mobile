@@ -27,6 +27,7 @@ import {
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import type { WorkerStackParamList } from '../../navigation/types';
+import { Dialog } from '../../components/ui/Dialog';
 import { Screen } from '../../components/layout/Screen';
 import { CompanyLogo } from '../../components/domain/CompanyLogo';
 import { workerApi } from '../../api/workerApi';
@@ -397,69 +398,63 @@ export const ApplicationDetailScreen: React.FC = () => {
       </ScrollView>
 
       {/* Confirm Withdraw Modal */}
-      <Modal visible={confirmWithdraw} transparent animationType="fade">
-        <View style={styles.modalBackdrop}>
-          <View style={[styles.confirmDialog, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.confirmTitle, { color: colors.ink }]}>
-              {t('Withdraw this application?')}
-            </Text>
-            <Text style={[styles.confirmMsg, { color: colors.inkSecondary }]}>
-              {t("The employer will no longer see your application, and you can't apply to this job again.")}
-            </Text>
-            <View style={styles.confirmActions}>
-              <TouchableOpacity
-                onPress={() => setConfirmWithdraw(false)}
-                style={[styles.dialogBtn, { borderColor: colors.border }]}
-              >
-                <Text style={{ color: colors.ink, fontWeight: '600' }}>{t('Cancel')}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => withdrawMutation.mutate()}
-                disabled={withdrawMutation.isPending}
-                style={[styles.dialogBtn, { backgroundColor: colors.dangerFg }]}
-              >
-                <Text style={{ color: '#FFF', fontWeight: '700' }}>{t('Withdraw')}</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+      <Dialog
+        visible={confirmWithdraw}
+        onClose={() => setConfirmWithdraw(false)}
+        title={t('Withdraw this application?')}
+        message={t("The employer will no longer see your application, and you can't apply to this job again.")}
+        actions={
+          <>
+          <TouchableOpacity
+            onPress={() => setConfirmWithdraw(false)}
+            style={[styles.dialogBtn, { borderColor: colors.border }]}
+          >
+            <Text style={{ color: colors.ink, fontWeight: '600' }}>{t('Cancel')}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => withdrawMutation.mutate()}
+            disabled={withdrawMutation.isPending}
+            style={[styles.dialogBtn, { backgroundColor: colors.dangerFg }]}
+          >
+            <Text style={{ color: '#FFF', fontWeight: '700' }}>{t('Withdraw')}</Text>
+          </TouchableOpacity>
+          </>
+        }
+      >
+      </Dialog>
 
       {/* Decline Offer Modal */}
-      <Modal visible={decliningOffer} transparent animationType="fade">
-        <View style={styles.modalBackdrop}>
-          <View style={[styles.confirmDialog, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.confirmTitle, { color: colors.ink }]}>
-              {t('Decline this offer?')}
-            </Text>
-            <Text style={[styles.confirmMsg, { color: colors.inkSecondary }]}>
-              {t('The employer will be told, and this application will close.')}
-            </Text>
-            <TextInput
-              value={declineReason}
-              onChangeText={setDeclineReason}
-              placeholder={t('Reason (optional), e.g. Got a job closer to home')}
-              placeholderTextColor={colors.inkMuted}
-              style={[styles.askingInput, { borderColor: colors.border, color: colors.ink, marginVertical: 12 }]}
-            />
-            <View style={styles.confirmActions}>
-              <TouchableOpacity
-                onPress={() => setDecliningOffer(false)}
-                style={[styles.dialogBtn, { borderColor: colors.border }]}
-              >
-                <Text style={{ color: colors.ink, fontWeight: '600' }}>{t('Cancel')}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => offerReplyMutation.mutate('declined')}
-                disabled={offerReplyMutation.isPending}
-                style={[styles.dialogBtn, { backgroundColor: colors.dangerFg }]}
-              >
-                <Text style={{ color: '#FFF', fontWeight: '700' }}>{t('Decline offer')}</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
+      <Dialog
+        visible={decliningOffer}
+        onClose={() => setDecliningOffer(false)}
+        title={t('Decline this offer?')}
+        message={t('The employer will be told, and this application will close.')}
+        actions={
+          <>
+          <TouchableOpacity
+            onPress={() => setDecliningOffer(false)}
+            style={[styles.dialogBtn, { borderColor: colors.border }]}
+          >
+            <Text style={{ color: colors.ink, fontWeight: '600' }}>{t('Cancel')}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => offerReplyMutation.mutate('declined')}
+            disabled={offerReplyMutation.isPending}
+            style={[styles.dialogBtn, { backgroundColor: colors.dangerFg }]}
+          >
+            <Text style={{ color: '#FFF', fontWeight: '700' }}>{t('Decline offer')}</Text>
+          </TouchableOpacity>
+          </>
+        }
+      >
+        <TextInput
+          value={declineReason}
+          onChangeText={setDeclineReason}
+          placeholder={t('Reason (optional), e.g. Got a job closer to home')}
+          placeholderTextColor={colors.inkMuted}
+          style={[styles.askingInput, { borderColor: colors.border, color: colors.ink, marginVertical: 12 }]}
+        />
+      </Dialog>
     </Screen>
   );
 };

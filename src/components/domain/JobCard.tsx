@@ -14,6 +14,7 @@ import { payShort } from './JobBits';
 import { EXPERIENCE_LABEL, SECTOR_LABEL, SHIFT_LABEL } from '../../lib/labels';
 import { formatDate, timeAgo } from '../../lib/format';
 import { t } from '../../lib/i18n';
+import { PressableScale } from '../ui/PressableScale';
 import { useUiStore } from '../../store/uiStore';
 import { spacing } from '../../theme/spacing';
 
@@ -48,8 +49,7 @@ export const JobCard: React.FC<JobCardProps> = ({
   const previewSnippet = [job.responsibilities?.[0], job.requirements?.[0]].filter(Boolean).join('. ');
 
   return (
-    <TouchableOpacity
-      activeOpacity={0.88}
+    <PressableScale
       onPress={onPress}
       style={[
         styles.card,
@@ -167,7 +167,7 @@ export const JobCard: React.FC<JobCardProps> = ({
           {timeAgo(job.postedAt)}
         </Text>
       </View>
-    </TouchableOpacity>
+    </PressableScale>
   );
 };
 
@@ -178,12 +178,13 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: spacing.md,
   },
+  // Small neutral shadow only (no coloured glow).
   selectedShadow: {
-    shadowColor: '#2454E6',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: 4,
+    shadowColor: '#15191E',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 6,
+    elevation: 2,
   },
   headerRow: {
     flexDirection: 'row',

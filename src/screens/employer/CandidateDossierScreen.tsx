@@ -30,6 +30,7 @@ import {
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import type { EmployerStackParamList } from '../../navigation/types';
+import { Sheet } from '../../components/ui/Sheet';
 import { Screen } from '../../components/layout/Screen';
 import { Avatar } from '../../components/ui/Avatar';
 import { employerApi } from '../../api/employerApi';
@@ -351,133 +352,128 @@ export const CandidateDossierScreen: React.FC<Props> = ({ route, navigation }) =
       </ScrollView>
 
       {/* Schedule Interview Modal */}
-      <Modal visible={interviewModal} transparent animationType="slide">
-        <View style={styles.modalBackdrop}>
-          <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.modalTitle, { color: colors.ink }]}>
-              {t('Schedule Factory Interview')}
-            </Text>
-            <Text style={[styles.modalSubtitle, { color: colors.inkSecondary }]}>
-              Invite {w.name} for an on-site interview.
-            </Text>
-
-            <TextInput
-              value={interviewAt}
-              onChangeText={setInterviewAt}
-              placeholder="Date & Time (YYYY-MM-DDTHH:MM)"
-              style={[styles.modalInput, { borderColor: colors.border, color: colors.ink }]}
-            />
-
-            <TextInput
-              value={interviewPlace}
-              onChangeText={setInterviewPlace}
-              placeholder="Interview Location / Plant Gate"
-              style={[styles.modalInput, { borderColor: colors.border, color: colors.ink }]}
-            />
-
-            <View style={styles.modalBtnRow}>
-              <TouchableOpacity
-                onPress={() => setInterviewModal(false)}
-                style={[styles.modalBtnSecondary, { borderColor: colors.border }]}
-              >
-                <Text style={{ color: colors.ink, fontWeight: '600' }}>{t('Cancel')}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() =>
-                  updateStageMutation.mutate({
-                    stage: 'interview',
-                    payload: { at: interviewAt, place: interviewPlace },
-                  })
-                }
-                style={[styles.modalBtnPrimary, { backgroundColor: colors.primary }]}
-              >
-                <Text style={{ color: '#FFF', fontWeight: '700' }}>{t('Schedule')}</Text>
-              </TouchableOpacity>
-            </View>
+      <Sheet
+        visible={interviewModal}
+        onClose={() => setInterviewModal(false)}
+        title={t('Schedule Factory Interview')}
+        subtitle={`Invite ${w.name} for an on-site interview.`}
+        footer={
+          <View style={styles.modalBtnRow}>
+          <TouchableOpacity
+            onPress={() => setInterviewModal(false)}
+            style={[styles.modalBtnSecondary, { borderColor: colors.border }]}
+          >
+            <Text style={{ color: colors.ink, fontWeight: '600' }}>{t('Cancel')}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() =>
+              updateStageMutation.mutate({
+                stage: 'interview',
+                payload: { at: interviewAt, place: interviewPlace },
+              })
+            }
+            style={[styles.modalBtnPrimary, { backgroundColor: colors.primary }]}
+          >
+            <Text style={{ color: '#FFF', fontWeight: '700' }}>{t('Schedule')}</Text>
+          </TouchableOpacity>
           </View>
-        </View>
-      </Modal>
+        }
+      >
+
+        <TextInput
+          value={interviewAt}
+          onChangeText={setInterviewAt}
+          placeholder="Date & Time (YYYY-MM-DDTHH:MM)"
+          style={[styles.modalInput, { borderColor: colors.border, color: colors.ink }]}
+        />
+
+        <TextInput
+          value={interviewPlace}
+          onChangeText={setInterviewPlace}
+          placeholder="Interview Location / Plant Gate"
+          style={[styles.modalInput, { borderColor: colors.border, color: colors.ink }]}
+        />
+
+      </Sheet>
 
       {/* Send Offer Modal */}
-      <Modal visible={offerModal} transparent animationType="slide">
-        <View style={styles.modalBackdrop}>
-          <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.modalTitle, { color: colors.ink }]}>{t('Send Job Offer')}</Text>
-            <Text style={[styles.modalSubtitle, { color: colors.inkSecondary }]}>
-              Make an official offer to {w.name}.
-            </Text>
-
-            <TextInput
-              value={offerPay}
-              onChangeText={setOfferPay}
-              placeholder="Monthly Pay (₹)"
-              keyboardType="numeric"
-              style={[styles.modalInput, { borderColor: colors.border, color: colors.ink }]}
-            />
-
-            <TextInput
-              value={offerJoiningDate}
-              onChangeText={setOfferJoiningDate}
-              placeholder="Joining Date (YYYY-MM-DD)"
-              style={[styles.modalInput, { borderColor: colors.border, color: colors.ink }]}
-            />
-
-            <View style={styles.modalBtnRow}>
-              <TouchableOpacity
-                onPress={() => setOfferModal(false)}
-                style={[styles.modalBtnSecondary, { borderColor: colors.border }]}
-              >
-                <Text style={{ color: colors.ink, fontWeight: '600' }}>{t('Cancel')}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() =>
-                  updateStageMutation.mutate({
-                    stage: 'offer',
-                    payload: { pay: parseInt(offerPay, 10), joiningDate: offerJoiningDate },
-                  })
-                }
-                style={[styles.modalBtnPrimary, { backgroundColor: colors.primary }]}
-              >
-                <Text style={{ color: '#FFF', fontWeight: '700' }}>{t('Send Offer')}</Text>
-              </TouchableOpacity>
-            </View>
+      <Sheet
+        visible={offerModal}
+        onClose={() => setOfferModal(false)}
+        title={t('Send Job Offer')}
+        subtitle={`Make an official offer to ${w.name}.`}
+        footer={
+          <View style={styles.modalBtnRow}>
+          <TouchableOpacity
+            onPress={() => setOfferModal(false)}
+            style={[styles.modalBtnSecondary, { borderColor: colors.border }]}
+          >
+            <Text style={{ color: colors.ink, fontWeight: '600' }}>{t('Cancel')}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() =>
+              updateStageMutation.mutate({
+                stage: 'offer',
+                payload: { pay: parseInt(offerPay, 10), joiningDate: offerJoiningDate },
+              })
+            }
+            style={[styles.modalBtnPrimary, { backgroundColor: colors.primary }]}
+          >
+            <Text style={{ color: '#FFF', fontWeight: '700' }}>{t('Send Offer')}</Text>
+          </TouchableOpacity>
           </View>
-        </View>
-      </Modal>
+        }
+      >
+
+        <TextInput
+          value={offerPay}
+          onChangeText={setOfferPay}
+          placeholder="Monthly Pay (₹)"
+          keyboardType="numeric"
+          style={[styles.modalInput, { borderColor: colors.border, color: colors.ink }]}
+        />
+
+        <TextInput
+          value={offerJoiningDate}
+          onChangeText={setOfferJoiningDate}
+          placeholder="Joining Date (YYYY-MM-DD)"
+          style={[styles.modalInput, { borderColor: colors.border, color: colors.ink }]}
+        />
+
+      </Sheet>
 
       {/* Reject Modal */}
-      <Modal visible={rejectModal} transparent animationType="fade">
-        <View style={styles.modalBackdrop}>
-          <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.modalTitle, { color: colors.ink }]}>{t('Reject Candidate?')}</Text>
-            <Text style={[styles.modalSubtitle, { color: colors.inkSecondary }]}>
-              Candidate will be notified politely that they were not selected this time.
-            </Text>
-
-            <TextInput
-              value={rejectReason}
-              onChangeText={setRejectReason}
-              placeholder="Reason (e.g. Position filled, experience required)"
-              style={[styles.modalInput, { borderColor: colors.border, color: colors.ink }]}
-            />
-
-            <View style={styles.modalBtnRow}>
-              <TouchableOpacity
-                onPress={() => setRejectModal(false)}
-                style={[styles.modalBtnSecondary, { borderColor: colors.border }]}
-              >
-                <Text style={{ color: colors.ink, fontWeight: '600' }}>{t('Cancel')}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                onPress={() => updateStageMutation.mutate({ stage: 'rejected' })}
-                style={[styles.modalBtnPrimary, { backgroundColor: colors.dangerFg }]}
-              >
-                <Text style={{ color: '#FFF', fontWeight: '700' }}>{t('Reject')}</Text>
-              </TouchableOpacity>
-            </View>
+      <Sheet
+        visible={rejectModal}
+        onClose={() => setRejectModal(false)}
+        title={t('Reject Candidate?')}
+        subtitle={`Candidate will be notified politely that they were not selected this time.`}
+        footer={
+          <View style={styles.modalBtnRow}>
+          <TouchableOpacity
+            onPress={() => setRejectModal(false)}
+            style={[styles.modalBtnSecondary, { borderColor: colors.border }]}
+          >
+            <Text style={{ color: colors.ink, fontWeight: '600' }}>{t('Cancel')}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => updateStageMutation.mutate({ stage: 'rejected' })}
+            style={[styles.modalBtnPrimary, { backgroundColor: colors.dangerFg }]}
+          >
+            <Text style={{ color: '#FFF', fontWeight: '700' }}>{t('Reject')}</Text>
+          </TouchableOpacity>
           </View>
-        </View>
-      </Modal>
+        }
+      >
+
+        <TextInput
+          value={rejectReason}
+          onChangeText={setRejectReason}
+          placeholder="Reason (e.g. Position filled, experience required)"
+          style={[styles.modalInput, { borderColor: colors.border, color: colors.ink }]}
+        />
+
+      </Sheet>
     </Screen>
   );
 };
@@ -704,17 +700,17 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   modalInput: {
-    height: 46,
+    height: 48,
     borderRadius: 10,
     borderWidth: 1,
     paddingHorizontal: 12,
-    fontSize: 13.5,
+    fontSize: 15,
+    marginBottom: 12,
   },
   modalBtnRow: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
     gap: 10,
-    marginTop: 8,
   },
   modalBtnSecondary: {
     paddingHorizontal: 16,

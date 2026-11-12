@@ -22,12 +22,15 @@ import {
   ChevronDown,
   X,
   RotateCcw,
+  Check,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import type { WorkerStackParamList } from '../../navigation/types';
+import { ListSkeleton } from '../../components/ui/Skeleton';
 import { Screen } from '../../components/layout/Screen';
 import { AppHeader } from '../../components/layout/AppHeader';
 import { Hero } from '../../components/ui/Hero';
+import { Sheet } from '../../components/ui/Sheet';
 import { JobRow } from '../../components/domain/JobRow';
 import { workerApi } from '../../api/workerApi';
 import { queryKeys } from '../../api/keys';
@@ -327,9 +330,7 @@ export const FindJobsScreen: React.FC = () => {
 
         {/* Results List */}
         {jobsQuery.isLoading ? (
-          <View style={{ paddingVertical: 40, alignItems: 'center' }}>
-            <ActivityIndicator size="large" color={colors.primary} />
-          </View>
+          <ListSkeleton style={{ paddingHorizontal: 16 }} />
         ) : jobsList.length === 0 ? (
           <View style={[styles.emptyBox, { backgroundColor: colors.surfaceMuted }]}>
             <Search size={36} color={colors.inkMuted} />
@@ -375,32 +376,29 @@ export const FindJobsScreen: React.FC = () => {
         )}
       </ScrollView>
 
-      {/* Deep Filter Modal / Bottom Sheet */}
-      <Modal
+      {/* Filters */}
+      <Sheet
         visible={filterModalOpen}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setFilterModalOpen(false)}
+        onClose={() => setFilterModalOpen(false)}
+        title={t('Filter')}
+        footer={
+          <View style={styles.sheetFooterRow}>
+            <TouchableOpacity
+              onPress={handleClearAll}
+              style={[styles.clearBtn, { borderColor: colors.borderStrong }]}
+            >
+              <Text style={[styles.clearBtnText, { color: colors.ink }]}>{t('Clear all')}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => setFilterModalOpen(false)}
+              style={[styles.applyFilterBtn, styles.flex1, { backgroundColor: colors.primary }]}
+            >
+              <Text style={styles.applyFilterBtnText}>{t('Show {n} jobs', { n: totalCount })}</Text>
+            </TouchableOpacity>
+          </View>
+        }
       >
-        <View style={styles.modalOverlay}>
-          <View style={[styles.filterSheet, { backgroundColor: colors.surface }]}>
-            {/* Sheet Header */}
-            <View style={[styles.filterSheetHeader, { borderBottomColor: colors.border }]}>
-              <Text style={[styles.filterSheetTitle, { color: colors.ink }]}>{t('Filter')}</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 14 }}>
-                <TouchableOpacity onPress={handleClearAll}>
-                  <Text style={[styles.clearLinkText, { color: colors.dangerFg }]}>
-                    {t('Clear all')}
-                  </Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => setFilterModalOpen(false)}>
-                  <X size={20} color={colors.inkMuted} />
-                </TouchableOpacity>
-              </View>
-            </View>
 
-            {/* Filter Options List */}
-            <ScrollView contentContainerStyle={styles.filterSheetBody}>
               {/* Job Type Checkboxes */}
               <View style={styles.filterGroup}>
                 <Text style={[styles.groupTitle, { color: colors.ink }]}>{t('Job type')}</Text>
@@ -525,61 +523,33 @@ export const FindJobsScreen: React.FC = () => {
                   ))}
                 </ScrollView>
               </View>
-            </ScrollView>
+      </Sheet>
 
-            {/* Sticky Apply Button */}
-            <View style={[styles.filterSheetFooter, { borderTopColor: colors.border }]}>
-              <TouchableOpacity
-                onPress={() => setFilterModalOpen(false)}
-                style={[styles.applyFilterBtn, { backgroundColor: colors.primary }]}
-              >
-                <Text style={styles.applyFilterBtnText}>
-                  {t('Show {n} jobs', { n: totalCount })}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-
-      {/* Sort Selection Modal */}
-      <Modal
-        visible={sortModalOpen}
-        animationType="fade"
-        transparent
-        onRequestClose={() => setSortModalOpen(false)}
-      >
-        <TouchableOpacity
-          activeOpacity={1}
-          onPress={() => setSortModalOpen(false)}
-          style={styles.modalOverlay}
-        >
-          <View style={[styles.sortCard, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.sortCardTitle, { color: colors.ink }]}>{t('Sort by')}</Text>
-            {[
-              { key: 'newest' as const, label: t('Newest first') },
-              { key: 'pay' as const, label: t('Highest pay') },
-              ...(homeCity ? [{ key: 'nearest' as const, label: t('Nearest') }] : []),
-            ].map((opt) => (
-              <TouchableOpacity
-                key={opt.key}
-                onPress={() => {
-                  setSort(opt.key);
-                  setSortModalOpen(false);
-                }}
-                style={[
-                  styles.sortRow,
-                  { backgroundColor: sort === opt.key ? colors.primarySoft : 'transparent' },
-                ]}
-              >
-                <Text style={[styles.sortRowText, { color: sort === opt.key ? colors.primary : colors.ink }]}>
-                  {opt.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </TouchableOpacity>
-      </Modal>
+      {/* Sort */}
+      <Sheet visible={sortModalOpen} onClose={() => setSortModalOpen(false)} title={t('Sort by')} scroll={false}>
+        {[
+          { key: 'newest' as const, label: t('Newest first') },
+          { key: 'pay' as const, label: t('Highest pay') },
+          ...(homeCity ? [{ key: 'nearest' as const, label: t('Nearest') }] : []),
+        ].map((opt) => {
+          const on = sort === opt.key;
+          return (
+            <TouchableOpacity
+              key={opt.key}
+              accessibilityRole="radio"
+              accessibilityState={{ selected: on }}
+              onPress={() => {
+                setSort(opt.key);
+                setSortModalOpen(false);
+              }}
+              style={[styles.sortRow, { backgroundColor: on ? colors.primarySoft : 'transparent' }]}
+            >
+              <Text style={[styles.sortRowText, { color: on ? colors.primary : colors.ink }]}>{opt.label}</Text>
+              {on && <Check size={18} color={colors.primary} />}
+            </TouchableOpacity>
+          );
+        })}
+      </Sheet>
     </Screen>
   );
 };
@@ -618,6 +588,10 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: 48,
   },
+  flex1: { flex: 1 },
+  sheetFooterRow: { flexDirection: 'row', gap: 10 },
+  clearBtn: { minHeight: 48, paddingHorizontal: 18, borderRadius: 12, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  clearBtnText: { fontSize: 15, fontWeight: '600' },
   // Bottom padding leaves room for the search card that overlaps the banner.
   hero: {
     marginHorizontal: 16,
@@ -827,6 +801,7 @@ const styles = StyleSheet.create({
   },
   filterGroup: {
     gap: 10,
+    marginBottom: 22,
   },
   groupTitle: {
     fontSize: 14,
@@ -900,8 +875,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   sortRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    minHeight: 48,
     paddingHorizontal: 12,
-    paddingVertical: 12,
     borderRadius: 10,
   },
   sortRowText: {

@@ -25,6 +25,8 @@ import {
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import type { WorkerStackParamList } from '../../navigation/types';
+import { ListSkeleton } from '../../components/ui/Skeleton';
+import { SegmentedTabs } from '../../components/ui/SegmentedTabs';
 import { Screen } from '../../components/layout/Screen';
 import { AppHeader } from '../../components/layout/AppHeader';
 import { CompanyLogo } from '../../components/domain/CompanyLogo';
@@ -107,56 +109,21 @@ export const ApplicationsScreen: React.FC = () => {
           </Text>
         </View>
 
-        {/* 3 Tabs */}
-        <View style={[styles.tabsWrap, { backgroundColor: colors.surfaceMuted, borderColor: colors.border }]}>
-          {(['active', 'interviews', 'closed'] as const).map((tKey) => {
-            const isSelected = tab === tKey;
-            const count = groups[tKey].length;
-            return (
-              <TouchableOpacity
-                key={tKey}
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  setTab(tKey);
-                }}
-                style={[
-                  styles.tabItem,
-                  isSelected && { backgroundColor: colors.surface, borderColor: colors.border },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.tabLabel,
-                    { color: isSelected ? colors.primary : colors.inkSecondary, fontWeight: isSelected ? '700' : '600' },
-                  ]}
-                >
-                  {tKey === 'active' ? t('Active') : tKey === 'interviews' ? t('Interviews') : t('Closed')}
-                </Text>
-                <View
-                  style={[
-                    styles.countPill,
-                    { backgroundColor: isSelected ? colors.primarySoft : colors.surfaceStrong },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.countPillText,
-                      { color: isSelected ? colors.primary : colors.inkMuted },
-                    ]}
-                  >
-                    {count}
-                  </Text>
-                </View>
-              </TouchableOpacity>
-            );
-          })}
-        </View>
+        <SegmentedTabs
+          variant="underline"
+          style={styles.tabsWrap}
+          value={tab}
+          onChange={setTab}
+          items={[
+            { key: 'active', label: t('Active'), count: groups.active.length },
+            { key: 'interviews', label: t('Interviews'), count: groups.interviews.length },
+            { key: 'closed', label: t('Closed'), count: groups.closed.length },
+          ]}
+        />
 
         {/* Content */}
         {isLoading ? (
-          <View style={{ paddingVertical: 40, alignItems: 'center' }}>
-            <ActivityIndicator size="large" color={colors.primary} />
-          </View>
+          <ListSkeleton />
         ) : currentList.length === 0 ? (
           <View style={[styles.emptyBox, { backgroundColor: colors.surfaceMuted }]}>
             <FileText size={36} color={colors.inkMuted} />
@@ -397,10 +364,6 @@ const styles = StyleSheet.create({
     marginTop: 3,
   },
   tabsWrap: {
-    flexDirection: 'row',
-    borderRadius: 14,
-    borderWidth: 1,
-    padding: 3,
     marginBottom: 16,
   },
   tabItem: {

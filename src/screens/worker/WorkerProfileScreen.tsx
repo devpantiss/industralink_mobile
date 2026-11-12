@@ -25,6 +25,7 @@ import {
   Trash2,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
+import { SegmentedTabs } from '../../components/ui/SegmentedTabs';
 import { Screen } from '../../components/layout/Screen';
 import { AppHeader } from '../../components/layout/AppHeader';
 import { Avatar } from '../../components/ui/Avatar';
@@ -219,42 +220,15 @@ export const WorkerProfileScreen: React.FC = () => {
           )}
         </View>
 
-        {/* Tab Switcher */}
-        <View style={[styles.tabSwitcher, { backgroundColor: colors.surfaceMuted }]}>
-          <TouchableOpacity
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              setTab('profile');
-            }}
-            style={[styles.tabButton, tab === 'profile' && { backgroundColor: colors.inkFill }]}
-          >
-            <Text
-              style={[
-                styles.tabButtonText,
-                { color: tab === 'profile' ? colors.onInk : colors.inkSecondary },
-              ]}
-            >
-              {t('Details')}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              setTab('documents');
-            }}
-            style={[styles.tabButton, tab === 'documents' && { backgroundColor: colors.inkFill }]}
-          >
-            <Text
-              style={[
-                styles.tabButtonText,
-                { color: tab === 'documents' ? colors.onInk : colors.inkSecondary },
-              ]}
-            >
-              {t('Resume & documents')}
-            </Text>
-          </TouchableOpacity>
-        </View>
+        <SegmentedTabs
+          style={styles.tabSwitcher}
+          value={tab}
+          onChange={setTab}
+          items={[
+            { key: 'profile', label: t('Details') },
+            { key: 'documents', label: t('Resume & documents') },
+          ]}
+        />
 
         {/* Tab 1: Profile Details */}
         {tab === 'profile' ? (
@@ -293,7 +267,7 @@ export const WorkerProfileScreen: React.FC = () => {
               />
 
               {/* Skills */}
-              <View style={styles.subSection}>
+              <View style={[styles.subSection, { borderColor: colors.border }]}>
                 <Text style={[styles.subSectionLabel, { color: colors.inkMuted }]}>
                   {t('Skills')}
                 </Text>
@@ -310,7 +284,7 @@ export const WorkerProfileScreen: React.FC = () => {
               </View>
 
               {/* Work History */}
-              <View style={styles.subSection}>
+              <View style={[styles.subSection, { borderColor: colors.border }]}>
                 <Text style={[styles.subSectionLabel, { color: colors.inkMuted }]}>
                   {t('Past jobs')}
                 </Text>
@@ -577,11 +551,7 @@ const styles = StyleSheet.create({
     fontSize: 11.5,
     marginTop: 2,
   },
-  tabSwitcher: {
-    flexDirection: 'row',
-    padding: 4,
-    borderRadius: 22,
-  },
+  tabSwitcher: {},
   tabButton: {
     flex: 1,
     height: 38,
@@ -630,7 +600,6 @@ const styles = StyleSheet.create({
   },
   subSection: {
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderColor: '#E6E8EC',
     paddingTop: 10,
     marginTop: 4,
     gap: 6,

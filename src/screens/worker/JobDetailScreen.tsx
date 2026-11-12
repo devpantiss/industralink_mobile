@@ -31,6 +31,7 @@ import {
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import type { WorkerStackParamList } from '../../navigation/types';
+import { SegmentedTabs } from '../../components/ui/SegmentedTabs';
 import { Screen } from '../../components/layout/Screen';
 import { CompanyLogo } from '../../components/domain/CompanyLogo';
 import { BenefitChips, jobTypeText, payShort, walkInWhen } from '../../components/domain/JobBits';
@@ -199,42 +200,15 @@ export const JobDetailScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* Tabs: Description vs Company */}
-        <View style={[styles.tabsRow, { backgroundColor: colors.surfaceMuted }]}>
-          <TouchableOpacity
-            onPress={() => setActiveTab('description')}
-            style={[
-              styles.tabBtn,
-              activeTab === 'description' && { backgroundColor: colors.inkFill },
-            ]}
-          >
-            <Text
-              style={[
-                styles.tabBtnText,
-                { color: activeTab === 'description' ? colors.onInk : colors.inkSecondary },
-              ]}
-            >
-              {t('Description')}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => setActiveTab('company')}
-            style={[
-              styles.tabBtn,
-              activeTab === 'company' && { backgroundColor: colors.inkFill },
-            ]}
-          >
-            <Text
-              style={[
-                styles.tabBtnText,
-                { color: activeTab === 'company' ? colors.onInk : colors.inkSecondary },
-              ]}
-            >
-              {t('Company')}
-            </Text>
-          </TouchableOpacity>
-        </View>
+        <SegmentedTabs
+          style={styles.tabsRow}
+          value={activeTab}
+          onChange={setActiveTab}
+          items={[
+            { key: 'description', label: t('Description') },
+            { key: 'company', label: t('Company') },
+          ]}
+        />
 
         {/* Tab 1: Description Content */}
         {activeTab === 'description' ? (
@@ -649,9 +623,6 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   tabsRow: {
-    flexDirection: 'row',
-    padding: 4,
-    borderRadius: 24,
     marginBottom: 18,
   },
   tabBtn: {

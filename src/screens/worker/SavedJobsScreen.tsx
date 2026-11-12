@@ -13,6 +13,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Bookmark, Heart, Briefcase } from 'lucide-react-native';
 import type { WorkerStackParamList } from '../../navigation/types';
+import { ListSkeleton } from '../../components/ui/Skeleton';
 import { Screen } from '../../components/layout/Screen';
 import { AppHeader } from '../../components/layout/AppHeader';
 import { JobCard } from '../../components/domain/JobCard';
@@ -70,9 +71,7 @@ export const SavedJobsScreen: React.FC = () => {
         </View>
 
         {isLoading ? (
-          <View style={{ paddingVertical: 40, alignItems: 'center' }}>
-            <ActivityIndicator size="large" color={colors.primary} />
-          </View>
+          <ListSkeleton />
         ) : savedList.length === 0 ? (
           <View style={[styles.emptyBox, { backgroundColor: colors.surfaceMuted }]}>
             <Heart size={36} color={colors.inkMuted} />

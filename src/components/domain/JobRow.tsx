@@ -14,6 +14,7 @@ import { payLong } from './JobBits';
 import { JOB_TYPE_LABEL, SHIFT_LABEL } from '../../lib/labels';
 import { timeAgo } from '../../lib/format';
 import { t } from '../../lib/i18n';
+import { PressableScale } from '../ui/PressableScale';
 import { useUiStore } from '../../store/uiStore';
 import { spacing } from '../../theme/spacing';
 
@@ -45,8 +46,7 @@ export const JobRow: React.FC<JobRowProps> = ({
   };
 
   return (
-    <TouchableOpacity
-      activeOpacity={0.88}
+    <PressableScale
       onPress={onPress}
       style={[
         styles.card,
@@ -174,7 +174,7 @@ export const JobRow: React.FC<JobRowProps> = ({
           </Text>
         </View>
       </View>
-    </TouchableOpacity>
+    </PressableScale>
   );
 };
 
