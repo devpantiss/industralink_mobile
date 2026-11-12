@@ -1,6 +1,6 @@
 import { apiClient, USE_MOCKS, delay } from './client';
 import { mockDb } from '../mocks/db';
-import { Job, Candidate, ApplicationStage, EmployerSummary, TalentProfile } from '../types';
+import { Job, Candidate, ApplicationStage, EmployerSummary, TalentProfile, Company, EmployerAnalytics } from '../types';
 
 export const employerApi = {
   async getSummary(): Promise<EmployerSummary> {
@@ -73,5 +73,41 @@ export const employerApi = {
       return mockDb.inviteTalent(workerId, jobId);
     }
     await apiClient.post('/employer/invites', { workerId, jobId });
+  },
+
+  async getJob(id: string): Promise<Job | null> {
+    if (USE_MOCKS) {
+      await delay();
+      return mockDb.getEmployerJob(id);
+    }
+    const res = await apiClient.get(`/employer/jobs/${id}`);
+    return res.data;
+  },
+
+  async getCompany(): Promise<Company> {
+    if (USE_MOCKS) {
+      await delay();
+      return mockDb.getMyCompany();
+    }
+    const res = await apiClient.get('/employer/company');
+    return res.data;
+  },
+
+  async updateCompany(changes: Partial<Company>): Promise<Company> {
+    if (USE_MOCKS) {
+      await delay(250);
+      return mockDb.updateMyCompany(changes);
+    }
+    const res = await apiClient.patch('/employer/company', changes);
+    return res.data;
+  },
+
+  async getAnalytics(): Promise<EmployerAnalytics> {
+    if (USE_MOCKS) {
+      await delay();
+      return mockDb.getEmployerAnalytics();
+    }
+    const res = await apiClient.get('/employer/analytics');
+    return res.data;
   },
 };

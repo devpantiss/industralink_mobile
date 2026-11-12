@@ -110,7 +110,7 @@ export const useAuthStore = create<AuthStoreState>((set, get) => ({
     } else if (role === 'employer') {
       mockUser = {
         id: 'usr_employer_1',
-        name: 'Eastline Plant HR',
+        name: 'Pradeep Mohanty',
         phone: '+91 98111 22334',
         email: 'recruiter@eastline.demo',
         role: 'employer',

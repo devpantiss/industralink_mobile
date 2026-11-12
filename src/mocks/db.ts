@@ -17,8 +17,48 @@ import {
   JobSearchParams,
   Paginated,
   CompanyForWorker,
+  EmployerAnalytics,
 } from '../types';
-import { SEED_JOBS, SEED_COMPANIES, SEED_WORKER, SEED_VERIFICATIONS } from './seed';
+import { SEED_JOBS, SEED_COMPANIES, SEED_WORKER, SEED_VERIFICATIONS, SEED_APPLICANT_POOL } from './seed';
+
+const FLOW: ApplicationStage[] = ['applied', 'shortlisted', 'interview', 'offer', 'hired'];
+const DAY = 86400000;
+const NOW = Date.now();
+
+/** Applications from the other workers in the pool, with a timeline up to their stage. */
+const poolCandidates: Candidate[] = SEED_APPLICANT_POOL.map((p, i) => {
+  const appliedAt = new Date(NOW - p.daysAgo * DAY).toISOString();
+  const reached = p.stage === 'rejected' ? ['applied' as ApplicationStage] : FLOW.slice(0, FLOW.indexOf(p.stage) + 1);
+  // Each step a few days after the previous one (at most 4), ending before today.
+  const gap = Math.min(4, p.daysAgo / (reached.length + 1));
+  const timeline = reached.map((stage, k) => ({ stage, at: new Date(NOW - (p.daysAgo - k * gap) * DAY).toISOString() }));
+  if (p.stage === 'rejected') timeline.push({ stage: 'rejected', at: new Date(NOW - (p.daysAgo - 2) * DAY).toISOString() });
+  const id = `app_pool_${i + 1}`;
+  return {
+    id,
+    jobId: p.jobId,
+    workerId: p.worker.userId,
+    stage: p.stage,
+    appliedAt,
+    updatedAt: timeline[timeline.length - 1].at,
+    sentWith: p.sentWith ?? 'profile',
+    timeline,
+    worker: p.worker,
+    jobTitle: '',
+    documents:
+      p.sentWith === 'document'
+        ? [{ id: `${id}_cv`, ownerId: p.worker.userId, name: `${p.worker.name.replace(/ /g, '_')}_Resume.pdf`,
+            type: 'resume', sizeBytes: 1024 * 210, mimeType: 'application/pdf', uploadedAt: appliedAt, isDefaultResume: true }]
+        : [],
+    ...(p.stage === 'interview'
+      ? { interview: { at: new Date(NOW + 2 * DAY).toISOString(), place: 'Main gate HR office' } }
+      : {}),
+    ...(p.stage === 'offer'
+      ? { offer: { pay: p.worker.expectedPay ?? 22000, payPeriod: 'month' as const, joiningDate: new Date(NOW + 10 * DAY).toISOString().slice(0, 10),
+          place: 'Main gate HR office', sentAt: timeline[timeline.length - 1].at } }
+      : {}),
+  };
+});
 
 class MockDatabase {
   private jobs: Job[] = [...SEED_JOBS];
@@ -51,7 +91,7 @@ class MockDatabase {
     {
       id: 'doc_2',
       ownerId: 'usr_worker_1',
-      name: 'Aadhaar_Card_Verified.pdf',
+      name: 'Aadhaar_Card.pdf',
       type: 'id_proof',
       sizeBytes: 1024 * 320,
       mimeType: 'application/pdf',
@@ -108,6 +148,81 @@ class MockDatabase {
   ];
 
   private verifications: VerificationItem[] = [...SEED_VERIFICATIONS];
+  private pool: Candidate[] = poolCandidates;
+  private talent: TalentProfile[] = [
+    {
+      userId: 'usr_talent_1',
+      name: 'Ramesh Kumar',
+      trade: 'welder',
+      experience: '3_5',
+      qualifications: ['ITI', '10th'],
+      licences: ['DGMS', 'Welding cert'],
+      skills: ['Arc Welding', 'MIG 6G', 'Gas Cutting'],
+      location: { city: 'Kalinganagar', state: 'Odisha' },
+      willingToRelocate: true,
+      expectedPay: 22000,
+      availability: 'immediate',
+      languages: ['Hindi', 'Odia'],
+      safetyTrainingHours: 40,
+      invitedTo: [],
+      appliedTo: ['job_1'],
+    },
+    {
+      userId: 'usr_talent_2',
+      name: 'Sunil Pradhan',
+      trade: 'fitter',
+      experience: '1_2',
+      qualifications: ['ITI'],
+      licences: ['Forklift'],
+      skills: ['Machine Assembly', 'Hydraulics', 'Bearing fitting'],
+      location: { city: 'Jajpur', state: 'Odisha' },
+      willingToRelocate: false,
+      expectedPay: 19000,
+      availability: '15_days',
+      languages: ['Hindi', 'Odia'],
+      safetyTrainingHours: 20,
+      invitedTo: [],
+      appliedTo: [],
+    },
+    {
+      userId: 'usr_talent_3',
+      name: 'Bikash Mohanty',
+      trade: 'electrician',
+      experience: '5_plus',
+      qualifications: ['Diploma', 'ITI'],
+      licences: ['Electrical licence', 'DGMS'],
+      skills: ['HT/LT Panels', 'Substation Wiring', 'Transformer testing'],
+      location: { city: 'Angul', state: 'Odisha' },
+      willingToRelocate: true,
+      expectedPay: 28000,
+      availability: 'immediate',
+      languages: ['Hindi', 'Odia', 'English'],
+      safetyTrainingHours: 60,
+      invitedTo: [],
+      appliedTo: [],
+    },
+  ];
+  /** The signed-in employer's own company (shown on Company profile and in the drawer). */
+  private myCompany: Company = {
+    id: 'comp_1',
+    name: 'Eastline Heavy Engineering',
+    sector: 'metals',
+    size: '1000+',
+    hiringType: 'direct',
+    location: { city: 'Kalinganagar', state: 'Odisha' },
+    address: 'Plot 4B, Kalinganagar Industrial Complex, Gate 4',
+    pincode: '755026',
+    website: 'https://eastline.demo',
+    gstNumber: '21AAACE2727Q1ZT',
+    about: 'Steel fabrication and heavy engineering plant. We hire welders, fitters and machinists for permanent and contract roles.',
+    hrName: 'Pradeep Mohanty',
+    hrDesignation: 'Plant HR Manager',
+    hrPhone: '9437000111',
+    sites: ['Kalinganagar Plant', 'Angul Fabrication Yard'],
+    verification: 'approved',
+    status: 'active',
+    createdAt: '2024-01-15T10:00:00Z',
+  };
 
   // Auth Operations
   async loginWithOtp(phone: string): Promise<{ success: boolean; message: string }> {
@@ -152,7 +267,7 @@ class MockDatabase {
 
     const user: User = {
       id: 'usr_employer_1',
-      name: 'Eastline Plant HR',
+      name: 'Pradeep Mohanty',
       phone: '+91 98111 22334',
       email,
       role: 'employer',
@@ -180,7 +295,7 @@ class MockDatabase {
     if (token.includes('employer')) {
       return {
         id: 'usr_employer_1',
-        name: 'Eastline Plant HR',
+        name: 'Pradeep Mohanty',
         phone: '+91 98111 22334',
         email: 'hr@eastline.demo',
         role: 'employer',
@@ -457,42 +572,54 @@ class MockDatabase {
 
   // Employer Operations
   async getEmployerSummary(): Promise<EmployerSummary> {
-    const openJobs = this.jobs.filter((j) => j.status === 'active').length;
-    const newApplicants = this.jobs.reduce((s, j) => s + (j.newApplicantsCount || 0), 0);
+    const all = await this.getCandidates();
+    const jobs = await this.getEmployerJobs();
+    const openJobs = jobs.filter((j) => j.status === 'active').length;
+    const newApplicants = all.filter((c) => c.stage === 'applied').length;
+    const reached = (s: ApplicationStage) =>
+      all.filter((c) => c.timeline.some((t) => t.stage === s)).length;
     return {
       openJobs,
-      newApplicants: Math.max(1, newApplicants),
-      interviewsThisWeek: 4,
-      hiredThisMonth: 8,
+      newApplicants,
+      interviewsThisWeek: all.filter((c) => c.stage === 'interview').length,
+      hiredThisMonth: all.filter((c) => c.stage === 'hired').length,
       attention: [
         {
           id: 'att_1',
-          text: '3 new welder applicants awaiting review for Kalinganagar Plant',
+          text: `${newApplicants} new applicants are waiting for your review`,
           link: '/employer/candidates?stage=applied',
           action: 'Review',
         },
       ],
-      applicantsPerDay: [
-        { day: 'Mon', count: 12 },
-        { day: 'Tue', count: 18 },
-        { day: 'Wed', count: 24 },
-        { day: 'Thu', count: 15 },
-        { day: 'Fri', count: 22 },
-        { day: 'Sat', count: 8 },
-        { day: 'Sun', count: 5 },
-      ],
+      applicantsPerDay: Array.from({ length: 7 }, (_, k) => {
+        const day = new Date(NOW - (6 - k) * DAY);
+        const key = day.toDateString();
+        return {
+          day: day.toLocaleDateString('en-IN', { weekday: 'short' }),
+          count: all.filter((c) => new Date(c.appliedAt).toDateString() === key).length,
+        };
+      }),
       funnel: [
-        { stage: 'Applied', count: 84 },
-        { stage: 'Shortlisted', count: 32 },
-        { stage: 'Interview', count: 14 },
-        { stage: 'Hired', count: 8 },
+        { stage: 'Applied', count: all.length },
+        { stage: 'Shortlisted', count: reached('shortlisted') },
+        { stage: 'Interview', count: reached('interview') },
+        { stage: 'Hired', count: reached('hired') },
       ],
     };
   }
 
   async getEmployerJobs(status?: string): Promise<Job[]> {
-    if (status) return this.jobs.filter((j) => j.status === status);
-    return this.jobs;
+    const all = await this.getCandidates();
+    return this.jobs
+      .filter((j) => !status || j.status === status)
+      .map((j) => {
+        const mine = all.filter((c) => c.jobId === j.id);
+        return {
+          ...j,
+          applicantsCount: mine.length,
+          newApplicantsCount: mine.filter((c) => c.stage === 'applied').length,
+        };
+      });
   }
 
   async createJob(data: any): Promise<Job> {
@@ -521,21 +648,80 @@ class MockDatabase {
   }
 
   async getCandidates(jobId?: string): Promise<Candidate[]> {
-    return this.applications
-      .filter((a) => (!jobId ? true : a.jobId === jobId))
-      .map((a) => {
-        const job = this.jobs.find((j) => j.id === a.jobId);
+    const own: Candidate[] = this.applications.map((a) => ({
+      ...a,
+      worker: this.workerProfile,
+      jobTitle: '',
+      documents: this.documents,
+    }));
+    return [...own, ...this.pool]
+      .filter((c) => (!jobId ? true : c.jobId === jobId))
+      .map((c) => ({ ...c, jobTitle: this.jobs.find((j) => j.id === c.jobId)?.title || 'Industrial Worker' }))
+      .sort((a, b) => +new Date(b.updatedAt) - +new Date(a.updatedAt));
+  }
+
+  async getMyCompany(): Promise<Company> {
+    return this.myCompany;
+  }
+
+  async updateMyCompany(changes: Partial<Company>): Promise<Company> {
+    this.myCompany = { ...this.myCompany, ...changes };
+    return this.myCompany;
+  }
+
+  async getEmployerAnalytics(): Promise<EmployerAnalytics> {
+    const all = await this.getCandidates();
+    const jobs = await this.getEmployerJobs();
+    const hired = all.filter((c) => c.stage === 'hired');
+    const openings = jobs.filter((j) => j.status === 'active').reduce((n, j) => n + j.openings, 0);
+    const days = hired.map((c) => (+new Date(c.updatedAt) - +new Date(c.appliedAt)) / DAY);
+    const byState = new Map<string, number>();
+    all.forEach((c) => {
+      const st = c.worker.location?.state ?? 'Not given';
+      byState.set(st, (byState.get(st) ?? 0) + 1);
+    });
+    const reached = (list: Candidate[], st: ApplicationStage) =>
+      list.filter((c) => c.timeline.some((t) => t.stage === st)).length;
+    return {
+      totalApplicants: all.length,
+      hired: hired.length,
+      fillRate: openings ? Math.round((hired.length / openings) * 100) : 0,
+      avgDaysToHire: days.length ? days.reduce((a, b) => a + b, 0) / days.length : null,
+      resumeShare: all.length ? Math.round((all.filter((c) => c.sentWith === 'document').length / all.length) * 100) : 0,
+      applicantsPerWeek: Array.from({ length: 8 }, (_, k) => {
+        const end = NOW - (7 - k) * 7 * DAY;
+        const start = end - 7 * DAY;
         return {
-          ...a,
-          worker: this.workerProfile,
-          jobTitle: job?.title || 'Industrial Worker',
-          documents: this.documents,
+          week: new Date(end).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' }),
+          count: all.filter((c) => {
+            const t = +new Date(c.appliedAt);
+            return t > start && t <= end;
+          }).length,
         };
-      });
+      }),
+      byState: [...byState].map(([state, count]) => ({ state, count })).sort((a, b) => b.count - a.count),
+      byJob: jobs.map((j) => {
+        const mine = all.filter((c) => c.jobId === j.id);
+        return {
+          jobId: j.id,
+          title: j.title,
+          openings: j.openings,
+          applied: mine.length,
+          shortlisted: reached(mine, 'shortlisted'),
+          interview: reached(mine, 'interview'),
+          hired: reached(mine, 'hired'),
+        };
+      }),
+    };
+  }
+
+  async getEmployerJob(id: string): Promise<Job | null> {
+    return this.jobs.find((j) => j.id === id) ?? null;
   }
 
   async updateCandidateStage(appId: string, stage: ApplicationStage, payload?: any): Promise<void> {
-    const app = this.applications.find((a) => a.id === appId);
+    const app: Application | undefined =
+      this.applications.find((a) => a.id === appId) ?? this.pool.find((a) => a.id === appId);
     if (app) {
       app.stage = stage;
       app.updatedAt = new Date().toISOString();
@@ -558,64 +744,17 @@ class MockDatabase {
     }
   }
 
-  async searchTalent(_params?: any): Promise<TalentProfile[]> {
-    return [
-      {
-        userId: 'usr_talent_1',
-        name: 'Ramesh Kumar',
-        trade: 'welder',
-        experience: '3_5',
-        qualifications: ['ITI', '10th'],
-        licences: ['DGMS', 'Welding cert'],
-        skills: ['Arc Welding', 'MIG 6G', 'Gas Cutting'],
-        location: { city: 'Kalinganagar', state: 'Odisha' },
-        willingToRelocate: true,
-        expectedPay: 22000,
-        availability: 'immediate',
-        languages: ['Hindi', 'Odia'],
-        safetyTrainingHours: 40,
-        invitedTo: [],
-        appliedTo: ['job_1'],
-      },
-      {
-        userId: 'usr_talent_2',
-        name: 'Sunil Pradhan',
-        trade: 'fitter',
-        experience: '1_2',
-        qualifications: ['ITI'],
-        licences: ['Forklift'],
-        skills: ['Machine Assembly', 'Hydraulics', 'Bearing fitting'],
-        location: { city: 'Jajpur', state: 'Odisha' },
-        willingToRelocate: false,
-        expectedPay: 19000,
-        availability: '15_days',
-        languages: ['Hindi', 'Odia'],
-        safetyTrainingHours: 20,
-        invitedTo: [],
-        appliedTo: [],
-      },
-      {
-        userId: 'usr_talent_3',
-        name: 'Bikash Mohanty',
-        trade: 'electrician',
-        experience: '5_plus',
-        qualifications: ['Diploma', 'ITI'],
-        licences: ['Electrical licence', 'DGMS'],
-        skills: ['HT/LT Panels', 'Substation Wiring', 'Transformer testing'],
-        location: { city: 'Angul', state: 'Odisha' },
-        willingToRelocate: true,
-        expectedPay: 28000,
-        availability: 'immediate',
-        languages: ['Hindi', 'Odia', 'English'],
-        safetyTrainingHours: 60,
-        invitedTo: [],
-        appliedTo: [],
-      },
-    ];
+  async searchTalent(params?: { trade?: string; city?: string }): Promise<TalentProfile[]> {
+    return this.talent.filter(
+      (t) =>
+        (!params?.trade || t.trade === params.trade) &&
+        (!params?.city || t.location?.city.toLowerCase().includes(params.city.toLowerCase()))
+    );
   }
 
-  async inviteTalent(_workerId: string, _jobId: string): Promise<void> {
-    // Simulated invite recorded
+  async inviteTalent(workerId: string, jobId: string): Promise<void> {
+    const t = this.talent.find((x) => x.userId === workerId);
+    if (t && !t.invitedTo.includes(jobId)) t.invitedTo = [...t.invitedTo, jobId];
   }
 
   // Admin Operations

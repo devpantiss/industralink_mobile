@@ -35,6 +35,8 @@ export type EmployerTabParamList = {
 
 export type EmployerDrawerParamList = {
   EmployerMain: NavigatorScreenParams<EmployerTabParamList>;
+  Company: undefined;
+  Analytics: undefined;
   Settings: undefined;
 };
 
@@ -43,6 +45,7 @@ export type EmployerStackParamList = {
   EmployerDrawer: NavigatorScreenParams<EmployerDrawerParamList>;
   PostJobWizard: undefined;
   CandidateDossier: { candidateId: string };
+  JobApplicants: { jobId: string };
 };
 
 export type AdminDrawerParamList = {

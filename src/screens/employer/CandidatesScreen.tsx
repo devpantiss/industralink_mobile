@@ -5,27 +5,20 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
-  ActivityIndicator,
 } from 'react-native';
 import { Text, TextInput } from '../../components/ui/Text';
 import { useNavigation } from '@react-navigation/native';
 import { useQuery } from '@tanstack/react-query';
-import { Search, ChevronRight, UserSearch } from 'lucide-react-native';
+import { Search, UserSearch } from 'lucide-react-native';
 import { ListSkeleton } from '../../components/ui/Skeleton';
 import { Screen } from '../../components/layout/Screen';
 import { AppHeader } from '../../components/layout/AppHeader';
-import { Avatar } from '../../components/ui/Avatar';
+import { CandidateRow } from '../../components/domain/CandidateRow';
 import { employerApi } from '../../api/employerApi';
 import { queryKeys } from '../../api/keys';
 import { useUiStore } from '../../store/uiStore';
-import {
-  EXPERIENCE_LABEL,
-  STAGE_LABEL,
-  TRADE_LABEL,
-} from '../../lib/labels';
-import { timeAgo } from '../../lib/format';
 import { t } from '../../lib/i18n';
-import type { ApplicationStage, Candidate } from '../../types';
+import type { ApplicationStage } from '../../types';
 
 export const CandidatesScreen: React.FC = () => {
   const navigation = useNavigation<any>();
@@ -151,7 +144,7 @@ export const CandidatesScreen: React.FC = () => {
           </View>
         ) : (
           filtered.map((c) => (
-            <CandidateRowItem
+            <CandidateRow
               key={c.id}
               candidate={c}
               onPress={() => navigation.navigate('CandidateDossier', { candidateId: c.id })}
@@ -162,95 +155,6 @@ export const CandidatesScreen: React.FC = () => {
     </Screen>
   );
 };
-
-function CandidateRowItem({
-  candidate: c,
-  onPress,
-}: {
-  candidate: Candidate;
-  onPress: () => void;
-}) {
-  const { colors } = useUiStore();
-  const w = c.worker;
-
-  return (
-    <TouchableOpacity
-      activeOpacity={0.85}
-      onPress={onPress}
-      style={[styles.rowItem, { backgroundColor: colors.surface, borderColor: colors.border }]}
-    >
-      <Avatar name={w.name} src={w.photoUrl} size="md" />
-
-      <View style={{ flex: 1, gap: 3 }}>
-        <Text style={[styles.workerName, { color: colors.ink }]} numberOfLines={1}>
-          {w.name}
-        </Text>
-        <Text style={[styles.workerMeta, { color: colors.inkSecondary }]} numberOfLines={1}>
-          {w.trade ? TRADE_LABEL[w.trade] : '—'} · {w.experience ? EXPERIENCE_LABEL[w.experience] : '—'} · {w.location?.city ?? '—'}
-        </Text>
-
-        {/* Qualification & Licence Badges */}
-        <View style={styles.badgeWrap}>
-          {w.qualifications.map((q) => (
-            <View key={q} style={[styles.badge, { backgroundColor: colors.primarySoft }]}>
-              <Text style={[styles.badgeText, { color: colors.primary }]}>{q}</Text>
-            </View>
-          ))}
-          {w.licences.map((lic) => (
-            <View key={lic} style={[styles.badge, { backgroundColor: colors.tiles.yellow.bg }]}>
-              <Text style={[styles.badgeText, { color: colors.tiles.yellow.text }]}>{lic}</Text>
-            </View>
-          ))}
-        </View>
-
-        {/* Applied Job title + Stage */}
-        <View style={styles.appliedJobRow}>
-          <Text style={[styles.appliedJobText, { color: colors.inkMuted }]} numberOfLines={1}>
-            {c.jobTitle}
-          </Text>
-          <View
-            style={[
-              styles.stageBadge,
-              {
-                backgroundColor:
-                  c.stage === 'interview'
-                    ? colors.tiles.purple.bg
-                    : c.stage === 'offer' || c.stage === 'hired'
-                    ? colors.tiles.green.bg
-                    : c.stage === 'shortlisted'
-                    ? colors.primarySoft
-                    : colors.surfaceMuted,
-              },
-            ]}
-          >
-            <Text
-              style={[
-                styles.stageBadgeText,
-                {
-                  color:
-                    c.stage === 'interview'
-                      ? colors.tiles.purple.text
-                      : c.stage === 'offer' || c.stage === 'hired'
-                      ? colors.tiles.green.text
-                      : c.stage === 'shortlisted'
-                      ? colors.primary
-                      : colors.inkSecondary,
-                },
-              ]}
-            >
-              {STAGE_LABEL[c.stage]}
-            </Text>
-          </View>
-        </View>
-      </View>
-
-      <View style={{ alignItems: 'flex-end', justifyContent: 'space-between', paddingVertical: 2 }}>
-        <Text style={[styles.timeAgo, { color: colors.inkMuted }]}>{timeAgo(c.updatedAt)}</Text>
-        <ChevronRight size={18} color={colors.inkMuted} />
-      </View>
-    </TouchableOpacity>
-  );
-}
 
 const styles = StyleSheet.create({
   topContainer: {
@@ -300,57 +204,6 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 48,
     gap: 10,
-  },
-  rowItem: {
-    flexDirection: 'row',
-    padding: 14,
-    borderRadius: 14,
-    borderWidth: 1,
-    gap: 12,
-  },
-  workerName: {
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  workerMeta: {
-    fontSize: 12.5,
-  },
-  badgeWrap: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 5,
-    marginTop: 2,
-  },
-  badge: {
-    paddingHorizontal: 7,
-    paddingVertical: 2,
-    borderRadius: 999,
-  },
-  badgeText: {
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  appliedJobRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginTop: 4,
-  },
-  appliedJobText: {
-    fontSize: 12,
-    flex: 1,
-  },
-  stageBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 999,
-  },
-  stageBadgeText: {
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  timeAgo: {
-    fontSize: 11,
   },
   emptyBox: {
     padding: 36,

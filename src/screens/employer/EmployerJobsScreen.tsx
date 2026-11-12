@@ -116,7 +116,7 @@ export const EmployerJobsScreen: React.FC = () => {
             <TouchableOpacity
               key={job.id}
               activeOpacity={0.88}
-              onPress={() => navigation.navigate('Candidates')}
+              onPress={() => navigation.navigate('JobApplicants', { jobId: job.id })}
               style={[styles.jobCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
             >
               <View style={styles.jobCardHeader}>

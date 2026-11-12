@@ -25,6 +25,7 @@ export const queryKeys = {
     allCandidates: (params?: Record<string, any>) => ['employer', 'allCandidates', params] as const,
     talent: (params?: Record<string, any>) => ['employer', 'talent', params] as const,
     analytics: ['employer', 'analytics'] as const,
+    company: ['employer', 'company'] as const,
   },
   admin: {
     all: ['admin'] as const,

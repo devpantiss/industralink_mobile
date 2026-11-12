@@ -21,6 +21,8 @@ import {
   UserSearch,
   PlusCircle,
   Building,
+  Building2,
+  BarChart3,
   Settings,
   LogOut,
 } from 'lucide-react-native';
@@ -31,7 +33,10 @@ import { CandidatesScreen } from '../screens/employer/CandidatesScreen';
 import { FindWorkersScreen } from '../screens/employer/FindWorkersScreen';
 import { PostJobWizardScreen } from '../screens/employer/PostJobWizardScreen';
 import { CandidateDossierScreen } from '../screens/employer/CandidateDossierScreen';
+import { JobApplicantsScreen } from '../screens/employer/JobApplicantsScreen';
 import { SettingsScreen } from '../screens/shared/SettingsScreen';
+import { CompanyProfileScreen } from '../screens/employer/CompanyProfileScreen';
+import { AnalyticsScreen } from '../screens/employer/AnalyticsScreen';
 import { useUiStore } from '../store/uiStore';
 import { useAuthStore } from '../store/authStore';
 import { spacing } from '../theme/spacing';
@@ -108,10 +113,10 @@ const CustomDrawer: React.FC<DrawerContentComponentProps> = (props) => {
           <Building size={22} color={colors.primary} />
         </View>
         <Text style={[typography.h3, { color: colors.ink, fontWeight: '700' }]}>
-          {user?.companyName || 'National Heavy Engineering'}
+          {user?.companyName || 'Your company'}
         </Text>
         <Text style={[typography.caption, { color: colors.inkSecondary }]}>
-          Employer Portal • Verified Recruiter
+          Employer · Verified company
         </Text>
       </View>
 
@@ -167,6 +172,22 @@ const EmployerDrawer: React.FC = () => {
         }}
       />
       <Drawer.Screen
+        name="Company"
+        component={CompanyProfileScreen}
+        options={{
+          drawerLabel: 'Company profile',
+          drawerIcon: ({ color, size }) => <Building2 size={size - 2} color={color} />,
+        }}
+      />
+      <Drawer.Screen
+        name="Analytics"
+        component={AnalyticsScreen}
+        options={{
+          drawerLabel: 'Analytics',
+          drawerIcon: ({ color, size }) => <BarChart3 size={size - 2} color={color} />,
+        }}
+      />
+      <Drawer.Screen
         name="Settings"
         component={SettingsScreen}
         options={{
@@ -182,6 +203,7 @@ export const EmployerNavigator: React.FC = () => (
   <Stack.Navigator screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
     <Stack.Screen name="EmployerDrawer" component={EmployerDrawer} />
     <Stack.Screen name="CandidateDossier" component={CandidateDossierScreen} />
+    <Stack.Screen name="JobApplicants" component={JobApplicantsScreen} />
     <Stack.Screen
       name="PostJobWizard"
       component={PostJobWizardScreen}

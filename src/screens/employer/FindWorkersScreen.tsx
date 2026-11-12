@@ -4,25 +4,23 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Modal,
-  ActivityIndicator,
 } from 'react-native';
 import { Text, TextInput } from '../../components/ui/Text';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Search,
   Send,
-  MapPin,
   EyeOff,
   UserSearch,
   CheckCircle2,
-  X,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { ListSkeleton } from '../../components/ui/Skeleton';
 import { Screen } from '../../components/layout/Screen';
 import { AppHeader } from '../../components/layout/AppHeader';
 import { Avatar } from '../../components/ui/Avatar';
+import { Sheet } from '../../components/ui/Sheet';
+import { Button } from '../../components/ui/Button';
 import { employerApi } from '../../api/employerApi';
 import { queryKeys } from '../../api/keys';
 import { useUiStore } from '../../store/uiStore';
@@ -33,7 +31,7 @@ import {
 } from '../../lib/labels';
 import { formatNumber } from '../../lib/format';
 import { t } from '../../lib/i18n';
-import type { ExperienceBand, TalentProfile, Trade } from '../../types';
+import type { TalentProfile, Trade } from '../../types';
 
 export const FindWorkersScreen: React.FC = () => {
   const { colors, showToast } = useUiStore();
@@ -59,12 +57,19 @@ export const FindWorkersScreen: React.FC = () => {
     mutationFn: ({ workerId, jobId }: { workerId: string; jobId: string }) =>
       employerApi.inviteTalent(workerId, jobId),
     onSuccess: () => {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       qc.invalidateQueries({ queryKey: ['employer', 'talent'] });
-      showToast(t('Invitation sent! Worker notified via push and SMS.'), 'success');
+      showToast(`Invite sent to ${invitingWorker?.name ?? 'the worker'}`, 'success');
       setInvitingWorker(null);
     },
+    onError: () => showToast('Could not send the invite. Please try again.', 'error'),
   });
+
+  const openInvite = (w: TalentProfile) => {
+    const first = activeJobs?.find((j) => !w.appliedTo.includes(j.id) && !w.invitedTo.includes(j.id));
+    setSelectedJobId(first?.id ?? '');
+    setInvitingWorker(w);
+  };
 
   const filtered = (workers ?? []).filter((w) => {
     if (!q.trim()) return true;
@@ -221,92 +226,99 @@ export const FindWorkersScreen: React.FC = () => {
                   {AVAILABILITY_LABEL[w.availability]}
                 </Text>
 
-                <TouchableOpacity
-                  onPress={() => setInvitingWorker(w)}
-                  style={[styles.inviteBtn, { backgroundColor: colors.primary }]}
-                >
-                  <Send size={14} color="#FFF" />
-                  <Text style={styles.inviteBtnText}>{t('Invite to apply')}</Text>
-                </TouchableOpacity>
+                {w.invitedTo.length > 0 ? (
+                  <View style={[styles.inviteBtn, { backgroundColor: colors.successBg }]}>
+                    <CheckCircle2 size={14} color={colors.successFg} />
+                    <Text style={[styles.inviteBtnText, { color: colors.successFg }]}>Invited</Text>
+                  </View>
+                ) : (
+                  <TouchableOpacity
+                    onPress={() => openInvite(w)}
+                    style={[styles.inviteBtn, { backgroundColor: colors.primary }]}
+                  >
+                    <Send size={14} color="#FFF" />
+                    <Text style={styles.inviteBtnText}>{t('Invite to apply')}</Text>
+                  </TouchableOpacity>
+                )}
               </View>
             </View>
           ))
         )}
       </ScrollView>
 
-      {/* Invite Modal */}
-      {invitingWorker && (
-        <Modal visible transparent animationType="slide">
-          <View style={styles.modalBackdrop}>
-            <View style={[styles.modalCard, { backgroundColor: colors.surface }]}>
-              <View style={styles.modalHeader}>
-                <Text style={[styles.modalTitle, { color: colors.ink }]}>
-                  {t('Invite {name} to apply', { name: invitingWorker.name })}
-                </Text>
-                <TouchableOpacity onPress={() => setInvitingWorker(null)}>
-                  <X size={20} color={colors.inkMuted} />
-                </TouchableOpacity>
-              </View>
-
-              <Text style={[styles.modalDesc, { color: colors.inkSecondary }]}>
-                {t("They'll get a notification with a direct link to this job.")}
-              </Text>
-
-              <Text style={[styles.selectJobLabel, { color: colors.ink }]}>{t('Which job?')}</Text>
-              <View style={{ gap: 8 }}>
-                {activeJobs?.map((j) => {
-                  const isSelected = selectedJobId === j.id;
-                  return (
-                    <TouchableOpacity
-                      key={j.id}
-                      onPress={() => setSelectedJobId(j.id)}
-                      style={[
-                        styles.jobSelectOption,
-                        {
-                          backgroundColor: isSelected ? colors.primarySoft : colors.surfaceMuted,
-                          borderColor: isSelected ? colors.primary : colors.border,
-                        },
-                      ]}
-                    >
-                      <Text style={[styles.jobOptionTitle, { color: colors.ink }]}>{j.title}</Text>
-                      <Text style={[styles.jobOptionMeta, { color: colors.inkMuted }]}>
-                        {j.location.city} · {j.openings} openings
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-
-              <View style={styles.modalActions}>
-                <TouchableOpacity
-                  onPress={() => setInvitingWorker(null)}
-                  style={[styles.modalCancelBtn, { borderColor: colors.border }]}
-                >
-                  <Text style={{ color: colors.ink, fontWeight: '600' }}>{t('Cancel')}</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  onPress={() =>
-                    inviteMutation.mutate({
-                      workerId: invitingWorker.userId,
-                      jobId: selectedJobId || activeJobs?.[0]?.id || '',
-                    })
-                  }
-                  disabled={inviteMutation.isPending}
-                  style={[styles.modalSendBtn, { backgroundColor: colors.primary }]}
-                >
-                  <Text style={{ color: '#FFF', fontWeight: '700' }}>{t('Send invite')}</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
+      {/* Invite sheet */}
+      <Sheet
+        visible={!!invitingWorker}
+        onClose={() => setInvitingWorker(null)}
+        title={invitingWorker ? `Invite ${invitingWorker.name} to apply` : ''}
+        subtitle="They get a message with a link to the job. Their phone number stays hidden until they apply."
+        footer={
+          <View style={styles.sheetActions}>
+            <Button label="Cancel" variant="secondary" onPress={() => setInvitingWorker(null)} style={styles.flex} />
+            <Button
+              label="Send invite"
+              icon={<Send size={16} color="#FFF" />}
+              disabled={!selectedJobId}
+              loading={inviteMutation.isPending}
+              onPress={() =>
+                invitingWorker && inviteMutation.mutate({ workerId: invitingWorker.userId, jobId: selectedJobId })
+              }
+              style={styles.flex}
+            />
           </View>
-        </Modal>
-      )}
+        }
+      >
+        <Text style={[styles.selectJobLabel, { color: colors.ink }]}>Which job?</Text>
+        <View style={styles.jobOptions}>
+          {activeJobs?.map((j) => {
+            const isSelected = selectedJobId === j.id;
+            const applied = invitingWorker?.appliedTo.includes(j.id);
+            const invited = invitingWorker?.invitedTo.includes(j.id);
+            return (
+              <TouchableOpacity
+                key={j.id}
+                disabled={applied || invited}
+                onPress={() => setSelectedJobId(j.id)}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: isSelected, disabled: applied || invited }}
+                style={[
+                  styles.jobSelectOption,
+                  {
+                    backgroundColor: isSelected ? colors.primarySoft : colors.surface,
+                    borderColor: isSelected ? colors.primary : colors.border,
+                    opacity: applied || invited ? 0.55 : 1,
+                  },
+                ]}
+              >
+                <View style={styles.flex}>
+                  <Text style={[styles.jobOptionTitle, { color: colors.ink }]}>{j.title}</Text>
+                  <Text style={[styles.jobOptionMeta, { color: colors.inkMuted }]}>
+                    {applied ? 'Already applied' : invited ? 'Already invited' : `${j.location.city} · ${j.openings} openings`}
+                  </Text>
+                </View>
+                <View
+                  style={[
+                    styles.radio,
+                    { borderColor: isSelected ? colors.primary : colors.borderStrong },
+                  ]}
+                >
+                  {isSelected && <View style={[styles.radioDot, { backgroundColor: colors.primary }]} />}
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </Sheet>
     </Screen>
   );
 };
 
 const styles = StyleSheet.create({
+  flex: { flex: 1 },
+  sheetActions: { flexDirection: 'row', gap: 10 },
+  jobOptions: { gap: 8 },
+  radio: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
+  radioDot: { width: 10, height: 10, borderRadius: 5 },
   scrollContent: {
     padding: 16,
     paddingBottom: 48,
@@ -442,40 +454,19 @@ const styles = StyleSheet.create({
   emptySubtitle: {
     fontSize: 13,
   },
-  modalBackdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.55)',
-    justifyContent: 'flex-end',
-  },
-  modalCard: {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    padding: 20,
-    gap: 12,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  modalTitle: {
-    fontSize: 17,
-    fontWeight: '800',
-  },
-  modalDesc: {
-    fontSize: 13,
-    lineHeight: 18,
-  },
   selectJobLabel: {
     fontSize: 13.5,
     fontWeight: '700',
-    marginTop: 4,
+    marginBottom: 10,
   },
   jobSelectOption: {
-    padding: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 14,
+    minHeight: 56,
     borderRadius: 12,
     borderWidth: 1.5,
-    gap: 2,
   },
   jobOptionTitle: {
     fontSize: 14,
@@ -483,25 +474,5 @@ const styles = StyleSheet.create({
   },
   jobOptionMeta: {
     fontSize: 12,
-  },
-  modalActions: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 10,
-  },
-  modalCancelBtn: {
-    flex: 1,
-    height: 46,
-    borderRadius: 23,
-    borderWidth: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modalSendBtn: {
-    flex: 1.5,
-    height: 46,
-    borderRadius: 23,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
 });

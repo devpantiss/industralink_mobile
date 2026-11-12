@@ -1,4 +1,4 @@
-import { Company, Job, WorkerProfile, Candidate, VerificationItem } from '../types';
+import { Company, Job, WorkerProfile, VerificationItem, ApplicationStage } from '../types';
 
 export const SEED_COMPANIES: Company[] = [
   {
@@ -342,3 +342,85 @@ export const SEED_VERIFICATIONS: VerificationItem[] = [
   },
 ];
 
+
+/**
+ * Other workers who applied to the employer's jobs, so the employer side shows a real mix of
+ * people and stages (the demo worker's own applications are added on top of these).
+ */
+type PoolEntry = {
+  worker: WorkerProfile;
+  jobId: string;
+  stage: ApplicationStage;
+  daysAgo: number;
+  sentWith?: 'profile' | 'document';
+};
+
+const w = (p: Partial<WorkerProfile> & Pick<WorkerProfile, 'userId' | 'name' | 'phone'>): WorkerProfile => ({
+  qualifications: [],
+  licences: [],
+  skills: [],
+  willingToRelocate: false,
+  availability: 'immediate',
+  ...p,
+});
+
+export const SEED_APPLICANT_POOL: PoolEntry[] = [
+  {
+    jobId: 'job_1', stage: 'applied', daysAgo: 0.2,
+    worker: w({ userId: 'usr_pool_1', name: 'Sanjay Behera', phone: '9437012345', trade: 'welder', experience: '5_plus',
+      qualifications: ['ITI Welder (NCVT)'], licences: ['Welding cert'], skills: ['MIG Welding', 'Pipe Welding 6G', 'Gas Cutting'],
+      location: { city: 'Cuttack', state: 'Odisha' }, willingToRelocate: true, expectedPay: 27000, safetyTrainingHours: 60,
+      languages: ['Odia', 'Hindi'], about: 'Pipe and structural welder, 7 years in steel plants.',
+      workHistory: [{ company: 'Tata Steel (contract)', role: 'Pipe Welder', from: '2019', to: '2026' }] }),
+  },
+  {
+    jobId: 'job_1', stage: 'shortlisted', daysAgo: 9, sentWith: 'document',
+    worker: w({ userId: 'usr_pool_2', name: 'Mohammed Arif', phone: '9831045678', trade: 'welder', experience: '3_5',
+      qualifications: ['ITI Welder (NCVT)', '10th'], licences: ['DGMS'], skills: ['TIG Welding', 'Stainless Steel', 'Blueprints'],
+      location: { city: 'Durgapur', state: 'West Bengal' }, willingToRelocate: true, expectedPay: 24000, availability: '15_days',
+      safetyTrainingHours: 40, languages: ['Hindi', 'Bengali'] }),
+  },
+  {
+    jobId: 'job_1', stage: 'offer', daysAgo: 16,
+    worker: w({ userId: 'usr_pool_3', name: 'Rakesh Nayak', phone: '9861203344', trade: 'welder', experience: '3_5',
+      qualifications: ['ITI Welder (NCVT)'], licences: ['Boiler Welder 3G Certification'], skills: ['MIG Welding', 'CO2 Welding'],
+      location: { city: 'Kalinganagar', state: 'Odisha' }, expectedPay: 23000, safetyTrainingHours: 20, languages: ['Odia'] }),
+  },
+  {
+    jobId: 'job_2', stage: 'applied', daysAgo: 0.6,
+    worker: w({ userId: 'usr_pool_4', name: 'Pooja Sahu', phone: '7008123456', trade: 'machine_operator', experience: '1_2',
+      qualifications: ['ITI Machinist', '12th'], skills: ['CNC Turning', 'Fanuc Controls', 'Vernier & Micrometer'],
+      location: { city: 'Surat', state: 'Gujarat' }, expectedPay: 21000, languages: ['Hindi', 'Gujarati'], safetyTrainingHours: 16 }),
+  },
+  {
+    jobId: 'job_2', stage: 'interview', daysAgo: 11,
+    worker: w({ userId: 'usr_pool_5', name: 'Vikram Singh', phone: '9812345670', trade: 'machine_operator', experience: '5_plus',
+      qualifications: ['Diploma Mechanical'], skills: ['VMC Setting', 'CNC Milling', 'Drawing Reading'],
+      location: { city: 'Hazira', state: 'Gujarat' }, expectedPay: 32000, availability: '30_days', languages: ['Hindi', 'Punjabi'] }),
+  },
+  {
+    jobId: 'job_3', stage: 'applied', daysAgo: 1,
+    worker: w({ userId: 'usr_pool_6', name: 'Sunil Pradhan', phone: '9938776655', trade: 'fitter', experience: '1_2',
+      qualifications: ['ITI Fitter'], licences: ['Forklift'], skills: ['Machine Assembly', 'Hydraulics', 'Bearing fitting'],
+      location: { city: 'Jajpur', state: 'Odisha' }, expectedPay: 19000, availability: '15_days', languages: ['Odia', 'Hindi'] }),
+  },
+  {
+    jobId: 'job_3', stage: 'hired', daysAgo: 30,
+    worker: w({ userId: 'usr_pool_7', name: 'Anil Munda', phone: '9576543210', trade: 'fitter', experience: '3_5',
+      qualifications: ['ITI Fitter', '10th'], licences: ['DGMS'], skills: ['Dumper Maintenance', 'Gearbox Overhaul'],
+      location: { city: 'Angul', state: 'Odisha' }, expectedPay: 24000, safetyTrainingHours: 40, languages: ['Hindi', 'Odia'] }),
+  },
+  {
+    jobId: 'job_4', stage: 'shortlisted', daysAgo: 22,
+    worker: w({ userId: 'usr_pool_8', name: 'Bikash Mohanty', phone: '9439988776', trade: 'electrician', experience: '5_plus',
+      qualifications: ['Diploma Electrical', 'ITI Electrician'], licences: ['Electrical licence', 'DGMS'],
+      skills: ['HT/LT Panels', 'Substation Wiring', 'Transformer testing'], location: { city: 'Angul', state: 'Odisha' },
+      willingToRelocate: true, expectedPay: 28000, safetyTrainingHours: 60, languages: ['Odia', 'Hindi', 'English'] }),
+  },
+  {
+    jobId: 'job_5', stage: 'rejected', daysAgo: 38,
+    worker: w({ userId: 'usr_pool_9', name: 'Deepak Yadav', phone: '8789012345', trade: 'welder', experience: 'fresher',
+      qualifications: ['10th'], skills: ['Arc Welding'], location: { city: 'Pune', state: 'Maharashtra' },
+      expectedPay: 15000, languages: ['Hindi', 'Marathi'] }),
+  },
+];

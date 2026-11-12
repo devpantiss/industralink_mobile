@@ -5,7 +5,6 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
-  ActivityIndicator,
 } from 'react-native';
 import { Text } from '../../components/ui/Text';
 import { useNavigation } from '@react-navigation/native';
@@ -16,16 +15,13 @@ import {
   CalendarClock,
   CheckCircle2,
   Plus,
-  ArrowRight,
-  ShieldCheck,
-  Clock,
   UserPlus,
   ChevronRight,
-  AlertCircle,
 } from 'lucide-react-native';
 import { Screen } from '../../components/layout/Screen';
 import { AppHeader } from '../../components/layout/AppHeader';
 import { Avatar } from '../../components/ui/Avatar';
+import { Hero } from '../../components/ui/Hero';
 import { CompanyLogo } from '../../components/domain/CompanyLogo';
 import { employerApi } from '../../api/employerApi';
 import { queryKeys } from '../../api/keys';
@@ -34,7 +30,6 @@ import { useAuthStore } from '../../store/authStore';
 import { SHIFT_LABEL } from '../../lib/labels';
 import { formatDateTime, greeting } from '../../lib/format';
 import { t } from '../../lib/i18n';
-import type { EmployerSummary, Job } from '../../types';
 
 export const EmployerHomeScreen: React.FC = () => {
   const navigation = useNavigation<any>();
@@ -87,28 +82,21 @@ export const EmployerHomeScreen: React.FC = () => {
           />
         }
       >
-        {/* Welcome Header */}
-        <View style={styles.headerBlock}>
-          <Text style={[styles.greetingTitle, { color: colors.ink }]}>
-            {greeting()}, {firstName}
-          </Text>
-          <Text style={[styles.companySubtitle, { color: colors.inkSecondary }]}>
-            Hiring at {user?.companyName || 'National Heavy Engineering'}
-            {s ? ` · ${s.newApplicants} new applicant${s.newApplicants === 1 ? '' : 's'} waiting` : ''}
-          </Text>
-
-          {/* Quick Action Buttons */}
+        <Hero
+          eyebrow={t('Verified employer')}
+          title={`${greeting()}, ${firstName}`}
+          subtitle={`Hiring at ${user?.companyName || 'your company'}${
+            s ? ` · ${s.newApplicants} new applicant${s.newApplicants === 1 ? '' : 's'} waiting` : ''
+          }`}
+        >
           <View style={styles.actionButtonsRow}>
             <TouchableOpacity
-              onPress={() => navigation.navigate('EmployerJobs')}
+              onPress={() => navigation.navigate('Candidates')}
               style={[styles.outlineBtn, { borderColor: colors.border, backgroundColor: colors.surface }]}
             >
               <Users size={16} color={colors.ink} />
-              <Text style={[styles.outlineBtnText, { color: colors.ink }]}>
-                {t('View candidates')}
-              </Text>
+              <Text style={[styles.outlineBtnText, { color: colors.ink }]}>{t('View candidates')}</Text>
             </TouchableOpacity>
-
             <TouchableOpacity
               onPress={() => navigation.navigate('PostJobWizard')}
               style={[styles.primaryBtn, { backgroundColor: colors.primary }]}
@@ -117,20 +105,7 @@ export const EmployerHomeScreen: React.FC = () => {
               <Text style={styles.primaryBtnText}>{t('Post a job')}</Text>
             </TouchableOpacity>
           </View>
-        </View>
-
-        {/* Verification Banner */}
-        <View style={[styles.verificationBanner, { backgroundColor: colors.primarySoft, borderColor: colors.primary }]}>
-          <ShieldCheck size={20} color={colors.primary} />
-          <View style={{ flex: 1 }}>
-            <Text style={[styles.verificationTitle, { color: colors.ink }]}>
-              {t('Verified Employer Account')}
-            </Text>
-            <Text style={[styles.verificationDesc, { color: colors.inkSecondary }]}>
-              {t('Your company documents are verified. Job posts are shown immediately to active workers.')}
-            </Text>
-          </View>
-        </View>
+        </Hero>
 
         {/* 4 Pastel Stat Cards (2x2 Grid) */}
         <View style={styles.statsGrid}>
@@ -219,7 +194,7 @@ export const EmployerHomeScreen: React.FC = () => {
                 const barHeight = Math.max(12, (d.count / maxVal) * 90);
                 return (
                   <View key={i} style={styles.chartCol}>
-                    <Text style={[styles.barCountText, { color: colors.ink }]}>{d.count}</Text>
+                    <Text style={[styles.barCountText, { color: colors.ink }]}>{d.count || ''}</Text>
                     <View
                       style={[
                         styles.chartBar,
@@ -339,7 +314,7 @@ export const EmployerHomeScreen: React.FC = () => {
               {jobs.slice(0, 5).map((j) => (
                 <TouchableOpacity
                   key={j.id}
-                  onPress={() => navigation.navigate('EmployerJobs')}
+                  onPress={() => navigation.navigate('JobApplicants', { jobId: j.id })}
                   style={[styles.jobRowItem, { backgroundColor: colors.surfaceMuted }]}
                 >
                   <CompanyLogo job={j} size="sm" />
@@ -384,17 +359,6 @@ const styles = StyleSheet.create({
     paddingBottom: 48,
     gap: 16,
   },
-  headerBlock: {
-    gap: 4,
-  },
-  greetingTitle: {
-    fontSize: 24,
-    fontWeight: '800',
-    letterSpacing: -0.3,
-  },
-  companySubtitle: {
-    fontSize: 13.5,
-  },
   actionButtonsRow: {
     flexDirection: 'row',
     gap: 10,
@@ -427,23 +391,6 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 13.5,
     fontWeight: '700',
-  },
-  verificationBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 14,
-    borderRadius: 14,
-    borderWidth: 1,
-    gap: 12,
-  },
-  verificationTitle: {
-    fontSize: 13.5,
-    fontWeight: '700',
-  },
-  verificationDesc: {
-    fontSize: 12,
-    marginTop: 2,
-    lineHeight: 16,
   },
   statsGrid: {
     flexDirection: 'row',

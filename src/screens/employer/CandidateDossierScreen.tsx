@@ -5,7 +5,6 @@ import {
   ScrollView,
   Linking,
   TouchableOpacity,
-  Modal,
   ActivityIndicator,
 } from 'react-native';
 import { Text, TextInput } from '../../components/ui/Text';
@@ -14,19 +13,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Phone,
   CheckCircle2,
-  Calendar,
   Award,
   FileText,
-  MapPin,
-  Clock,
   Briefcase,
   XCircle,
   ChevronLeft,
   CalendarClock,
   Gift,
-  ShieldCheck,
-  Send,
-  Building2,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import type { EmployerStackParamList } from '../../navigation/types';
@@ -37,13 +30,12 @@ import { employerApi } from '../../api/employerApi';
 import { queryKeys } from '../../api/keys';
 import { useUiStore } from '../../store/uiStore';
 import {
-  AVAILABILITY_LABEL,
   DOC_TYPE_LABEL,
   EXPERIENCE_LABEL,
   STAGE_LABEL,
   TRADE_LABEL,
 } from '../../lib/labels';
-import { formatDate, formatDateTime, formatNumber, formatPhone, telUrl } from '../../lib/format';
+import { formatBytes, formatPhone, telUrl, timeAgo } from '../../lib/format';
 import { t } from '../../lib/i18n';
 import type { ApplicationStage } from '../../types';
 
@@ -130,7 +122,6 @@ export const CandidateDossierScreen: React.FC<Props> = ({ route, navigation }) =
             <View style={{ flex: 1 }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                 <Text style={[styles.workerName, { color: colors.ink }]}>{w.name}</Text>
-                <ShieldCheck size={16} color={colors.primary} />
               </View>
               <Text style={[styles.workerTrade, { color: colors.inkSecondary }]}>
                 {w.trade ? TRADE_LABEL[w.trade] : '—'} · {w.experience ? EXPERIENCE_LABEL[w.experience] : '—'}
@@ -191,7 +182,7 @@ export const CandidateDossierScreen: React.FC<Props> = ({ route, navigation }) =
 
         {/* Pipeline Stage Movement Actions */}
         <View style={styles.stageActionsWrap}>
-          <Text style={[styles.stageActionsTitle, { color: colors.ink }]}>Advance Candidate</Text>
+          <Text style={[styles.stageActionsTitle, { color: colors.ink }]}>Next step</Text>
           <View style={styles.actionButtonsRow}>
             {candidate.stage === 'applied' && (
               <TouchableOpacity
@@ -288,7 +279,7 @@ export const CandidateDossierScreen: React.FC<Props> = ({ route, navigation }) =
 
               {w.safetyTrainingHours ? (
                 <Text style={[styles.trainingText, { color: colors.inkSecondary }]}>
-                  ✓ {t('{n} hours safety training verified', { n: w.safetyTrainingHours })}
+                  {t('{n} hours safety training', { n: w.safetyTrainingHours })}
                 </Text>
               ) : null}
             </View>
@@ -326,31 +317,40 @@ export const CandidateDossierScreen: React.FC<Props> = ({ route, navigation }) =
             </View>
           </View>
         ) : (
-          /* Tab 2: Documents */
+          /* Tab 2: Documents the worker shared */
           <View style={{ gap: 10 }}>
-            <View style={[styles.docItem, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <FileText size={22} color={colors.primary} />
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.docName, { color: colors.ink }]}>Aadhaar / ID Proof</Text>
-                <Text style={[styles.docMeta, { color: colors.successFg }]}>✓ Verified Government ID</Text>
+            {candidate.documents.length === 0 ? (
+              <View style={[styles.docItem, { backgroundColor: colors.surfaceMuted, borderColor: colors.border }]}>
+                <FileText size={22} color={colors.inkMuted} />
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.docName, { color: colors.ink }]}>No files shared</Text>
+                  <Text style={[styles.docMeta, { color: colors.inkSecondary }]}>
+                    {w.name.split(' ')[0]} applied with their profile. Ask them to bring certificates to the interview.
+                  </Text>
+                </View>
               </View>
-            </View>
-
-            <View style={[styles.docItem, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <Award size={22} color={colors.accent} />
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.docName, { color: colors.ink }]}>ITI Trade Certificate</Text>
-                <Text style={[styles.docMeta, { color: colors.successFg }]}>✓ NCVT Certified</Text>
-              </View>
-            </View>
-
-            <View style={[styles.docItem, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-              <FileText size={22} color={colors.inkSecondary} />
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.docName, { color: colors.ink }]}>Candidate Resume (PDF)</Text>
-                <Text style={[styles.docMeta, { color: colors.inkMuted }]}>Uploaded 2 days ago</Text>
-              </View>
-            </View>
+            ) : (
+              candidate.documents.map((d) => (
+                <View
+                  key={d.id}
+                  style={[styles.docItem, { backgroundColor: colors.surface, borderColor: colors.border }]}
+                >
+                  {d.type === 'resume' ? (
+                    <FileText size={22} color={colors.primary} />
+                  ) : (
+                    <Award size={22} color={colors.tiles.yellow.text} />
+                  )}
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.docName, { color: colors.ink }]} numberOfLines={1}>
+                      {DOC_TYPE_LABEL[d.type]}
+                    </Text>
+                    <Text style={[styles.docMeta, { color: colors.inkMuted }]} numberOfLines={1}>
+                      {d.name} · {formatBytes(d.sizeBytes)} · {timeAgo(d.uploadedAt)}
+                    </Text>
+                  </View>
+                </View>
+              ))
+            )}
           </View>
         )}
       </ScrollView>
@@ -359,7 +359,7 @@ export const CandidateDossierScreen: React.FC<Props> = ({ route, navigation }) =
       <Sheet
         visible={interviewModal}
         onClose={() => setInterviewModal(false)}
-        title={t('Schedule Factory Interview')}
+        title={t('Schedule interview')}
         subtitle={`Invite ${w.name} for an on-site interview.`}
         footer={
           <View style={styles.modalBtnRow}>
