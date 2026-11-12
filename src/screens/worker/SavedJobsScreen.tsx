@@ -16,6 +16,7 @@ import type { WorkerStackParamList } from '../../navigation/types';
 import { ListSkeleton } from '../../components/ui/Skeleton';
 import { Screen } from '../../components/layout/Screen';
 import { AppHeader } from '../../components/layout/AppHeader';
+import Animated, { FadeOut, LinearTransition } from 'react-native-reanimated';
 import { JobCard } from '../../components/domain/JobCard';
 import { workerApi } from '../../api/workerApi';
 import { queryKeys } from '../../api/keys';
@@ -74,7 +75,7 @@ export const SavedJobsScreen: React.FC = () => {
           <ListSkeleton />
         ) : savedList.length === 0 ? (
           <View style={[styles.emptyBox, { backgroundColor: colors.surfaceMuted }]}>
-            <Heart size={36} color={colors.inkMuted} />
+            <Bookmark size={36} color={colors.inkMuted} />
             <Text style={[styles.emptyTitle, { color: colors.ink }]}>
               {t('No saved jobs yet')}
             </Text>
@@ -82,7 +83,7 @@ export const SavedJobsScreen: React.FC = () => {
               {t('Tap the bookmark icon on any job to save it here.')}
             </Text>
             <TouchableOpacity
-              onPress={() => navigation.navigate('WorkerTabs', { screen: 'FindJobs' } as any)}
+              onPress={() => navigation.navigate('WorkerTabs', { screen: 'FindJobs' })}
               style={[styles.findBtn, { backgroundColor: colors.primary }]}
             >
               <Text style={styles.findBtnText}>{t('Find jobs')}</Text>
@@ -90,13 +91,15 @@ export const SavedJobsScreen: React.FC = () => {
           </View>
         ) : (
           savedList.map((j) => (
-            <JobCard
-              key={j.id}
-              job={j}
-              onPress={() => navigation.navigate('JobDetail', { jobId: j.id })}
-              onToggleSave={(job) => saveMutation.mutate(job)}
-              saving={saveMutation.isPending && saveMutation.variables?.id === j.id}
-            />
+            // Unsaved cards fade out and the rest slide up to close the gap.
+            <Animated.View key={j.id} exiting={FadeOut.duration(160)} layout={LinearTransition.duration(220)}>
+              <JobCard
+                job={j}
+                onPress={() => navigation.navigate('JobDetail', { jobId: j.id })}
+                onToggleSave={(job) => saveMutation.mutate(job)}
+                saving={saveMutation.isPending && saveMutation.variables?.id === j.id}
+              />
+            </Animated.View>
           ))
         )}
       </ScrollView>

@@ -136,7 +136,7 @@ export const ApplicationsScreen: React.FC = () => {
             </Text>
             {tab === 'active' && (
               <TouchableOpacity
-                onPress={() => navigation.navigate('WorkerTabs', { screen: 'FindJobs' } as any)}
+                onPress={() => navigation.navigate('WorkerTabs', { screen: 'FindJobs' })}
                 style={[styles.findJobsBtn, { backgroundColor: colors.primary }]}
               >
                 <Text style={styles.findJobsBtnText}>{t('Find jobs')}</Text>

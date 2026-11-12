@@ -123,8 +123,12 @@ export const ApplicationDetailScreen: React.FC = () => {
     <Screen edges={['top']}>
       {/* Top Header */}
       <View style={[styles.topBar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <ChevronLeft size={24} color={colors.ink} />
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={[styles.backBtn, { backgroundColor: colors.surfaceMuted }]}
+          accessibilityLabel={t('Back')}
+        >
+          <ChevronLeft size={22} color={colors.ink} />
         </TouchableOpacity>
         <Text style={[styles.topBarTitle, { color: colors.ink }]} numberOfLines={1}>
           {job.title}
@@ -512,15 +516,19 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   topBar: {
-    height: 52,
+    height: 56,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    gap: 8,
+    gap: 10,
   },
   backBtn: {
-    padding: 6,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   topBarTitle: {
     fontSize: 15,

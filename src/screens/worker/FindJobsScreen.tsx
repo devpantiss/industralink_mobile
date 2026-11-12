@@ -353,6 +353,7 @@ export const FindJobsScreen: React.FC = () => {
               <JobRow
                 key={j.id}
                 job={j}
+                style={styles.row}
                 onPress={() => navigation.navigate('JobDetail', { jobId: j.id })}
                 onToggleSave={(job) => saveMutation.mutate(job)}
                 saving={saveMutation.isPending && saveMutation.variables?.id === j.id}
@@ -589,6 +590,7 @@ const styles = StyleSheet.create({
     paddingBottom: 48,
   },
   flex1: { flex: 1 },
+  row: { marginHorizontal: 16 },
   sheetFooterRow: { flexDirection: 'row', gap: 10 },
   clearBtn: { minHeight: 48, paddingHorizontal: 18, borderRadius: 12, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
   clearBtnText: { fontSize: 15, fontWeight: '600' },

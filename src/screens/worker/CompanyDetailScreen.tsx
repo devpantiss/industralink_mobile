@@ -81,8 +81,12 @@ export const CompanyDetailScreen: React.FC = () => {
   return (
     <Screen edges={['top']}>
       <View style={[styles.topBar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <ChevronLeft size={24} color={colors.ink} />
+        <TouchableOpacity
+          onPress={() => navigation.goBack()}
+          style={[styles.backBtn, { backgroundColor: colors.surfaceMuted }]}
+          accessibilityLabel={t('Back')}
+        >
+          <ChevronLeft size={22} color={colors.ink} />
         </TouchableOpacity>
         <Text style={[styles.topBarTitle, { color: colors.ink }]} numberOfLines={1}>
           {c.name}
@@ -92,7 +96,8 @@ export const CompanyDetailScreen: React.FC = () => {
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Banner with BannerArt */}
         <View style={[styles.banner, { backgroundColor: colors.surfaceMuted }]}>
-          <BannerArt opacity={0.35} />
+          {/* Full-colour art at its 600x260 shape (banner is 110 tall). */}
+          <BannerArt opacity={1} style={{ width: 254 }} />
         </View>
 
         {/* Company Info Box */}
@@ -217,15 +222,19 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   topBar: {
-    height: 52,
+    height: 56,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    gap: 8,
+    gap: 10,
   },
   backBtn: {
-    padding: 6,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   topBarTitle: {
     fontSize: 16,
