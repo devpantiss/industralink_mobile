@@ -311,6 +311,12 @@ export interface AdminJobRow extends Job {
   companyStatus: AccountStatus;
 }
 
+/** A job report plus the job's current state, for the admin list. */
+export interface AdminReportRow extends JobReport {
+  jobStatus: JobStatus;
+  reportsForJob: number;
+}
+
 export type ReportReason = 'asks_money' | 'fake' | 'wrong_details' | 'unsafe' | 'other';
 export type ReportStatus = 'open' | 'dismissed' | 'job_removed';
 

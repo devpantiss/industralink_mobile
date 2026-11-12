@@ -18,8 +18,25 @@ import {
   Paginated,
   CompanyForWorker,
   EmployerAnalytics,
+  AdminUserRow,
+  AdminJobRow,
+  AdminReportRow,
+  JobReport,
+  SupportTicket,
+  AuditEntry,
+  AccountStatus,
 } from '../types';
-import { SEED_JOBS, SEED_COMPANIES, SEED_WORKER, SEED_VERIFICATIONS, SEED_APPLICANT_POOL } from './seed';
+import {
+  SEED_JOBS,
+  SEED_COMPANIES,
+  SEED_WORKER,
+  SEED_VERIFICATIONS,
+  SEED_APPLICANT_POOL,
+  SEED_ADMIN_USERS,
+  SEED_REPORTS,
+  SEED_TICKETS,
+  SEED_AUDIT,
+} from './seed';
 
 const FLOW: ApplicationStage[] = ['applied', 'shortlisted', 'interview', 'offer', 'hired'];
 const DAY = 86400000;
@@ -147,7 +164,15 @@ class MockDatabase {
     },
   ];
 
-  private verifications: VerificationItem[] = [...SEED_VERIFICATIONS];
+  private verifications: VerificationItem[] = SEED_VERIFICATIONS.map((v) => ({ ...v, details: { ...v.details } }));
+  private adminUsers: AdminUserRow[] = SEED_ADMIN_USERS.map((u) => ({ ...u }));
+  private reports: JobReport[] = SEED_REPORTS.map((r) => ({ ...r }));
+  private tickets: SupportTicket[] = SEED_TICKETS.map((t) => ({ ...t }));
+  private audit: AuditEntry[] = [...SEED_AUDIT];
+
+  private log(action: string, target: string) {
+    this.audit.unshift({ id: `aud_${Date.now()}`, at: new Date().toISOString(), actor: 'Admin', action, target });
+  }
   private pool: Candidate[] = poolCandidates;
   private talent: TalentProfile[] = [
     {
@@ -342,6 +367,7 @@ class MockDatabase {
   async getJobs(params?: { search?: string; trade?: string }): Promise<JobForWorker[]> {
     return this.jobs
       .filter((j) => {
+        if (j.status !== 'active') return false;
         if (params?.trade && j.trade !== params.trade) return false;
         if (params?.search) {
           const s = params.search.toLowerCase();
@@ -357,7 +383,7 @@ class MockDatabase {
   }
 
   async searchJobs(params?: JobSearchParams): Promise<Paginated<JobForWorker>> {
-    let items = this.jobs.map((j) => this.mapJobForWorker(j));
+    let items = this.jobs.filter((j) => j.status === 'active').map((j) => this.mapJobForWorker(j));
     if (params?.trade) {
       items = items.filter((j) => j.trade === params.trade);
     }
@@ -759,25 +785,110 @@ class MockDatabase {
 
   // Admin Operations
   async getAdminSummary(): Promise<AdminSummary> {
+    const pending = this.verifications.filter((v) => v.status === 'pending').length;
+    const openReports = this.reports.filter((r) => r.status === 'open').length;
+    const openTickets = this.tickets.filter((t) => t.status === 'open').length;
+    const moneyReports = this.reports.filter((r) => r.status === 'open' && r.reason === 'asks_money').length;
+    const attention: AdminSummary['attention'] = [];
+    if (moneyReports)
+      attention.push({ id: 'att_money', text: `${moneyReports} report${moneyReports === 1 ? '' : 's'} of a job asking workers for money`, link: 'Reports' });
+    if (pending)
+      attention.push({ id: 'att_pending', text: `${pending} compan${pending === 1 ? 'y is' : 'ies are'} waiting for approval`, link: 'VerificationsQueue' });
+    if (openTickets)
+      attention.push({ id: 'att_help', text: `${openTickets} help request${openTickets === 1 ? '' : 's'} not answered`, link: 'Reports' });
     return {
-      workers: 2450,
-      companies: 84,
+      workers: 2450 + this.adminUsers.filter((u) => u.role === 'worker').length,
+      companies: 84 + this.adminUsers.filter((u) => u.role === 'employer').length,
       activeJobs: this.jobs.filter((j) => j.status === 'active').length,
-      pendingVerifications: this.verifications.filter((v) => v.status === 'pending').length,
-      openReports: 1,
-      openTickets: 3,
-      attention: [
-        {
-          id: 'att_adm_1',
-          text: '2 companies submitted GST certificates for approval',
-          link: '/admin/verifications',
-        },
-      ],
+      pendingVerifications: pending,
+      openReports,
+      openTickets,
+      attention,
       signupsPerWeek: [
-        { week: 'W1', workers: 120, companies: 6 },
-        { week: 'W2', workers: 180, companies: 9 },
+        { week: '20 Oct', workers: 96, companies: 4 },
+        { week: '27 Oct', workers: 120, companies: 6 },
+        { week: '3 Nov', workers: 142, companies: 5 },
+        { week: '10 Nov', workers: 180, companies: 9 },
       ],
     };
+  }
+
+  async getAdminUsers(params?: { role?: string; q?: string }): Promise<AdminUserRow[]> {
+    const s = params?.q?.trim().toLowerCase();
+    return this.adminUsers.filter(
+      (u) =>
+        (!params?.role || u.role === params.role) &&
+        (!s || `${u.name} ${u.contact} ${u.city}`.toLowerCase().includes(s))
+    );
+  }
+
+  async setUserStatus(id: string, status: AccountStatus): Promise<AdminUserRow> {
+    const u = this.adminUsers.find((x) => x.id === id);
+    if (!u) throw new Error('User not found');
+    u.status = status;
+    this.log(status === 'suspended' ? 'Suspended' : 'Reactivated', u.name);
+    return u;
+  }
+
+  async getAdminJobs(params?: { q?: string; status?: string }): Promise<AdminJobRow[]> {
+    const s = params?.q?.trim().toLowerCase();
+    return this.jobs
+      .filter((j) => !params?.status || j.status === params.status)
+      .filter((j) => !s || `${j.title} ${j.companyName} ${j.location.city}`.toLowerCase().includes(s))
+      .map((j) => ({ ...j, companyStatus: 'active' as AccountStatus }));
+  }
+
+  async removeJob(id: string, reason: string): Promise<void> {
+    const j = this.jobs.find((x) => x.id === id);
+    if (!j) throw new Error('Job not found');
+    j.status = 'closed';
+    j.removedByAdmin = true;
+    this.reports.forEach((r) => {
+      if (r.jobId === id && r.status === 'open') {
+        r.status = 'job_removed';
+        r.resolvedAt = new Date().toISOString();
+        r.resolvedBy = 'Admin';
+      }
+    });
+    this.log(`Removed job (${reason})`, j.title);
+  }
+
+  async getReports(status: string): Promise<AdminReportRow[]> {
+    return this.reports
+      .filter((r) => status === 'all' || r.status === status)
+      .map((r) => ({
+        ...r,
+        jobStatus: this.jobs.find((j) => j.id === r.jobId)?.status ?? 'closed',
+        reportsForJob: this.reports.filter((x) => x.jobId === r.jobId && x.status === 'open').length,
+      }))
+      .sort((a, b) => +new Date(b.at) - +new Date(a.at));
+  }
+
+  async resolveReport(id: string, action: 'dismiss' | 'remove_job', note?: string): Promise<void> {
+    const r = this.reports.find((x) => x.id === id);
+    if (!r) throw new Error('Report not found');
+    if (action === 'remove_job') return this.removeJob(r.jobId, note || r.reason);
+    r.status = 'dismissed';
+    r.resolvedAt = new Date().toISOString();
+    r.resolvedBy = 'Admin';
+    this.log('Dismissed report on', r.jobTitle);
+  }
+
+  async getTickets(status: string): Promise<SupportTicket[]> {
+    return this.tickets
+      .filter((t) => status === 'all' || t.status === status)
+      .sort((a, b) => +new Date(b.at) - +new Date(a.at));
+  }
+
+  async closeTicket(id: string): Promise<void> {
+    const t = this.tickets.find((x) => x.id === id);
+    if (!t) throw new Error('Request not found');
+    t.status = 'closed';
+    this.log('Closed help request from', t.name);
+  }
+
+  async getAudit(): Promise<AuditEntry[]> {
+    return this.audit;
   }
 
   async getVerifications(): Promise<VerificationItem[]> {
@@ -792,6 +903,9 @@ class MockDatabase {
     const item = this.verifications.find((v) => v.id === id);
     if (!item) throw new Error('Item not found');
     item.status = decision;
+    this.log(decision === 'approved' ? 'Approved company' : 'Rejected company', item.title);
+    const u = this.adminUsers.find((x) => x.id === id);
+    if (u) u.verification = decision;
     if (decision === 'rejected') {
       if (!item.details) item.details = {};
       item.details['Rejection reason'] = reason || 'Document did not meet compliance criteria';

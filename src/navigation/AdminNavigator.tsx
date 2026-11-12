@@ -11,10 +11,14 @@ import {
   DrawerItemList,
   DrawerContentComponentProps,
 } from '@react-navigation/drawer';
-import { CheckSquare, Users, Shield, Settings, LogOut } from 'lucide-react-native';
+import { LayoutGrid, BadgeCheck, Flag, Users, Briefcase, ScrollText, Shield, Settings, LogOut } from 'lucide-react-native';
 import { AdminDrawerParamList } from './types';
 import { VerificationsQueueScreen } from '../screens/admin/VerificationsQueueScreen';
 import { UsersManagementScreen } from '../screens/admin/UsersManagementScreen';
+import { AdminHomeScreen } from '../screens/admin/AdminHomeScreen';
+import { AdminJobsScreen } from '../screens/admin/AdminJobsScreen';
+import { ReportsScreen } from '../screens/admin/ReportsScreen';
+import { ActivityLogScreen } from '../screens/admin/ActivityLogScreen';
 import { SettingsScreen } from '../screens/shared/SettingsScreen';
 import { useUiStore } from '../store/uiStore';
 import { useAuthStore } from '../store/authStore';
@@ -34,10 +38,10 @@ const CustomAdminDrawer: React.FC<DrawerContentComponentProps> = (props) => {
           <Shield size={24} color={colors.primary} />
         </View>
         <Text style={[typography.h2, { color: colors.ink, fontWeight: '700' }]}>
-          Admin Control
+          Admin
         </Text>
         <Text style={[typography.caption, { color: colors.inkSecondary }]}>
-          Compliance, Verifications & Trust
+          Approve companies, remove bad jobs
         </Text>
       </View>
 
@@ -62,6 +66,7 @@ export const AdminNavigator: React.FC = () => {
 
   return (
     <Drawer.Navigator
+      initialRouteName="AdminHome"
       drawerContent={(props) => <CustomAdminDrawer {...props} />}
       screenOptions={{
         headerShown: false,
@@ -75,26 +80,58 @@ export const AdminNavigator: React.FC = () => {
       }}
     >
       <Drawer.Screen
+        name="AdminHome"
+        component={AdminHomeScreen}
+        options={{
+          drawerLabel: 'Dashboard',
+          drawerIcon: ({ color, size }) => <LayoutGrid size={size - 2} color={color} />,
+        }}
+      />
+      <Drawer.Screen
         name="VerificationsQueue"
         component={VerificationsQueueScreen}
         options={{
-          drawerLabel: 'Verifications Queue',
-          drawerIcon: ({ color, size }) => <CheckSquare size={size - 2} color={color} />,
+          drawerLabel: 'Company approvals',
+          drawerIcon: ({ color, size }) => <BadgeCheck size={size - 2} color={color} />,
+        }}
+      />
+      <Drawer.Screen
+        name="Reports"
+        component={ReportsScreen}
+        options={{
+          drawerLabel: 'Reports & help',
+          drawerIcon: ({ color, size }) => <Flag size={size - 2} color={color} />,
         }}
       />
       <Drawer.Screen
         name="UsersManagement"
         component={UsersManagementScreen}
         options={{
-          drawerLabel: 'User Accounts',
+          drawerLabel: 'Users',
           drawerIcon: ({ color, size }) => <Users size={size - 2} color={color} />,
+        }}
+      />
+      <Drawer.Screen
+        name="JobsModeration"
+        component={AdminJobsScreen}
+        options={{
+          drawerLabel: 'Jobs',
+          drawerIcon: ({ color, size }) => <Briefcase size={size - 2} color={color} />,
+        }}
+      />
+      <Drawer.Screen
+        name="ActivityLog"
+        component={ActivityLogScreen}
+        options={{
+          drawerLabel: 'Activity log',
+          drawerIcon: ({ color, size }) => <ScrollText size={size - 2} color={color} />,
         }}
       />
       <Drawer.Screen
         name="Settings"
         component={SettingsScreen}
         options={{
-          drawerLabel: 'App Settings',
+          drawerLabel: 'Settings',
           drawerIcon: ({ color, size }) => <Settings size={size - 2} color={color} />,
         }}
       />

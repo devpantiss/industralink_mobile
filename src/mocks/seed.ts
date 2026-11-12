@@ -1,4 +1,4 @@
-import { Company, Job, WorkerProfile, VerificationItem, ApplicationStage } from '../types';
+import { Company, Job, WorkerProfile, VerificationItem, ApplicationStage, AdminUserRow, JobReport, SupportTicket, AuditEntry } from '../types';
 
 export const SEED_COMPANIES: Company[] = [
   {
@@ -340,6 +340,45 @@ export const SEED_VERIFICATIONS: VerificationItem[] = [
       },
     ],
   },
+  {
+    id: 'comp_v3',
+    kind: 'company',
+    title: 'Kalinganagar Manpower Services',
+    subtitle: 'Contractor / agency · Jajpur, Odisha',
+    submittedAt: '2026-11-11T08:15:00Z',
+    status: 'pending',
+    details: {
+      'GST number': '21ABCFK8812M1Z3',
+      'Entity Name': 'Kalinganagar Manpower Services',
+      'City': 'Jajpur, Odisha',
+      'HR Contact': 'Sushant Rout (+91 70081 44556)',
+    },
+    documents: [],
+  },
+  {
+    id: 'comp_v4',
+    kind: 'company',
+    title: 'Paradip Bulk Handling Pvt Ltd',
+    subtitle: 'Direct employer · Paradip, Odisha',
+    submittedAt: '2026-11-04T11:00:00Z',
+    status: 'rejected',
+    details: {
+      'GST number': '21AAGCP4410L1ZQ',
+      'Entity Name': 'Paradip Bulk Handling Pvt Ltd',
+      'City': 'Paradip, Odisha',
+      'HR Contact': 'Nirmal Das (+91 94371 22001)',
+      'Rejection reason': 'GST certificate is for a different company name',
+    },
+    documents: [
+      {
+        id: 'cdoc_4',
+        name: 'GST_Paradip.pdf',
+        type: 'gst',
+        mimeType: 'application/pdf',
+        uploadedAt: '2026-11-04T11:00:00Z',
+      },
+    ],
+  },
 ];
 
 
@@ -423,4 +462,44 @@ export const SEED_APPLICANT_POOL: PoolEntry[] = [
       qualifications: ['10th'], skills: ['Arc Welding'], location: { city: 'Pune', state: 'Maharashtra' },
       expectedPay: 15000, languages: ['Hindi', 'Marathi'] }),
   },
+];
+
+/* ---------- Admin ---------- */
+
+export const SEED_ADMIN_USERS: AdminUserRow[] = [
+  { id: 'usr_worker_1', role: 'worker', name: 'Ramesh Kumar', contact: '9876543210', city: 'Jamshedpur', status: 'active', joinedAt: '2026-10-02T09:00:00Z' },
+  { id: 'usr_pool_1', role: 'worker', name: 'Sanjay Behera', contact: '9437012345', city: 'Cuttack', status: 'active', joinedAt: '2026-11-11T18:20:00Z' },
+  { id: 'usr_pool_4', role: 'worker', name: 'Pooja Sahu', contact: '7008123456', city: 'Surat', status: 'active', joinedAt: '2026-11-08T07:40:00Z' },
+  { id: 'usr_pool_8', role: 'worker', name: 'Bikash Mohanty', contact: '9439988776', city: 'Angul', status: 'active', joinedAt: '2026-09-21T12:00:00Z' },
+  { id: 'usr_bad_1', role: 'worker', name: 'Raju Contractor', contact: '9000011111', city: 'Bhubaneswar', status: 'suspended', joinedAt: '2026-10-28T10:00:00Z' },
+  { id: 'usr_employer_1', role: 'employer', name: 'Eastline Heavy Engineering', contact: '9437000111', city: 'Kalinganagar', status: 'active', verification: 'approved', joinedAt: '2024-01-15T10:00:00Z' },
+  { id: 'comp_1', role: 'employer', name: 'National Heavy Engineering', contact: '9811122334', city: 'Kalinganagar', status: 'active', verification: 'pending', joinedAt: '2026-11-10T10:00:00Z' },
+  { id: 'comp_v3', role: 'employer', name: 'Kalinganagar Manpower Services', contact: '7008144556', city: 'Jajpur', status: 'active', verification: 'pending', joinedAt: '2026-11-11T08:15:00Z' },
+  { id: 'comp_v4', role: 'employer', name: 'Paradip Bulk Handling Pvt Ltd', contact: '9437122001', city: 'Paradip', status: 'active', verification: 'rejected', joinedAt: '2026-11-04T11:00:00Z' },
+];
+
+export const SEED_REPORTS: JobReport[] = [
+  { id: 'rep_1', jobId: 'job_5', jobTitle: 'Automotive Spot & Robotic Welder', companyName: 'Mahindra & Mahindra Auto', reporterName: 'Deepak Yadav',
+    reason: 'asks_money', details: 'The agent on the phone asked for ₹3,000 registration fee before the interview.', at: '2026-11-12T05:30:00Z', status: 'open' },
+  { id: 'rep_2', jobId: 'job_5', jobTitle: 'Automotive Spot & Robotic Welder', companyName: 'Mahindra & Mahindra Auto', reporterName: 'Sanjay Behera',
+    reason: 'asks_money', at: '2026-11-11T16:10:00Z', status: 'open' },
+  { id: 'rep_3', jobId: 'job_2', jobTitle: 'CNC Lathe & Milling Machinist', companyName: 'Larsen & Toubro Heavy Engg', reporterName: 'Pooja Sahu',
+    reason: 'wrong_details', details: 'Pay on the call was ₹18,000, not ₹26,000 as shown.', at: '2026-11-10T09:00:00Z', status: 'open' },
+  { id: 'rep_4', jobId: 'job_3', jobTitle: 'Heavy Equipment Mechanical Fitter', companyName: 'Jindal Steel & Power Ltd', reporterName: 'Anil Munda',
+    reason: 'fake', at: '2026-11-02T09:00:00Z', status: 'dismissed', resolvedAt: '2026-11-03T10:00:00Z', resolvedBy: 'Admin' },
+];
+
+export const SEED_TICKETS: SupportTicket[] = [
+  { id: 'tkt_1', userId: 'usr_pool_6', name: 'Sunil Pradhan', contact: '9938776655', role: 'worker', topic: 'Cannot upload certificate',
+    message: 'The app says the file is too big when I upload my ITI certificate photo.', at: '2026-11-12T04:00:00Z', status: 'open' },
+  { id: 'tkt_2', name: 'Manoj Patra', contact: '9861100223', role: 'guest', topic: 'Someone asked me for money',
+    message: 'A person called saying he is from IndustriaLink and asked ₹500 to get me a job. Is this real?', at: '2026-11-11T13:25:00Z', status: 'open' },
+  { id: 'tkt_3', userId: 'usr_employer_1', name: 'Pradeep Mohanty', contact: '9437000111', role: 'employer', topic: 'Change company name',
+    message: 'We renamed the plant. Please update our company name.', at: '2026-11-05T10:00:00Z', status: 'closed' },
+];
+
+export const SEED_AUDIT: AuditEntry[] = [
+  { id: 'aud_3', at: '2026-11-09T15:00:00Z', actor: 'Admin', action: 'Approved company', target: 'Jindal Heavy Logistics Ltd' },
+  { id: 'aud_2', at: '2026-11-05T12:00:00Z', actor: 'Admin', action: 'Rejected company', target: 'Paradip Bulk Handling Pvt Ltd' },
+  { id: 'aud_1', at: '2026-11-03T10:00:00Z', actor: 'Admin', action: 'Dismissed report on', target: 'Heavy Equipment Mechanical Fitter' },
 ];

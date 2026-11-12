@@ -33,7 +33,9 @@ export const queryKeys = {
     verifications: ['admin', 'verifications'] as const,
     users: (params?: Record<string, any>) => ['admin', 'users', params] as const,
     jobs: (params?: Record<string, any>) => ['admin', 'jobs', params] as const,
-    reports: ['admin', 'reports'] as const,
+    reports: (status?: string) => ['admin', 'reports', status] as const,
+    tickets: (status?: string) => ['admin', 'tickets', status] as const,
+    audit: ['admin', 'audit'] as const,
   },
   messages: {
     threads: ['messages', 'threads'] as const,

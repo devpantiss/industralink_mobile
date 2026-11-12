@@ -68,8 +68,12 @@ const linking: LinkingOptions<RootStackParamList> = {
       },
       Admin: {
         screens: {
-          VerificationsQueue: 'admin',
+          AdminHome: 'admin',
+          VerificationsQueue: 'admin/verifications',
+          Reports: 'admin/reports',
           UsersManagement: 'admin/users',
+          JobsModeration: 'admin/jobs',
+          ActivityLog: 'admin/activity',
           Settings: 'admin/settings',
         },
       },

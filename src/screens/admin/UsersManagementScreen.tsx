@@ -1,287 +1,213 @@
 import React, { useState } from 'react';
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Alert,
-} from 'react-native';
-import { Text, TextInput } from '../../components/ui/Text';
-import { Search, UserCheck, ShieldAlert, UserX, ChevronRight } from 'lucide-react-native';
+import { View, StyleSheet, ScrollView, RefreshControl, Pressable } from 'react-native';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import Animated, { FadeIn } from 'react-native-reanimated';
+import { Search, Users, X } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
+import { Text, TextInput } from '../../components/ui/Text';
 import { Screen } from '../../components/layout/Screen';
 import { AppHeader } from '../../components/layout/AppHeader';
 import { Avatar } from '../../components/ui/Avatar';
+import { ListSkeleton } from '../../components/ui/Skeleton';
+import { FilterChips } from '../../components/ui/FilterChips';
+import { Dialog } from '../../components/ui/Dialog';
+import { Button } from '../../components/ui/Button';
+import { adminApi } from '../../api/adminApi';
+import { queryKeys } from '../../api/keys';
 import { useUiStore } from '../../store/uiStore';
-import { t } from '../../lib/i18n';
-import { formatPhone } from '../../lib/format';
+import { formatDate, formatPhone } from '../../lib/format';
+import type { AdminUserRow } from '../../types';
 
-interface UserItem {
-  id: string;
-  name: string;
-  role: 'Worker' | 'Employer' | 'Admin';
-  phone: string;
-  companyName?: string;
-  status: 'active' | 'suspended';
-  trade?: string;
-}
+type RoleKey = 'all' | 'worker' | 'employer';
+const VERIFY_LABEL = { approved: 'Approved', pending: 'Waiting for approval', rejected: 'Not approved' } as const;
 
+/** Worker and company accounts; suspend anyone abusing the platform (web: Users). */
 export const UsersManagementScreen: React.FC = () => {
-  const { colors, showToast } = useUiStore();
-  const [roleFilter, setRoleFilter] = useState<'all' | 'Worker' | 'Employer'>('all');
+  const colors = useUiStore((s) => s.colors);
+  const showToast = useUiStore((s) => s.showToast);
+  const qc = useQueryClient();
+  const [role, setRole] = useState<RoleKey>('all');
   const [q, setQ] = useState('');
+  const [target, setTarget] = useState<AdminUserRow | null>(null);
 
-  const [userList, setUserList] = useState<UserItem[]>([
-    {
-      id: 'u1',
-      name: 'Ramesh Kumar',
-      role: 'Worker',
-      phone: '9876543210',
-      trade: 'Welder (MIG)',
-      status: 'active',
-    },
-    {
-      id: 'u2',
-      name: 'National Heavy Eng HR Team',
-      role: 'Employer',
-      companyName: 'National Heavy Engineering',
-      phone: '9811122334',
-      status: 'active',
-    },
-    {
-      id: 'u3',
-      name: 'Bikash Mohanty',
-      role: 'Worker',
-      phone: '9899988877',
-      trade: 'Substation Electrician',
-      status: 'active',
-    },
-    {
-      id: 'u4',
-      name: 'Unverified Placement Agency',
-      role: 'Employer',
-      companyName: 'Kalinganagar Manpower',
-      phone: '9123456789',
-      status: 'suspended',
-    },
-  ]);
+  const params = { role: role === 'all' ? undefined : role, q: q.trim() || undefined };
+  const list = useQuery({ queryKey: queryKeys.admin.users(params), queryFn: () => adminApi.getUsers(params) });
 
-  const toggleStatus = (id: string) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setUserList((prev) =>
-      prev.map((u) => {
-        if (u.id === id) {
-          const next = u.status === 'active' ? 'suspended' : 'active';
-          showToast(
-            next === 'suspended' ? `Suspended ${u.name}` : `Reactivated ${u.name}`,
-            next === 'suspended' ? 'warning' : 'success'
-          );
-          return { ...u, status: next };
-        }
-        return u;
-      })
-    );
-  };
-
-  const filtered = userList.filter((u) => {
-    if (roleFilter !== 'all' && u.role !== roleFilter) return false;
-    if (!q.trim()) return true;
-    const s = q.toLowerCase();
-    return (
-      u.name.toLowerCase().includes(s) ||
-      u.phone.includes(s) ||
-      (u.companyName && u.companyName.toLowerCase().includes(s))
-    );
+  const toggle = useMutation({
+    mutationFn: (u: AdminUserRow) => adminApi.setUserStatus(u.id, u.status === 'suspended' ? 'active' : 'suspended'),
+    onSuccess: (u) => {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+      showToast(u.status === 'suspended' ? `${u.name} suspended` : `${u.name} can use IndustriaLink again`, 'success');
+      setTarget(null);
+      qc.invalidateQueries({ queryKey: queryKeys.admin.all });
+    },
+    onError: () => showToast('Something went wrong. Please try again.', 'error'),
   });
+
+  const suspending = target?.status !== 'suspended';
 
   return (
     <Screen edges={['top']}>
       <AppHeader />
+      <ScrollView
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={list.isRefetching} onRefresh={() => void list.refetch()} tintColor={colors.primary} />
+        }
+      >
+        <Text style={[styles.title, { color: colors.ink }]}>Users</Text>
+        <Text style={[styles.subtitle, { color: colors.inkSecondary }]}>
+          Worker and company accounts. Suspend anyone who cheats or asks workers for money.
+        </Text>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={styles.titleBlock}>
-          <Text style={[styles.title, { color: colors.ink }]}>{t('User moderation')}</Text>
-          <Text style={[styles.subtitle, { color: colors.inkSecondary }]}>
-            {t('Monitor and manage worker and employer accounts.')}
-          </Text>
-        </View>
-
-        {/* Search */}
-        <View style={[styles.searchBar, { backgroundColor: colors.surfaceMuted, borderColor: colors.border }]}>
+        <View style={[styles.search, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <Search size={18} color={colors.inkMuted} />
           <TextInput
             value={q}
             onChangeText={setQ}
-            placeholder={t('Search name, phone or company…')}
+            placeholder="Name, phone or city"
             placeholderTextColor={colors.inkMuted}
             style={[styles.searchInput, { color: colors.ink }]}
+            returnKeyType="search"
           />
+          {q ? (
+            <Pressable onPress={() => setQ('')} hitSlop={8} accessibilityLabel="Clear search">
+              <X size={18} color={colors.inkMuted} />
+            </Pressable>
+          ) : null}
         </View>
 
-        {/* Role Filter Chips */}
-        <View style={styles.rolesRow}>
-          {(['all', 'Worker', 'Employer'] as const).map((r) => (
-            <TouchableOpacity
-              key={r}
-              onPress={() => setRoleFilter(r)}
-              style={[
-                styles.roleChip,
-                {
-                  backgroundColor: roleFilter === r ? colors.primary : colors.surfaceMuted,
-                  borderColor: roleFilter === r ? colors.primary : colors.border,
-                },
-              ]}
-            >
-              <Text style={{ color: roleFilter === r ? '#FFF' : colors.inkSecondary, fontWeight: '600', fontSize: 13 }}>
-                {r === 'all' ? t('All users') : r}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        <FilterChips<RoleKey>
+          style={styles.chips}
+          value={role}
+          onChange={setRole}
+          options={[
+            { key: 'all', label: 'All' },
+            { key: 'worker', label: 'Workers' },
+            { key: 'employer', label: 'Companies' },
+          ]}
+        />
 
-        {/* User Card List */}
-        <View style={{ gap: 10 }}>
-          {filtered.map((u) => (
-            <View
-              key={u.id}
-              style={[styles.userCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
-            >
-              <View style={styles.userTopRow}>
-                <Avatar name={u.name} size="md" />
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.userName, { color: colors.ink }]}>{u.name}</Text>
-                  <Text style={[styles.userMeta, { color: colors.inkSecondary }]}>
-                    {u.role} · {formatPhone(u.phone)} {u.companyName ? `· ${u.companyName}` : ''}
-                  </Text>
+        {list.isLoading ? (
+          <ListSkeleton />
+        ) : !list.data?.length ? (
+          <View style={[styles.empty, { backgroundColor: colors.surfaceMuted }]}>
+            <Users size={30} color={colors.inkMuted} />
+            <Text style={[styles.emptyTitle, { color: colors.ink }]}>No one found</Text>
+          </View>
+        ) : (
+          list.data.map((u) => {
+            const suspended = u.status === 'suspended';
+            return (
+              <Animated.View
+                key={u.id}
+                entering={FadeIn.duration(180)}
+                style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}
+              >
+                <View style={styles.top}>
+                  <Avatar name={u.name} size="md" square={u.role === 'employer'} />
+                  <View style={styles.flex}>
+                    <Text style={[styles.name, { color: colors.ink }]} numberOfLines={1}>
+                      {u.name}
+                    </Text>
+                    <Text style={[styles.meta, { color: colors.inkSecondary }]} numberOfLines={1}>
+                      {u.role === 'worker' ? 'Worker' : 'Company'} · {formatPhone(u.contact)} · {u.city}
+                    </Text>
+                    <Text style={[styles.joined, { color: colors.inkMuted }]}>Joined {formatDate(u.joinedAt)}</Text>
+                  </View>
                 </View>
-                <View
-                  style={[
-                    styles.statusBadge,
-                    {
-                      backgroundColor: u.status === 'active' ? colors.successBg : colors.dangerBg,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.statusBadgeText,
-                      { color: u.status === 'active' ? colors.successFg : colors.dangerFg },
+                <View style={[styles.foot, { borderTopColor: colors.border }]}>
+                  <View style={styles.pills}>
+                    <Pill
+                      text={suspended ? 'Suspended' : 'Active'}
+                      bg={suspended ? colors.dangerBg : colors.successBg}
+                      fg={suspended ? colors.dangerFg : colors.successFg}
+                    />
+                    {u.verification && (
+                      <Pill
+                        text={VERIFY_LABEL[u.verification]}
+                        bg={u.verification === 'approved' ? colors.primarySoft : u.verification === 'pending' ? colors.warningBg : colors.neutralBg}
+                        fg={u.verification === 'approved' ? colors.primary : u.verification === 'pending' ? colors.warningFg : colors.neutralFg}
+                      />
+                    )}
+                  </View>
+                  <Pressable
+                    onPress={() => setTarget(u)}
+                    accessibilityRole="button"
+                    style={({ pressed }) => [
+                      styles.action,
+                      {
+                        borderColor: suspended ? colors.primary : colors.dangerFg,
+                        backgroundColor: pressed ? (suspended ? colors.primarySoft : colors.dangerBg) : 'transparent',
+                      },
                     ]}
                   >
-                    {u.status === 'active' ? t('Active') : t('Suspended')}
-                  </Text>
+                    <Text style={[styles.actionText, { color: suspended ? colors.primary : colors.dangerFg }]}>
+                      {suspended ? 'Reactivate' : 'Suspend'}
+                    </Text>
+                  </Pressable>
                 </View>
-              </View>
-
-              <View style={[styles.cardFooter, { borderTopColor: colors.border }]}>
-                <TouchableOpacity
-                  onPress={() => toggleStatus(u.id)}
-                  style={[
-                    styles.actionBtn,
-                    {
-                      borderColor: u.status === 'active' ? colors.dangerFg : colors.primary,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.actionBtnText,
-                      { color: u.status === 'active' ? colors.dangerFg : colors.primary },
-                    ]}
-                  >
-                    {u.status === 'active' ? t('Suspend account') : t('Reactivate account')}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          ))}
-        </View>
+              </Animated.View>
+            );
+          })
+        )}
       </ScrollView>
+
+      <Dialog
+        visible={!!target}
+        onClose={() => setTarget(null)}
+        title={target ? `${suspending ? 'Suspend' : 'Reactivate'} ${target.name}?` : ''}
+        message={
+          suspending
+            ? target?.role === 'employer'
+              ? 'They are logged out and all their jobs are hidden from workers until you reactivate them.'
+              : 'They are logged out and cannot apply to jobs until you reactivate them.'
+            : 'They can log in and use IndustriaLink again.'
+        }
+        actions={
+          <>
+            <Button label="Cancel" variant="secondary" size="sm" onPress={() => setTarget(null)} />
+            <Button
+              label={suspending ? 'Suspend' : 'Reactivate'}
+              variant={suspending ? 'danger' : 'primary'}
+              size="sm"
+              loading={toggle.isPending}
+              onPress={() => target && toggle.mutate(target)}
+            />
+          </>
+        }
+      />
     </Screen>
   );
 };
 
+const Pill: React.FC<{ text: string; bg: string; fg: string }> = ({ text, bg, fg }) => (
+  <View style={[styles.pill, { backgroundColor: bg }]}>
+    <Text style={[styles.pillText, { color: fg }]}>{text}</Text>
+  </View>
+);
+
 const styles = StyleSheet.create({
-  scrollContent: {
-    padding: 16,
-    paddingBottom: 48,
-    gap: 14,
-  },
-  titleBlock: {
-    gap: 2,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '800',
-    letterSpacing: -0.3,
-  },
-  subtitle: {
-    fontSize: 13,
-  },
-  searchBar: {
-    height: 46,
-    borderRadius: 23,
-    borderWidth: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-    gap: 8,
-  },
-  searchInput: {
-    flex: 1,
-    fontSize: 14,
-  },
-  rolesRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  roleChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 999,
-    borderWidth: 1,
-  },
-  userCard: {
-    padding: 16,
-    borderRadius: 16,
-    borderWidth: 1,
-    gap: 12,
-  },
-  userTopRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  userName: {
-    fontSize: 15.5,
-    fontWeight: '700',
-  },
-  userMeta: {
-    fontSize: 12.5,
-    marginTop: 2,
-  },
-  statusBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 999,
-  },
-  statusBadgeText: {
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  cardFooter: {
-    borderTopWidth: StyleSheet.hairlineWidth,
-    paddingTop: 10,
-    alignItems: 'flex-end',
-  },
-  actionBtn: {
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 999,
-    borderWidth: 1,
-  },
-  actionBtnText: {
-    fontSize: 12.5,
-    fontWeight: '700',
-  },
+  flex: { flex: 1 },
+  content: { padding: 16, paddingBottom: 48 },
+  title: { fontSize: 24, fontWeight: '800', letterSpacing: -0.3 },
+  subtitle: { fontSize: 13, marginTop: 2, marginBottom: 14, lineHeight: 18 },
+  search: { height: 46, borderRadius: 23, borderWidth: 1, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, gap: 8 },
+  searchInput: { flex: 1, fontSize: 14 },
+  chips: { paddingVertical: 12 },
+  card: { borderWidth: 1, borderRadius: 14, padding: 14, marginBottom: 10, gap: 12 },
+  top: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  name: { fontSize: 15, fontWeight: '700' },
+  meta: { fontSize: 13, marginTop: 1 },
+  joined: { fontSize: 12, marginTop: 2 },
+  foot: { flexDirection: 'row', alignItems: 'center', gap: 10, borderTopWidth: 1, paddingTop: 10 },
+  pills: { flex: 1, flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  pill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
+  pillText: { fontSize: 11, fontWeight: '700' },
+  action: { height: 34, paddingHorizontal: 14, borderRadius: 17, borderWidth: 1, justifyContent: 'center' },
+  actionText: { fontSize: 13, fontWeight: '700' },
+  empty: { borderRadius: 16, padding: 28, alignItems: 'center', gap: 6 },
+  emptyTitle: { fontSize: 15, fontWeight: '700' },
 });

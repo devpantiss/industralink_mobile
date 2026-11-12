@@ -1,538 +1,347 @@
-import React, { useState } from 'react';
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  RefreshControl,
-  Modal,
-  Linking,
-  ActivityIndicator,
-} from 'react-native';
-import { Text, TextInput } from '../../components/ui/Text';
+import React, { useMemo, useState } from 'react';
+import { View, StyleSheet, ScrollView, RefreshControl, Linking, Pressable } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  BadgeCheck,
-  ChevronRight,
-  ExternalLink,
-  FileText,
-  X,
-  ShieldAlert,
-  Building2,
-} from 'lucide-react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
+import { BadgeCheck, ChevronRight, ExternalLink, FileText, AlertTriangle } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
+import { Text, TextInput } from '../../components/ui/Text';
 import { ListSkeleton } from '../../components/ui/Skeleton';
 import { Screen } from '../../components/layout/Screen';
 import { AppHeader } from '../../components/layout/AppHeader';
 import { Avatar } from '../../components/ui/Avatar';
+import { SegmentedTabs } from '../../components/ui/SegmentedTabs';
+import { PressableScale } from '../../components/ui/PressableScale';
+import { Sheet } from '../../components/ui/Sheet';
+import { Button } from '../../components/ui/Button';
 import { adminApi } from '../../api/adminApi';
 import { queryKeys } from '../../api/keys';
 import { useUiStore } from '../../store/uiStore';
 import { COMPANY_DOC_LABEL } from '../../lib/labels';
 import { formatDate, timeAgo } from '../../lib/format';
-import { t } from '../../lib/i18n';
-import type { VerificationItem } from '../../types';
+import type { VerificationItem, VerificationStatus } from '../../types';
 
+const QUICK_REASONS = [
+  'GST certificate is for a different company name',
+  'Document is unclear or cut off',
+  'GST number not found on the GST portal',
+  'No document uploaded',
+];
+
+/** Company approvals (web: Verifications). New companies can't publish jobs until approved. */
 export const VerificationsQueueScreen: React.FC = () => {
-  const { colors, showToast } = useUiStore();
+  const colors = useUiStore((s) => s.colors);
+  const showToast = useUiStore((s) => s.showToast);
   const qc = useQueryClient();
+  const [tab, setTab] = useState<VerificationStatus>('pending');
+  const [selected, setSelected] = useState<VerificationItem | null>(null);
+  const [mode, setMode] = useState<'review' | 'reject'>('review');
+  const [reason, setReason] = useState('');
 
-  const [selectedItem, setSelectedItem] = useState<VerificationItem | null>(null);
-  const [rejectModalOpen, setRejectModalOpen] = useState(false);
-  const [rejectReason, setRejectReason] = useState('');
+  const q = useQuery({ queryKey: queryKeys.admin.verifications, queryFn: () => adminApi.getVerifications() });
+  const all = useMemo(() => q.data ?? [], [q.data]);
+  const counts = useMemo(
+    () => ({
+      pending: all.filter((v) => v.status === 'pending').length,
+      approved: all.filter((v) => v.status === 'approved').length,
+      rejected: all.filter((v) => v.status === 'rejected').length,
+    }),
+    [all]
+  );
+  // Waiting: oldest first, so no one waits too long. Others: newest first.
+  const shown = all
+    .filter((v) => v.status === tab)
+    .sort((a, b) => (tab === 'pending' ? 1 : -1) * (+new Date(a.submittedAt) - +new Date(b.submittedAt)));
 
-  const {
-    data: items,
-    isLoading,
-    isRefetching,
-    refetch,
-  } = useQuery({
-    queryKey: queryKeys.admin.verifications,
-    queryFn: () => adminApi.getVerifications(),
-  });
-
-  const decideMutation = useMutation({
-    mutationFn: ({
-      item,
-      decision,
-      reason,
-    }: {
-      item: VerificationItem;
-      decision: 'approve' | 'reject';
-      reason?: string;
-    }) => adminApi.decideVerification(item.kind, item.id, decision, reason),
-    onSuccess: (_data, { item, decision }) => {
+  const decide = useMutation({
+    mutationFn: ({ item, decision, why }: { item: VerificationItem; decision: 'approve' | 'reject'; why?: string }) =>
+      adminApi.decideVerification(item.kind, item.id, decision, why),
+    onSuccess: (_d, { item, decision }) => {
       Haptics.notificationAsync(
-        decision === 'approve'
-          ? Haptics.NotificationFeedbackType.Success
-          : Haptics.NotificationFeedbackType.Warning
-      );
+        decision === 'approve' ? Haptics.NotificationFeedbackType.Success : Haptics.NotificationFeedbackType.Warning
+      ).catch(() => {});
       qc.invalidateQueries({ queryKey: queryKeys.admin.all });
       showToast(
-        decision === 'approve'
-          ? `${item.title} approved. They can now post jobs.`
-          : `${item.title} rejected`,
+        decision === 'approve' ? `${item.title} approved. They can now post jobs.` : `${item.title} rejected. They were told why.`,
         'success'
       );
-      setSelectedItem(null);
-      setRejectModalOpen(false);
-      setRejectReason('');
+      setSelected(null);
     },
+    onError: () => showToast('Something went wrong. Please try again.', 'error'),
   });
 
-  const pendingList = items ?? [];
+  const open = (v: VerificationItem) => {
+    setMode('review');
+    setReason('');
+    setSelected(v);
+  };
+
+  const s = selected;
+  const rejectionReason = s?.details['Rejection reason'];
+  const details = s ? Object.entries(s.details).filter(([k]) => k !== 'Rejection reason') : [];
 
   return (
     <Screen edges={['top']}>
       <AppHeader />
-
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl
-            refreshing={isRefetching}
-            onRefresh={() => {
-              void refetch();
-            }}
-            tintColor={colors.primary}
-          />
+          <RefreshControl refreshing={q.isRefetching} onRefresh={() => void q.refetch()} tintColor={colors.primary} />
         }
       >
-        {/* Title */}
-        <View style={styles.titleBlock}>
-          <Text style={[styles.title, { color: colors.ink }]}>{t('Company approvals')}</Text>
-          <Text style={[styles.subtitle, { color: colors.inkSecondary }]}>
-            {t("New companies can't publish jobs until you approve them. Oldest first.")}
-          </Text>
-        </View>
+        <Text style={[styles.title, { color: colors.ink }]}>Company approvals</Text>
+        <Text style={[styles.subtitle, { color: colors.inkSecondary }]}>
+          New companies can’t publish jobs until you approve them. Oldest first.
+        </Text>
 
-        {/* List of pending companies */}
-        {isLoading ? (
+        <SegmentedTabs<VerificationStatus>
+          variant="underline"
+          style={styles.tabs}
+          value={tab}
+          onChange={setTab}
+          items={[
+            { key: 'pending', label: 'Waiting', count: counts.pending },
+            { key: 'approved', label: 'Approved', count: counts.approved },
+            { key: 'rejected', label: 'Rejected', count: counts.rejected },
+          ]}
+        />
+
+        {q.isLoading ? (
           <ListSkeleton />
-        ) : pendingList.length === 0 ? (
-          <View style={[styles.emptyBox, { backgroundColor: colors.surfaceMuted }]}>
-            <BadgeCheck size={36} color={colors.primary} />
+        ) : shown.length === 0 ? (
+          <View style={[styles.empty, { backgroundColor: colors.surfaceMuted }]}>
+            <BadgeCheck size={32} color={colors.primary} />
             <Text style={[styles.emptyTitle, { color: colors.ink }]}>
-              {t('All caught up 🎉')}
+              {tab === 'pending' ? 'All caught up' : 'Nothing here yet'}
             </Text>
-            <Text style={[styles.emptySubtitle, { color: colors.inkSecondary }]}>
-              {t('No companies are waiting for approval.')}
-            </Text>
+            {tab === 'pending' && (
+              <Text style={[styles.emptyText, { color: colors.inkSecondary }]}>No companies are waiting for approval.</Text>
+            )}
           </View>
         ) : (
-          pendingList.map((item) => (
-            <TouchableOpacity
-              key={item.id}
-              activeOpacity={0.88}
-              onPress={() => setSelectedItem(item)}
-              style={[styles.itemCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
-            >
-              <Avatar name={item.title} square size="md" />
-              <View style={{ flex: 1, gap: 2 }}>
-                <Text style={[styles.itemTitle, { color: colors.ink }]} numberOfLines={1}>
-                  {item.title}
-                </Text>
-                <Text style={[styles.itemSubtitle, { color: colors.inkSecondary }]}>
-                  {item.subtitle}
-                </Text>
-                <Text style={[styles.itemTime, { color: colors.inkMuted }]}>
-                  Signed up {timeAgo(item.submittedAt)}
-                </Text>
-              </View>
-              <ChevronRight size={18} color={colors.inkMuted} />
-            </TouchableOpacity>
+          shown.map((v) => (
+            <Animated.View key={v.id} entering={FadeIn.duration(180)}>
+              <PressableScale
+                onPress={() => open(v)}
+                accessibilityLabel={`Review ${v.title}`}
+                style={[styles.item, { backgroundColor: colors.surface, borderColor: colors.border }]}
+              >
+                <Avatar name={v.title} square size="md" />
+                <View style={styles.flex}>
+                  <Text style={[styles.itemTitle, { color: colors.ink }]} numberOfLines={1}>
+                    {v.title}
+                  </Text>
+                  <Text style={[styles.itemSub, { color: colors.inkSecondary }]} numberOfLines={1}>
+                    {v.subtitle}
+                  </Text>
+                  <View style={styles.itemMeta}>
+                    <Text style={[styles.itemTime, { color: colors.inkMuted }]}>Signed up {timeAgo(v.submittedAt)}</Text>
+                    {v.status === 'pending' && v.documents.length === 0 && (
+                      <View style={[styles.pill, { backgroundColor: colors.warningBg }]}>
+                        <Text style={[styles.pillText, { color: colors.warningFg }]}>No document</Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
+                <ChevronRight size={18} color={colors.inkMuted} />
+              </PressableScale>
+            </Animated.View>
           ))
         )}
       </ScrollView>
 
-      {/* Review Company Details Modal */}
-      {selectedItem && (
-        <Modal visible transparent animationType="slide">
-          <View style={styles.modalOverlay}>
-            <View style={[styles.sheetCard, { backgroundColor: colors.surface }]}>
-              {/* Header */}
-              <View style={[styles.sheetHeader, { borderBottomColor: colors.border }]}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.sheetTitle, { color: colors.ink }]}>
-                    {selectedItem.title}
-                  </Text>
-                  <Text style={[styles.sheetSubtitle, { color: colors.inkMuted }]}>
-                    {selectedItem.subtitle} · {formatDate(selectedItem.submittedAt)}
-                  </Text>
-                </View>
-                <TouchableOpacity onPress={() => setSelectedItem(null)}>
-                  <X size={20} color={colors.inkMuted} />
-                </TouchableOpacity>
-              </View>
-
-              <ScrollView contentContainerStyle={styles.sheetBody}>
-                {/* Details list */}
-                <View style={styles.detailsGroup}>
-                  {Object.entries(selectedItem.details).map(([k, v]) => (
-                    <View key={k} style={styles.detailRow}>
-                      <Text style={[styles.detailKey, { color: colors.inkMuted }]}>{k}</Text>
-                      <Text style={[styles.detailVal, { color: colors.ink }]}>{v}</Text>
-                    </View>
-                  ))}
-                </View>
-
-                {/* Uploaded Documents */}
-                <View style={styles.docsSection}>
-                  <Text style={[styles.sectionHeading, { color: colors.ink }]}>
-                    {t('Uploaded Documents')}
-                  </Text>
-                  {selectedItem.documents.length === 0 ? (
-                    <View style={[styles.noDocsBox, { backgroundColor: colors.tiles.yellow.bg }]}>
-                      <Text style={[styles.noDocsText, { color: colors.tiles.yellow.text }]}>
-                        {t('No document uploaded yet. Ask for a GST certificate.')}
-                      </Text>
-                    </View>
-                  ) : (
-                    selectedItem.documents.map((doc) => (
-                      <View
-                        key={doc.id}
-                        style={[styles.docPreviewCard, { backgroundColor: colors.surfaceMuted, borderColor: colors.border }]}
-                      >
-                        <FileText size={20} color={colors.primary} />
-                        <View style={{ flex: 1 }}>
-                          <Text style={[styles.docName, { color: colors.ink }]}>{doc.name}</Text>
-                          <Text style={[styles.docType, { color: colors.inkMuted }]}>
-                            {COMPANY_DOC_LABEL[doc.type as keyof typeof COMPANY_DOC_LABEL] || doc.type}
-                          </Text>
-                        </View>
-                      </View>
-                    ))
-                  )}
-                </View>
-
-                {/* GST Portal Verify Link */}
-                {selectedItem.details['GST number'] && (
-                  <TouchableOpacity
-                    onPress={() => Linking.openURL('https://services.gst.gov.in/services/searchtp')}
-                    style={[styles.gstLinkRow, { backgroundColor: colors.primarySoft }]}
-                  >
-                    <ExternalLink size={16} color={colors.primary} />
-                    <Text style={[styles.gstLinkText, { color: colors.primary }]}>
-                      {t('Check this GST number on Government GST Portal')} →
-                    </Text>
-                  </TouchableOpacity>
-                )}
-
-                {/* Checklist Notice */}
-                <View style={[styles.checklistCard, { backgroundColor: colors.surfaceMuted }]}>
-                  <Text style={[styles.checkTitle, { color: colors.ink }]}>
-                    {t('Before approving, check:')}
-                  </Text>
-                  <Text style={[styles.checkItem, { color: colors.inkSecondary }]}>
-                    • The uploaded document shows matching company name & GST
-                  </Text>
-                  <Text style={[styles.checkItem, { color: colors.inkSecondary }]}>
-                    • The GST number belongs to this company on the portal
-                  </Text>
-                  <Text style={[styles.checkItem, { color: colors.inkSecondary }]}>
-                    • HR email is verified with company domain
-                  </Text>
-                </View>
-
-                {/* Actions */}
-                <View style={styles.sheetActions}>
-                  <TouchableOpacity
-                    onPress={() => setRejectModalOpen(true)}
-                    style={[styles.rejectBtn, { borderColor: colors.dangerFg }]}
-                  >
-                    <Text style={[styles.rejectBtnText, { color: colors.dangerFg }]}>
-                      {t('Reject')}
-                    </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    onPress={() => decideMutation.mutate({ item: selectedItem, decision: 'approve' })}
-                    disabled={decideMutation.isPending}
-                    style={[styles.approveBtn, { backgroundColor: colors.primary }]}
-                  >
-                    {decideMutation.isPending ? (
-                      <ActivityIndicator color="#FFF" />
-                    ) : (
-                      <Text style={styles.approveBtnText}>{t('Approve company')}</Text>
-                    )}
-                  </TouchableOpacity>
-                </View>
-              </ScrollView>
-            </View>
-          </View>
-        </Modal>
-      )}
-
-      {/* Reject Reason Modal */}
-      {selectedItem && (
-        <Modal visible={rejectModalOpen} transparent animationType="fade">
-          <View style={styles.modalOverlay}>
-            <View style={[styles.rejectCard, { backgroundColor: colors.surface }]}>
-              <Text style={[styles.rejectTitle, { color: colors.ink }]}>
-                {t('Reject {company}?', { company: selectedItem.title })}
-              </Text>
-              <Text style={[styles.rejectDesc, { color: colors.inkSecondary }]}>
-                {t('Please give a reason. The company will see this to fix their application.')}
-              </Text>
-
-              <TextInput
-                value={rejectReason}
-                onChangeText={setRejectReason}
-                placeholder="e.g. GST certificate mismatch or invalid registration"
-                placeholderTextColor={colors.inkMuted}
-                multiline
-                numberOfLines={3}
-                style={[styles.rejectInput, { borderColor: colors.border, color: colors.ink }]}
+      <Sheet
+        visible={!!s}
+        onClose={() => setSelected(null)}
+        title={mode === 'reject' && s ? `Reject ${s.title}?` : s?.title}
+        subtitle={
+          mode === 'reject'
+            ? 'The company sees this reason so they can fix it and send again.'
+            : s
+              ? `${s.subtitle} · ${formatDate(s.submittedAt)}`
+              : undefined
+        }
+        footer={
+          s?.status !== 'pending' ? undefined : mode === 'review' ? (
+            <View style={styles.actions}>
+              <Button label="Reject" variant="outline" onPress={() => setMode('reject')} style={styles.flex} textStyle={{ color: colors.dangerFg }} />
+              <Button
+                label="Approve company"
+                loading={decide.isPending}
+                onPress={() => s && decide.mutate({ item: s, decision: 'approve' })}
+                style={styles.flex2}
               />
-
-              <View style={styles.rejectActions}>
-                <TouchableOpacity
-                  onPress={() => setRejectModalOpen(false)}
-                  style={[styles.modalCancelBtn, { borderColor: colors.border }]}
-                >
-                  <Text style={{ color: colors.ink, fontWeight: '600' }}>{t('Cancel')}</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  onPress={() =>
-                    decideMutation.mutate({
-                      item: selectedItem,
-                      decision: 'reject',
-                      reason: rejectReason.trim(),
-                    })
-                  }
-                  disabled={decideMutation.isPending}
-                  style={[styles.modalRejectBtn, { backgroundColor: colors.dangerFg }]}
-                >
-                  <Text style={{ color: '#FFF', fontWeight: '700' }}>{t('Reject')}</Text>
-                </TouchableOpacity>
-              </View>
             </View>
+          ) : (
+            <View style={styles.actions}>
+              <Button label="Back" variant="secondary" onPress={() => setMode('review')} style={styles.flex} />
+              <Button
+                label="Reject company"
+                variant="danger"
+                disabled={!reason.trim()}
+                loading={decide.isPending}
+                onPress={() => s && decide.mutate({ item: s, decision: 'reject', why: reason.trim() })}
+                style={styles.flex2}
+              />
+            </View>
+          )
+        }
+      >
+        {s && mode === 'review' && (
+          <View style={styles.sheetBody}>
+            {s.status === 'rejected' && rejectionReason ? (
+              <View style={[styles.notice, { backgroundColor: colors.dangerBg }]}>
+                <AlertTriangle size={16} color={colors.dangerFg} />
+                <Text style={[styles.noticeText, { color: colors.dangerFg }]}>Rejected: {rejectionReason}</Text>
+              </View>
+            ) : s.status === 'approved' ? (
+              <View style={[styles.notice, { backgroundColor: colors.successBg }]}>
+                <BadgeCheck size={16} color={colors.successFg} />
+                <Text style={[styles.noticeText, { color: colors.successFg }]}>Approved. This company can post jobs.</Text>
+              </View>
+            ) : null}
+
+            <View style={[styles.details, { borderColor: colors.border }]}>
+              {details.map(([k, v], i) => (
+                <View key={k} style={[styles.detailRow, i > 0 && { borderTopWidth: 1, borderTopColor: colors.border }]}>
+                  <Text style={[styles.detailKey, { color: colors.inkMuted }]}>{k}</Text>
+                  <Text style={[styles.detailVal, { color: colors.ink }]} selectable>
+                    {v}
+                  </Text>
+                </View>
+              ))}
+            </View>
+
+            <Text style={[styles.heading, { color: colors.ink }]}>Documents</Text>
+            {s.documents.length === 0 ? (
+              <View style={[styles.notice, { backgroundColor: colors.warningBg }]}>
+                <AlertTriangle size={16} color={colors.warningFg} />
+                <Text style={[styles.noticeText, { color: colors.warningFg }]}>
+                  No document uploaded yet. Ask for a GST certificate before approving.
+                </Text>
+              </View>
+            ) : (
+              s.documents.map((d) => (
+                <Pressable
+                  key={d.id}
+                  disabled={!d.url}
+                  onPress={() => d.url && Linking.openURL(d.url).catch(() => {})}
+                  style={[styles.doc, { backgroundColor: colors.surfaceMuted, borderColor: colors.border }]}
+                >
+                  <FileText size={20} color={colors.primary} />
+                  <View style={styles.flex}>
+                    <Text style={[styles.docName, { color: colors.ink }]} numberOfLines={1}>
+                      {d.name}
+                    </Text>
+                    <Text style={[styles.docType, { color: colors.inkMuted }]}>
+                      {COMPANY_DOC_LABEL[d.type as keyof typeof COMPANY_DOC_LABEL] || d.type}
+                    </Text>
+                  </View>
+                  {d.url ? <ExternalLink size={16} color={colors.inkMuted} /> : null}
+                </Pressable>
+              ))
+            )}
+
+            {s.details['GST number'] ? (
+              <Pressable
+                onPress={() => Linking.openURL('https://services.gst.gov.in/services/searchtp').catch(() => {})}
+                style={[styles.gst, { backgroundColor: colors.primarySoft }]}
+              >
+                <ExternalLink size={16} color={colors.primary} />
+                <Text style={[styles.gstText, { color: colors.primary }]}>Check this GST number on the GST portal</Text>
+              </Pressable>
+            ) : null}
+
+            {s.status === 'pending' && (
+              <View style={[styles.checklist, { backgroundColor: colors.surfaceMuted }]}>
+                <Text style={[styles.checkTitle, { color: colors.ink }]}>Before approving, check:</Text>
+                {[
+                  'The document shows the same company name and GST number',
+                  'The GST number belongs to this company on the portal',
+                  'Call the HR number to confirm they hire for this company',
+                ].map((c) => (
+                  <Text key={c} style={[styles.checkItem, { color: colors.inkSecondary }]}>
+                    •  {c}
+                  </Text>
+                ))}
+              </View>
+            )}
           </View>
-        </Modal>
-      )}
+        )}
+
+        {s && mode === 'reject' && (
+          <View style={styles.sheetBody}>
+            <Text style={[styles.label, { color: colors.inkSecondary }]}>Common reasons</Text>
+            <View style={styles.quick}>
+              {QUICK_REASONS.map((r) => {
+                const on = reason === r;
+                return (
+                  <Pressable
+                    key={r}
+                    onPress={() => setReason(r)}
+                    style={[
+                      styles.quickChip,
+                      { borderColor: on ? colors.primary : colors.border, backgroundColor: on ? colors.primarySoft : colors.surface },
+                    ]}
+                  >
+                    <Text style={[styles.quickText, { color: on ? colors.primary : colors.ink }]}>{r}</Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+            <Text style={[styles.label, { color: colors.inkSecondary }]}>Reason (required)</Text>
+            <TextInput
+              value={reason}
+              onChangeText={setReason}
+              multiline
+              placeholder="What should they fix?"
+              placeholderTextColor={colors.inkMuted}
+              style={[styles.textarea, { borderColor: colors.border, color: colors.ink, backgroundColor: colors.surface }]}
+            />
+          </View>
+        )}
+      </Sheet>
     </Screen>
   );
 };
 
 const styles = StyleSheet.create({
-  scrollContent: {
-    padding: 16,
-    paddingBottom: 48,
-    gap: 12,
-  },
-  titleBlock: {
-    marginBottom: 6,
-    gap: 2,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '800',
-    letterSpacing: -0.3,
-  },
-  subtitle: {
-    fontSize: 13,
-  },
-  itemCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 14,
-    borderRadius: 14,
-    borderWidth: 1,
-    gap: 12,
-  },
-  itemTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  itemSubtitle: {
-    fontSize: 12.5,
-  },
-  itemTime: {
-    fontSize: 11.5,
-  },
-  emptyBox: {
-    padding: 36,
-    borderRadius: 16,
-    alignItems: 'center',
-    gap: 8,
-    marginTop: 20,
-  },
-  emptyTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    marginTop: 6,
-  },
-  emptySubtitle: {
-    fontSize: 13,
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.55)',
-    justifyContent: 'flex-end',
-  },
-  sheetCard: {
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: '90%',
-  },
-  sheetHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 16,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  sheetTitle: {
-    fontSize: 17,
-    fontWeight: '800',
-  },
-  sheetSubtitle: {
-    fontSize: 12,
-    marginTop: 2,
-  },
-  sheetBody: {
-    padding: 16,
-    gap: 16,
-  },
-  detailsGroup: {
-    gap: 8,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  detailKey: {
-    fontSize: 13,
-  },
-  detailVal: {
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  docsSection: {
-    gap: 8,
-  },
-  sectionHeading: {
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  noDocsBox: {
-    padding: 12,
-    borderRadius: 10,
-  },
-  noDocsText: {
-    fontSize: 12.5,
-    fontWeight: '600',
-  },
-  docPreviewCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    borderRadius: 10,
-    borderWidth: 1,
-    gap: 10,
-  },
-  docName: {
-    fontSize: 13.5,
-    fontWeight: '700',
-  },
-  docType: {
-    fontSize: 11.5,
-  },
-  gstLinkRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 12,
-    borderRadius: 10,
-    gap: 8,
-  },
-  gstLinkText: {
-    fontSize: 12.5,
-    fontWeight: '700',
-    flex: 1,
-  },
-  checklistCard: {
-    padding: 14,
-    borderRadius: 12,
-    gap: 6,
-  },
-  checkTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  checkItem: {
-    fontSize: 12,
-    lineHeight: 16,
-  },
-  sheetActions: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 10,
-  },
-  rejectBtn: {
-    flex: 1,
-    height: 48,
-    borderRadius: 24,
-    borderWidth: 1.5,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  rejectBtnText: {
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  approveBtn: {
-    flex: 1.5,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  approveBtnText: {
-    color: '#FFF',
-    fontSize: 14,
-    fontWeight: '700',
-  },
-  rejectCard: {
-    margin: 20,
-    borderRadius: 18,
-    padding: 20,
-    alignSelf: 'center',
-    width: '90%',
-    gap: 10,
-  },
-  rejectTitle: {
-    fontSize: 17,
-    fontWeight: '800',
-  },
-  rejectDesc: {
-    fontSize: 12.5,
-    lineHeight: 17,
-  },
-  rejectInput: {
-    borderWidth: 1,
-    borderRadius: 10,
-    padding: 10,
-    height: 70,
-    fontSize: 13,
-    textAlignVertical: 'top',
-  },
-  rejectActions: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
-    gap: 10,
-    marginTop: 8,
-  },
-  modalCancelBtn: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-  },
-  modalRejectBtn: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 10,
-  },
+  flex: { flex: 1 },
+  flex2: { flex: 1.6 },
+  content: { padding: 16, paddingBottom: 48 },
+  title: { fontSize: 24, fontWeight: '800', letterSpacing: -0.3 },
+  subtitle: { fontSize: 13, marginTop: 2, lineHeight: 18 },
+  tabs: { marginTop: 10, marginBottom: 14 },
+  item: { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderRadius: 14, padding: 14, marginBottom: 10 },
+  itemTitle: { fontSize: 15, fontWeight: '700' },
+  itemSub: { fontSize: 13, marginTop: 1 },
+  itemMeta: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },
+  itemTime: { fontSize: 12 },
+  pill: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999 },
+  pillText: { fontSize: 11, fontWeight: '700' },
+  empty: { borderRadius: 16, padding: 28, alignItems: 'center', gap: 6 },
+  emptyTitle: { fontSize: 15, fontWeight: '700' },
+  emptyText: { fontSize: 13, textAlign: 'center' },
+  sheetBody: { gap: 12 },
+  notice: { flexDirection: 'row', gap: 8, alignItems: 'flex-start', borderRadius: 10, padding: 12 },
+  noticeText: { flex: 1, fontSize: 13, lineHeight: 18, fontWeight: '600' },
+  details: { borderWidth: 1, borderRadius: 12, paddingHorizontal: 12 },
+  detailRow: { paddingVertical: 10, gap: 2 },
+  detailKey: { fontSize: 12 },
+  detailVal: { fontSize: 14, fontWeight: '600' },
+  heading: { fontSize: 15, fontWeight: '700', marginTop: 4 },
+  doc: { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderRadius: 12, padding: 12 },
+  docName: { fontSize: 14, fontWeight: '600' },
+  docType: { fontSize: 12, marginTop: 1 },
+  gst: { flexDirection: 'row', alignItems: 'center', gap: 8, borderRadius: 12, padding: 12, minHeight: 48 },
+  gstText: { flex: 1, fontSize: 13.5, fontWeight: '700' },
+  checklist: { borderRadius: 12, padding: 12, gap: 4 },
+  checkTitle: { fontSize: 13.5, fontWeight: '700', marginBottom: 2 },
+  checkItem: { fontSize: 13, lineHeight: 19 },
+  actions: { flexDirection: 'row', gap: 10 },
+  label: { fontSize: 13, fontWeight: '600' },
+  quick: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  quickChip: { borderWidth: 1, borderRadius: 18, paddingHorizontal: 12, paddingVertical: 8 },
+  quickText: { fontSize: 13, fontWeight: '600' },
+  textarea: { minHeight: 88, borderWidth: 1, borderRadius: 12, padding: 12, fontSize: 14, textAlignVertical: 'top' },
 });

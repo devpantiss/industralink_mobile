@@ -49,7 +49,9 @@ export type EmployerStackParamList = {
 };
 
 export type AdminDrawerParamList = {
+  AdminHome: undefined;
   VerificationsQueue: undefined;
+  Reports: undefined;
   UsersManagement: undefined;
   JobsModeration: undefined;
   ActivityLog: undefined;
