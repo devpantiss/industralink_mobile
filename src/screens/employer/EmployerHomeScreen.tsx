@@ -1,0 +1,596 @@
+import React from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  RefreshControl,
+  ActivityIndicator,
+} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { useQuery } from '@tanstack/react-query';
+import {
+  Briefcase,
+  Users,
+  CalendarClock,
+  CheckCircle2,
+  Plus,
+  ArrowRight,
+  ShieldCheck,
+  Clock,
+  UserPlus,
+  ChevronRight,
+  AlertCircle,
+} from 'lucide-react-native';
+import { Screen } from '../../components/layout/Screen';
+import { AppHeader } from '../../components/layout/AppHeader';
+import { Avatar } from '../../components/ui/Avatar';
+import { CompanyLogo } from '../../components/domain/CompanyLogo';
+import { employerApi } from '../../api/employerApi';
+import { queryKeys } from '../../api/keys';
+import { useUiStore } from '../../store/uiStore';
+import { useAuthStore } from '../../store/authStore';
+import { SHIFT_LABEL } from '../../lib/labels';
+import { formatDateTime, greeting } from '../../lib/format';
+import { t } from '../../lib/i18n';
+import type { EmployerSummary, Job } from '../../types';
+
+export const EmployerHomeScreen: React.FC = () => {
+  const navigation = useNavigation<any>();
+  const { colors } = useUiStore();
+  const { user } = useAuthStore();
+
+  const summaryQuery = useQuery({
+    queryKey: queryKeys.employer.summary,
+    queryFn: () => employerApi.getSummary(),
+  });
+
+  const jobsQuery = useQuery({
+    queryKey: queryKeys.employer.jobs('active'),
+    queryFn: () => employerApi.getJobs('active'),
+  });
+
+  const interviewsQuery = useQuery({
+    queryKey: queryKeys.employer.allCandidates({ stage: 'interview' }),
+    queryFn: () => employerApi.getAllCandidates({ stage: 'interview' }),
+  });
+
+  const s = summaryQuery.data;
+  const jobs = jobsQuery.data ?? [];
+  const upcomingInterviews = (interviewsQuery.data ?? [])
+    .filter((c) => c.interview && new Date(c.interview.at) > new Date(Date.now() - 3_600_000))
+    .slice(0, 4);
+
+  const isRefreshing = summaryQuery.isRefetching || jobsQuery.isRefetching || interviewsQuery.isRefetching;
+
+  const handleRefresh = () => {
+    summaryQuery.refetch();
+    jobsQuery.refetch();
+    interviewsQuery.refetch();
+  };
+
+  const firstName = (user?.name || 'Recruiter').split(' ')[0];
+
+  return (
+    <Screen edges={['top']}>
+      <AppHeader />
+
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={handleRefresh}
+            tintColor={colors.primary}
+          />
+        }
+      >
+        {/* Welcome Header */}
+        <View style={styles.headerBlock}>
+          <Text style={[styles.greetingTitle, { color: colors.ink }]}>
+            {greeting()}, {firstName}
+          </Text>
+          <Text style={[styles.companySubtitle, { color: colors.inkSecondary }]}>
+            Hiring at {user?.companyName || 'National Heavy Engineering'}
+            {s ? ` · ${s.newApplicants} new applicant${s.newApplicants === 1 ? '' : 's'} waiting` : ''}
+          </Text>
+
+          {/* Quick Action Buttons */}
+          <View style={styles.actionButtonsRow}>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('EmployerJobs')}
+              style={[styles.outlineBtn, { borderColor: colors.border, backgroundColor: colors.surface }]}
+            >
+              <Users size={16} color={colors.ink} />
+              <Text style={[styles.outlineBtnText, { color: colors.ink }]}>
+                {t('View candidates')}
+              </Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() => navigation.navigate('PostJobWizard')}
+              style={[styles.primaryBtn, { backgroundColor: colors.primary }]}
+            >
+              <Plus size={16} color="#FFF" />
+              <Text style={styles.primaryBtnText}>{t('Post a job')}</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Verification Banner */}
+        <View style={[styles.verificationBanner, { backgroundColor: colors.primarySoft, borderColor: colors.primary }]}>
+          <ShieldCheck size={20} color={colors.primary} />
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.verificationTitle, { color: colors.ink }]}>
+              {t('Verified Employer Account')}
+            </Text>
+            <Text style={[styles.verificationDesc, { color: colors.inkSecondary }]}>
+              {t('Your company documents are verified. Job posts are shown immediately to active workers.')}
+            </Text>
+          </View>
+        </View>
+
+        {/* 4 Pastel Stat Cards (2x2 Grid) */}
+        <View style={styles.statsGrid}>
+          {/* Open Jobs Tile */}
+          <TouchableOpacity
+            onPress={() => navigation.navigate('EmployerJobs')}
+            style={[styles.statTile, { backgroundColor: colors.tiles.blue.bg }]}
+          >
+            <View style={styles.statTileHeader}>
+              <Text style={[styles.statTileLabel, { color: colors.tiles.blue.text }]}>
+                {t('Open jobs')}
+              </Text>
+              <Briefcase size={18} color={colors.tiles.blue.text} />
+            </View>
+            <Text style={[styles.statTileNumber, { color: colors.tiles.blue.text }]}>
+              {s?.openJobs ?? jobs.length}
+            </Text>
+          </TouchableOpacity>
+
+          {/* New Applicants Tile */}
+          <TouchableOpacity
+            onPress={() => navigation.navigate('Candidates')}
+            style={[styles.statTile, { backgroundColor: colors.tiles.green.bg }]}
+          >
+            <View style={styles.statTileHeader}>
+              <Text style={[styles.statTileLabel, { color: colors.tiles.green.text }]}>
+                {t('New applicants')}
+              </Text>
+              <UserPlus size={18} color={colors.tiles.green.text} />
+            </View>
+            <Text style={[styles.statTileNumber, { color: colors.tiles.green.text }]}>
+              {s?.newApplicants ?? 0}
+            </Text>
+            {s?.newApplicants ? (
+              <Text style={[styles.statNote, { color: colors.tiles.green.text }]}>To review</Text>
+            ) : null}
+          </TouchableOpacity>
+
+          {/* Interviews Tile */}
+          <TouchableOpacity
+            onPress={() => navigation.navigate('Candidates')}
+            style={[styles.statTile, { backgroundColor: colors.tiles.purple.bg }]}
+          >
+            <View style={styles.statTileHeader}>
+              <Text style={[styles.statTileLabel, { color: colors.tiles.purple.text }]}>
+                {t('Interviews')}
+              </Text>
+              <CalendarClock size={18} color={colors.tiles.purple.text} />
+            </View>
+            <Text style={[styles.statTileNumber, { color: colors.tiles.purple.text }]}>
+              {s?.interviewsThisWeek ?? 0}
+            </Text>
+            <Text style={[styles.statNote, { color: colors.tiles.purple.text }]}>this week</Text>
+          </TouchableOpacity>
+
+          {/* Hired Tile */}
+          <TouchableOpacity
+            onPress={() => navigation.navigate('Candidates')}
+            style={[styles.statTile, { backgroundColor: colors.tiles.orange.bg }]}
+          >
+            <View style={styles.statTileHeader}>
+              <Text style={[styles.statTileLabel, { color: colors.tiles.orange.text }]}>
+                {t('Hired')}
+              </Text>
+              <CheckCircle2 size={18} color={colors.tiles.orange.text} />
+            </View>
+            <Text style={[styles.statTileNumber, { color: colors.tiles.orange.text }]}>
+              {s?.hiredThisMonth ?? 0}
+            </Text>
+            <Text style={[styles.statNote, { color: colors.tiles.orange.text }]}>this month</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Applicants Per Day Bar Chart */}
+        {s?.applicantsPerDay && (
+          <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <View style={styles.cardHeader}>
+              <Text style={[styles.cardTitle, { color: colors.ink }]}>
+                {t('Applicants per day')}
+              </Text>
+              <Text style={[styles.cardSubtitle, { color: colors.inkMuted }]}>This week</Text>
+            </View>
+            <View style={styles.chartBarsRow}>
+              {s.applicantsPerDay.map((d, i) => {
+                const maxVal = Math.max(1, ...s.applicantsPerDay.map((x) => x.count));
+                const barHeight = Math.max(12, (d.count / maxVal) * 90);
+                return (
+                  <View key={i} style={styles.chartCol}>
+                    <Text style={[styles.barCountText, { color: colors.ink }]}>{d.count}</Text>
+                    <View
+                      style={[
+                        styles.chartBar,
+                        {
+                          height: barHeight,
+                          backgroundColor: d.count > 0 ? colors.primary : colors.surfaceStrong,
+                        },
+                      ]}
+                    />
+                    <Text style={[styles.barDayText, { color: colors.inkSecondary }]}>
+                      {d.day}
+                    </Text>
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+        )}
+
+        {/* Upcoming Interviews Section */}
+        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <View style={styles.cardHeader}>
+            <Text style={[styles.cardTitle, { color: colors.ink }]}>
+              {t('Upcoming interviews')}
+            </Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Candidates')}>
+              <Text style={[styles.cardActionLink, { color: colors.primary }]}>{t('View all')}</Text>
+            </TouchableOpacity>
+          </View>
+
+          {upcomingInterviews.length === 0 ? (
+            <Text style={[styles.emptyHintText, { color: colors.inkMuted }]}>
+              {t('No interviews scheduled. Shortlist workers and invite them from a job.')}
+            </Text>
+          ) : (
+            <View style={{ gap: 10 }}>
+              {upcomingInterviews.map((c) => (
+                <TouchableOpacity
+                  key={c.id}
+                  onPress={() => navigation.navigate('CandidateDossier', { candidateId: c.id })}
+                  style={[styles.interviewItem, { backgroundColor: colors.surfaceMuted }]}
+                >
+                  <Avatar name={c.worker.name} src={c.worker.photoUrl} size="sm" />
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.candidateName, { color: colors.ink }]}>
+                      {c.worker.name}
+                    </Text>
+                    <Text style={[styles.candidateJob, { color: colors.inkMuted }]}>
+                      {c.jobTitle}
+                    </Text>
+                  </View>
+                  <Text style={[styles.interviewAtText, { color: colors.tiles.purple.text }]}>
+                    {c.interview ? formatDateTime(c.interview.at) : ''}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+        </View>
+
+        {/* Hiring Funnel Section */}
+        {s?.funnel && (
+          <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={[styles.cardTitle, { color: colors.ink, marginBottom: 14 }]}>
+              {t('Hiring funnel')} <Text style={{ fontSize: 13, fontWeight: '400', color: colors.inkMuted }}>· all jobs</Text>
+            </Text>
+            <View style={{ gap: 12 }}>
+              {s.funnel.map((f, i) => {
+                const max = Math.max(1, s.funnel[0]!.count);
+                const funnelColors = [
+                  colors.tiles.blue.text,
+                  colors.primary,
+                  colors.tiles.purple.text,
+                  colors.tiles.green.text,
+                ];
+                return (
+                  <View key={f.stage} style={{ gap: 4 }}>
+                    <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                      <Text style={[styles.funnelStageText, { color: colors.inkSecondary }]}>
+                        {f.stage}
+                      </Text>
+                      <Text style={[styles.funnelCountText, { color: colors.ink }]}>{f.count}</Text>
+                    </View>
+                    <View style={[styles.funnelTrack, { backgroundColor: colors.surfaceStrong }]}>
+                      <View
+                        style={[
+                          styles.funnelFill,
+                          {
+                            width: `${(f.count / max) * 100}%`,
+                            backgroundColor: funnelColors[i] || colors.primary,
+                          },
+                        ]}
+                      />
+                    </View>
+                  </View>
+                );
+              })}
+            </View>
+          </View>
+        )}
+
+        {/* Open Jobs List */}
+        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <View style={styles.cardHeader}>
+            <Text style={[styles.cardTitle, { color: colors.ink }]}>{t('Open jobs')}</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('EmployerJobs')}>
+              <Text style={[styles.cardActionLink, { color: colors.primary }]}>{t('View all')}</Text>
+            </TouchableOpacity>
+          </View>
+
+          {jobs.length === 0 ? (
+            <View style={{ paddingVertical: 20, alignItems: 'center' }}>
+              <Text style={{ color: colors.inkMuted }}>{t('No open jobs.')}</Text>
+            </View>
+          ) : (
+            <View style={{ gap: 10 }}>
+              {jobs.slice(0, 5).map((j) => (
+                <TouchableOpacity
+                  key={j.id}
+                  onPress={() => navigation.navigate('EmployerJobs')}
+                  style={[styles.jobRowItem, { backgroundColor: colors.surfaceMuted }]}
+                >
+                  <CompanyLogo job={j} size="sm" />
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.jobRowTitle, { color: colors.ink }]} numberOfLines={1}>
+                      {j.title}
+                    </Text>
+                    <Text style={[styles.jobRowSubtitle, { color: colors.inkMuted }]}>
+                      {j.location.city} · {t(SHIFT_LABEL[j.shift])}
+                    </Text>
+                    <View style={styles.openingsProgress}>
+                      <View style={[styles.progressTrack, { backgroundColor: colors.surfaceStrong }]}>
+                        <View
+                          style={[
+                            styles.progressFill,
+                            {
+                              width: `${Math.min(100, ((j.applicantsCount || 0) / Math.max(1, j.openings)) * 100)}%`,
+                              backgroundColor: colors.primary,
+                            },
+                          ]}
+                        />
+                      </View>
+                      <Text style={[styles.openingsText, { color: colors.inkSecondary }]}>
+                        {j.openings} {t('openings')} · {j.applicantsCount} {t('applied')}
+                      </Text>
+                    </View>
+                  </View>
+                  <ChevronRight size={16} color={colors.inkMuted} />
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+        </View>
+      </ScrollView>
+    </Screen>
+  );
+};
+
+const styles = StyleSheet.create({
+  scrollContent: {
+    padding: 16,
+    paddingBottom: 48,
+    gap: 16,
+  },
+  headerBlock: {
+    gap: 4,
+  },
+  greetingTitle: {
+    fontSize: 24,
+    fontWeight: '800',
+    letterSpacing: -0.3,
+  },
+  companySubtitle: {
+    fontSize: 13.5,
+  },
+  actionButtonsRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 12,
+  },
+  outlineBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1,
+  },
+  outlineBtnText: {
+    fontSize: 13.5,
+    fontWeight: '700',
+  },
+  primaryBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    height: 44,
+    borderRadius: 22,
+  },
+  primaryBtnText: {
+    color: '#FFF',
+    fontSize: 13.5,
+    fontWeight: '700',
+  },
+  verificationBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    gap: 12,
+  },
+  verificationTitle: {
+    fontSize: 13.5,
+    fontWeight: '700',
+  },
+  verificationDesc: {
+    fontSize: 12,
+    marginTop: 2,
+    lineHeight: 16,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  statTile: {
+    flex: 1,
+    minWidth: '47%',
+    padding: 14,
+    borderRadius: 14,
+  },
+  statTileHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  statTileLabel: {
+    fontSize: 12.5,
+    fontWeight: '600',
+  },
+  statTileNumber: {
+    fontSize: 24,
+    fontWeight: '800',
+    marginTop: 6,
+    lineHeight: 28,
+  },
+  statNote: {
+    fontSize: 11,
+    marginTop: 2,
+    fontWeight: '500',
+  },
+  card: {
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 16,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 14,
+  },
+  cardTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  cardSubtitle: {
+    fontSize: 12,
+  },
+  cardActionLink: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  chartBarsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    height: 120,
+    paddingTop: 10,
+  },
+  chartCol: {
+    alignItems: 'center',
+    gap: 4,
+    flex: 1,
+  },
+  chartBar: {
+    width: 14,
+    borderRadius: 7,
+  },
+  barCountText: {
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  barDayText: {
+    fontSize: 11,
+  },
+  emptyHintText: {
+    fontSize: 13,
+    textAlign: 'center',
+    paddingVertical: 14,
+    lineHeight: 18,
+  },
+  interviewItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 12,
+    gap: 10,
+  },
+  candidateName: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  candidateJob: {
+    fontSize: 12,
+    marginTop: 1,
+  },
+  interviewAtText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  funnelStageText: {
+    fontSize: 13,
+  },
+  funnelCountText: {
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  funnelTrack: {
+    height: 7,
+    borderRadius: 4,
+    overflow: 'hidden',
+  },
+  funnelFill: {
+    height: '100%',
+    borderRadius: 4,
+  },
+  jobRowItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 12,
+    gap: 10,
+  },
+  jobRowTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  jobRowSubtitle: {
+    fontSize: 12,
+    marginTop: 1,
+  },
+  openingsProgress: {
+    marginTop: 6,
+    gap: 3,
+  },
+  progressTrack: {
+    height: 4,
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 2,
+  },
+  openingsText: {
+    fontSize: 11,
+  },
+});

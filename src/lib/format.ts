@@ -1,0 +1,85 @@
+import type { PayPeriod } from '../types';
+import { getLang, t } from './i18n';
+
+const inr = new Intl.NumberFormat('en-IN');
+
+export const formatNumber = (n: number) => inr.format(n);
+
+export function formatCompact(n: number) {
+  if (n >= 1000) return `${(n / 1000).toFixed(n >= 10000 ? 0 : 1)}k`;
+  return String(n);
+}
+
+/** "₹18,000–22,000 / month" or "₹700 / day (about ₹18,200/month)". */
+export function formatPay(min?: number, max?: number, period: PayPeriod = 'month', withMonthly = false) {
+  if (!min && !max) return t('Salary not disclosed');
+  const range = min && max && min !== max ? `₹${inr.format(min)}–${inr.format(max)}` : `₹${inr.format((min || max)!)}`;
+  const base = `${range} / ${t(period === 'day' ? 'day' : 'month')}`;
+  if (withMonthly && period === 'day') {
+    const monthly = Math.round(((min || max)! * 26) / 100) * 100;
+    return `${base} (${t('about ₹{n}/month', { n: inr.format(monthly) })})`;
+  }
+  return base;
+}
+
+const loc = () => `${getLang()}-IN`;
+
+export function formatDate(iso: string) {
+  try {
+    return new Date(iso).toLocaleDateString(loc(), { day: 'numeric', month: 'short', year: 'numeric' });
+  } catch {
+    return iso;
+  }
+}
+
+export function formatDateTime(iso: string) {
+  try {
+    return new Date(iso).toLocaleString(loc(), {
+      day: 'numeric',
+      month: 'short',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+  } catch {
+    return iso;
+  }
+}
+
+export function timeAgo(iso: string): string {
+  try {
+    const diffSec = (new Date(iso).getTime() - Date.now()) / 1000;
+    const abs = Math.abs(diffSec);
+    if (abs < 60) return diffSec > 0 ? t('in a moment') : t('just now');
+
+    const minutes = Math.round(abs / 60);
+    const hours = Math.round(abs / 3600);
+    const days = Math.round(abs / 86400);
+
+    if (days >= 1) {
+      return diffSec < 0 ? `${days}d ago` : `in ${days}d`;
+    }
+    if (hours >= 1) {
+      return diffSec < 0 ? `${hours}h ago` : `in ${hours}h`;
+    }
+    return diffSec < 0 ? `${minutes}m ago` : `in ${minutes}m`;
+  } catch {
+    return 'recently';
+  }
+}
+
+export function formatBytes(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+export function initials(name: string) {
+  return name.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0]?.toUpperCase()).join('');
+}
+
+export function greeting() {
+  const h = new Date().getHours();
+  return t(h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening');
+}
+

@@ -1,25 +1,53 @@
 {
   "expo": {
-    "name": "industrialink-mobile",
-    "slug": "industrialink-mobile",
+    "name": "IndustriaLink",
+    "slug": "industrialink",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "scheme": "industrialink",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#2454E6"
+    },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.pantiss.industrialink",
+      "infoPlist": {
+        "NSCameraUsageDescription": "IndustriaLink requires camera access to photograph your ITI trade certificates and Aadhaar ID for verification.",
+        "NSPhotoLibraryUsageDescription": "IndustriaLink requires access to your photos to upload certificates and resume documents."
+      }
     },
     "android": {
+      "package": "com.pantiss.industrialink",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#2454E6",
         "foregroundImage": "./assets/android-icon-foreground.png",
         "backgroundImage": "./assets/android-icon-background.png",
         "monochromeImage": "./assets/android-icon-monochrome.png"
       },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
+      ],
       "predictiveBackGestureEnabled": false
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-font",
+      "expo-secure-store",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "IndustriaLink needs access to your gallery to upload trade certificates."
+        }
+      ]
+    ]
   }
 }
