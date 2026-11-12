@@ -1,19 +1,26 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+} from 'react-native';
+import { Text } from '../../components/ui/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CheckCircle2, AlertTriangle, AlertCircle, Info, X } from 'lucide-react-native';
+import Animated, { FadeInUp, FadeOutUp, LinearTransition } from 'react-native-reanimated';
 import { useUiStore } from '../../store/uiStore';
+import { useToastStore } from '../../store/toastStore';
 import { radii, spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
 
 export const ToastContainer: React.FC = () => {
   const insets = useSafeAreaInsets();
-  const { toasts, dismissToast, colors } = useUiStore();
-
-  if (toasts.length === 0) return null;
+  const colors = useUiStore((s) => s.colors);
+  const toasts = useToastStore((s) => s.toasts);
+  const dismissToast = useToastStore((s) => s.dismiss);
 
   return (
-    <View style={[styles.container, { top: insets.top + spacing.sm }]}>
+    <View pointerEvents="box-none" style={[styles.container, { top: insets.top + spacing.sm }]}>
       {toasts.map((toast) => {
         let bg: string = colors.surface;
         let border: string = colors.border;
@@ -39,8 +46,12 @@ export const ToastContainer: React.FC = () => {
         }
 
         return (
-          <View
+          <Animated.View
             key={toast.id}
+            entering={FadeInUp.duration(220)}
+            exiting={FadeOutUp.duration(160)}
+            layout={LinearTransition.duration(200)}
+            accessibilityRole="alert"
             style={[
               styles.toast,
               {
@@ -66,7 +77,7 @@ export const ToastContainer: React.FC = () => {
             >
               <X size={16} color={colors.inkMuted} />
             </TouchableOpacity>
-          </View>
+          </Animated.View>
         );
       })}
     </View>

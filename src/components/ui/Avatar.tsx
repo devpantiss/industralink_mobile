@@ -1,5 +1,12 @@
 import React from 'react';
-import { View, Text, Image, StyleSheet, ViewStyle, ImageStyle } from 'react-native';
+import {
+  View,
+  Image,
+  StyleSheet,
+  ViewStyle,
+  ImageStyle,
+} from 'react-native';
+import { Text } from '../../components/ui/Text';
 import { useUiStore } from '../../store/uiStore';
 import { radii } from '../../theme/spacing';
 

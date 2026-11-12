@@ -1,10 +1,7 @@
-import { TextStyle, Platform } from 'react-native';
+import { TextStyle } from 'react-native';
+import { FONT } from './fonts';
 
-const fontFamily = Platform.select({
-  ios: 'System',
-  android: 'Roboto',
-  default: 'System',
-});
+const fontFamily = FONT;
 
 export const typography: Record<string, TextStyle> = {
   display: {

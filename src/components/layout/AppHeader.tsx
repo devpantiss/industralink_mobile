@@ -1,5 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+} from 'react-native';
+import { Text } from '../../components/ui/Text';
 import { ArrowLeft, Moon, Sun, Menu, Settings } from 'lucide-react-native';
 import { useNavigation, DrawerActions } from '@react-navigation/native';
 import { useUiStore } from '../../store/uiStore';

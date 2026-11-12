@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  TextInput,
   Modal,
   ActivityIndicator,
 } from 'react-native';
+import { Text, TextInput } from '../../components/ui/Text';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Search,

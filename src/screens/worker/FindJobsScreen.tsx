@@ -1,15 +1,14 @@
 import React, { useState, useMemo } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  TextInput,
   Modal,
   RefreshControl,
   ActivityIndicator,
 } from 'react-native';
+import { Text, TextInput } from '../../components/ui/Text';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -28,7 +27,7 @@ import * as Haptics from 'expo-haptics';
 import type { WorkerStackParamList } from '../../navigation/types';
 import { Screen } from '../../components/layout/Screen';
 import { AppHeader } from '../../components/layout/AppHeader';
-import { BannerArt } from '../../components/ui/BannerArt';
+import { Hero } from '../../components/ui/Hero';
 import { JobRow } from '../../components/domain/JobRow';
 import { workerApi } from '../../api/workerApi';
 import { queryKeys } from '../../api/keys';
@@ -175,33 +174,26 @@ export const FindJobsScreen: React.FC = () => {
           />
         }
       >
-        {/* Banner with Geometric BannerArt */}
-        <View style={[styles.bannerContainer, { backgroundColor: colors.surfaceMuted }]}>
-          <BannerArt opacity={0.35} />
-          <View style={styles.bannerTextContent}>
-            <Text style={[styles.bannerTitle, { color: colors.ink }]}>
-              {t('Find work near you')}
-            </Text>
-            <Text style={[styles.bannerSubtitle, { color: colors.inkSecondary }]}>
-              {t('Verified jobs from plants, ports, mines and transport companies. Apply with your profile, no resume needed.')}
-            </Text>
-
-            <View style={styles.trustBadgesRow}>
-              <View style={styles.trustBadge}>
-                <BadgeCheck size={15} color={colors.primary} />
-                <Text style={[styles.trustBadgeText, { color: colors.inkSecondary }]}>
-                  {t('Verified employers')}
-                </Text>
-              </View>
-              <View style={styles.trustBadge}>
-                <ShieldCheck size={15} color={colors.primary} />
-                <Text style={[styles.trustBadgeText, { color: colors.inkSecondary }]}>
-                  {t('Always free for workers')}
-                </Text>
-              </View>
+        <Hero
+          style={styles.hero}
+          title={t('Find work near you')}
+          subtitle={t('Verified jobs from plants, ports, mines and transport companies. Apply with your profile, no resume needed.')}
+        >
+          <View style={styles.trustBadgesRow}>
+            <View style={styles.trustBadge}>
+              <BadgeCheck size={15} color={colors.primary} />
+              <Text style={[styles.trustBadgeText, { color: colors.inkSecondary }]}>
+                {t('Verified employers')}
+              </Text>
+            </View>
+            <View style={styles.trustBadge}>
+              <ShieldCheck size={15} color={colors.primary} />
+              <Text style={[styles.trustBadgeText, { color: colors.inkSecondary }]}>
+                {t('Always free for workers')}
+              </Text>
             </View>
           </View>
-        </View>
+        </Hero>
 
         {/* Floating/Docked Search Card */}
         <View style={[styles.searchDockCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
@@ -625,6 +617,13 @@ function FilterCheckbox({
 const styles = StyleSheet.create({
   scrollContent: {
     paddingBottom: 48,
+  },
+  // Bottom padding leaves room for the search card that overlaps the banner.
+  hero: {
+    marginHorizontal: 16,
+    marginTop: 12,
+    marginBottom: 0,
+    paddingBottom: 22,
   },
   bannerContainer: {
     position: 'relative',

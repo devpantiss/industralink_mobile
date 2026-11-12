@@ -1,7 +1,15 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch } from 'react-native';
+import React from 'react';
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Switch,
+} from 'react-native';
+import { Text } from '../../components/ui/Text';
 import { useTranslation } from 'react-i18next';
-import { Moon, Sun, Globe, Bell, Shield, LogOut, Check } from 'lucide-react-native';
+import { Moon, Sun, Globe, Bell, Shield, LogOut, Check, Smartphone } from 'lucide-react-native';
+import { SegmentedTabs } from '../../components/ui/SegmentedTabs';
 import * as Haptics from 'expo-haptics';
 import { Screen } from '../../components/layout/Screen';
 import { AppHeader } from '../../components/layout/AppHeader';
@@ -14,10 +22,10 @@ import { spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
 
 export const SettingsScreen: React.FC = () => {
-  const { colors, theme, toggleTheme, showToast } = useUiStore();
+  const { colors, themePref, setThemePref, language, setLanguage, showToast } = useUiStore();
   const { user, role, switchRole, logout } = useAuthStore();
   const { t } = useTranslation();
-  const [currentLang, setCurrentLang] = useState(i18n.language || 'en');
+  const currentLang = language;
 
   const languages = [
     { code: 'en', label: 'English', native: 'English' },
@@ -27,8 +35,7 @@ export const SettingsScreen: React.FC = () => {
 
   const handleLanguageChange = (code: string, label: string) => {
     Haptics.selectionAsync();
-    i18n.changeLanguage(code);
-    setCurrentLang(code);
+    setLanguage(code as 'en' | 'hi' | 'or');
     showToast(`App language set to ${label}`, 'success');
   };
 
@@ -119,29 +126,18 @@ export const SettingsScreen: React.FC = () => {
           <Text style={[typography.h3, styles.sectionTitle, { color: colors.ink }]}>
             Display & Appearance
           </Text>
-          <View style={styles.settingRow}>
-            <View style={styles.settingLeft}>
-              {theme === 'dark' ? (
-                <Moon size={20} color={colors.primary} />
-              ) : (
-                <Sun size={20} color={colors.accent} />
-              )}
-              <View style={styles.settingText}>
-                <Text style={[typography.body, { color: colors.ink, fontWeight: '600' }]}>
-                  Cobalt Night (Dark Mode)
-                </Text>
-                <Text style={[typography.caption, { color: colors.inkSecondary }]}>
-                  High contrast dark theme for industrial shopfloors
-                </Text>
-              </View>
-            </View>
-            <Switch
-              value={theme === 'dark'}
-              onValueChange={toggleTheme}
-              thumbColor={colors.surface}
-              trackColor={{ false: colors.border, true: colors.primary }}
-            />
-          </View>
+          <Text style={[typography.caption, { color: colors.inkSecondary, marginBottom: spacing.sm }]}>
+            Light is the default. System follows your phone.
+          </Text>
+          <SegmentedTabs
+            value={themePref}
+            onChange={setThemePref}
+            items={[
+              { key: 'light', label: 'Light', icon: (c) => <Sun size={16} color={c} /> },
+              { key: 'dark', label: 'Dark', icon: (c) => <Moon size={16} color={c} /> },
+              { key: 'system', label: 'System', icon: (c) => <Smartphone size={16} color={c} /> },
+            ]}
+          />
         </Card>
 
         <Button

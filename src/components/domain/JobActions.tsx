@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   Modal,
   TouchableOpacity,
-  TextInput,
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
+import { Text, TextInput } from '../../components/ui/Text';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { CheckCircle2, X, ShieldAlert } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';

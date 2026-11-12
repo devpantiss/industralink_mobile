@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   Modal,
   TouchableOpacity,
   ScrollView,
 } from 'react-native';
+import { Text } from '../../components/ui/Text';
 import { X, Check } from 'lucide-react-native';
 import { Trade, Shift } from '../../types';
 import { Button } from '../ui/Button';

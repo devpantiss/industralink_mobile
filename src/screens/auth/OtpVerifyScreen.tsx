@@ -1,12 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
-  TextInput,
   TouchableOpacity,
   Keyboard,
 } from 'react-native';
+import { Text, TextInput } from '../../components/ui/Text';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { CheckCircle2, RotateCw } from 'lucide-react-native';
 import { AuthStackParamList } from '../../navigation/types';

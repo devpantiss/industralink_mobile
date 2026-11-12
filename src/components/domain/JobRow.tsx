@@ -1,5 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ViewStyle } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  ViewStyle,
+} from 'react-native';
+import { Text } from '../../components/ui/Text';
 import { MapPin, Clock, Bookmark, BadgeCheck, CheckCircle2 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import type { JobForWorker } from '../../types';

@@ -1,5 +1,10 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+} from 'react-native';
+import { Text } from '../components/ui/Text';
 import {
   createDrawerNavigator,
   DrawerContentScrollView,

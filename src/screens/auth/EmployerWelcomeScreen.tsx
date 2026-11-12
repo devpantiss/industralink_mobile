@@ -1,5 +1,11 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+} from 'react-native';
+import { Text } from '../../components/ui/Text';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Building2, Check, ArrowRight } from 'lucide-react-native';
 import { AuthStackParamList } from '../../navigation/types';

@@ -1,13 +1,13 @@
 import React from 'react';
 import {
   TouchableOpacity,
-  Text,
   ActivityIndicator,
   StyleSheet,
   ViewStyle,
   TextStyle,
   StyleProp,
 } from 'react-native';
+import { Text } from '../../components/ui/Text';
 import * as Haptics from 'expo-haptics';
 import { useUiStore } from '../../store/uiStore';
 import { radii, layout } from '../../theme/spacing';

@@ -1,15 +1,14 @@
 import React, { useMemo, useState } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  TextInput,
   RefreshControl,
   Switch,
   ActivityIndicator,
 } from 'react-native';
+import { Text, TextInput } from '../../components/ui/Text';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -30,6 +29,7 @@ import { Screen } from '../../components/layout/Screen';
 import { AppHeader } from '../../components/layout/AppHeader';
 import { JobCard } from '../../components/domain/JobCard';
 import { Avatar } from '../../components/ui/Avatar';
+import { Hero } from '../../components/ui/Hero';
 import { workerApi } from '../../api/workerApi';
 import { queryKeys } from '../../api/keys';
 import { useUiStore } from '../../store/uiStore';
@@ -170,19 +170,18 @@ export const WorkerHomeScreen: React.FC = () => {
         }
       >
         {/* Welcome Header */}
-        <View style={styles.welcomeBlock}>
-          <Text style={[styles.welcomeTitle, { color: colors.ink }]}>
-            {t("Welcome back, {name}. Let's find your next job.", { name: firstName })}
-          </Text>
-          <Text style={[styles.welcomeSubtitle, { color: colors.inkSecondary }]}>
-            {trade && profile?.location
+        <Hero
+          eyebrow={t('Hi {name}', { name: firstName })}
+          title={t("Let's find your next job.")}
+          subtitle={
+            trade && profile?.location
               ? t('Jobs matched to your trade ({trade}) and location ({city}).', {
                   trade: t(TRADE_LABEL[trade]),
                   city: profile.location.city,
                 })
-              : t('New verified jobs are added every day.')}
-          </Text>
-        </View>
+              : t('New verified jobs are added every day.')
+          }
+        />
 
         {/* Next Step Appointment Urgent Banner */}
         {summary?.nextStep && (

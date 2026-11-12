@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import {
   View,
-  Text,
-  TextInput,
   StyleSheet,
   ViewStyle,
   TextInputProps,
 } from 'react-native';
+import { Text, TextInput } from '../../components/ui/Text';
 import { useUiStore } from '../../store/uiStore';
 import { radii, spacing, layout } from '../../theme/spacing';
 import { typography } from '../../theme/typography';

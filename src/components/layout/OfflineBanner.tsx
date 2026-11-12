@@ -1,5 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import {
+  View,
+  StyleSheet,
+} from 'react-native';
+import { Text } from '../../components/ui/Text';
 import NetInfo from '@react-native-community/netinfo';
 import { WifiOff } from 'lucide-react-native';
 import { useUiStore } from '../../store/uiStore';

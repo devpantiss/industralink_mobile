@@ -1,5 +1,13 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Linking, StyleProp, ViewStyle } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  Linking,
+  StyleProp,
+  ViewStyle,
+} from 'react-native';
+import { Text } from '../../components/ui/Text';
 import { Phone, CheckCircle, XCircle, Award, MapPin } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { Candidate, ApplicationStage } from '../../types';

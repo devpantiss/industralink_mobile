@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  TextInput,
   Alert,
 } from 'react-native';
+import { Text, TextInput } from '../../components/ui/Text';
 import { Search, UserCheck, ShieldAlert, UserX, ChevronRight } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { Screen } from '../../components/layout/Screen';

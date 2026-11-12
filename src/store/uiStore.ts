@@ -1,54 +1,72 @@
 import { create } from 'zustand';
-import { ThemeMode, colors, ThemeColors } from '../theme/colors';
+import { Appearance } from 'react-native';
 import * as SecureStore from 'expo-secure-store';
+import { ThemeMode, colors, ThemeColors } from '../theme/colors';
 import i18n from '../lib/i18n';
+import { useToastStore, ToastMessage } from './toastStore';
 
 const PREFS_KEY = 'industrialink_ui_prefs';
 type Lang = 'en' | 'hi' | 'or';
+/** What the user picked. "system" follows the phone; light is the default, like the web. */
+export type ThemePref = 'light' | 'dark' | 'system';
 
-function savePrefs(theme: ThemeMode, language: Lang) {
-  SecureStore.setItemAsync(PREFS_KEY, JSON.stringify({ theme, language })).catch(() => {});
-}
+const resolve = (pref: ThemePref): ThemeMode =>
+  pref === 'system' ? (Appearance.getColorScheme() === 'dark' ? 'dark' : 'light') : pref;
 
-interface ToastMessage {
-  id: string;
-  type: 'success' | 'warning' | 'error' | 'info';
-  message: string;
+function savePrefs(themePref: ThemePref, language: Lang) {
+  SecureStore.setItemAsync(PREFS_KEY, JSON.stringify({ theme: themePref, language })).catch(() => {});
 }
 
 interface UiState {
+  /** The theme in use right now (light or dark). */
   theme: ThemeMode;
+  themePref: ThemePref;
   colors: ThemeColors;
   toggleTheme: () => void;
   setTheme: (theme: ThemeMode) => void;
-  language: 'en' | 'hi' | 'or';
-  setLanguage: (lang: 'en' | 'hi' | 'or') => void;
+  setThemePref: (pref: ThemePref) => void;
+  language: Lang;
+  setLanguage: (lang: Lang) => void;
   loadPrefs: () => Promise<void>;
-  toasts: ToastMessage[];
   showToast: (message: string, type?: ToastMessage['type']) => void;
-  dismissToast: (id: string) => void;
 }
+
+let appearanceListening = false;
 
 export const useUiStore = create<UiState>((set, get) => ({
   theme: 'light',
+  themePref: 'light',
   colors: colors.light,
-  toggleTheme: () => get().setTheme(get().theme === 'light' ? 'dark' : 'light'),
-  setTheme: (theme) => {
-    set({ theme, colors: colors[theme] });
-    savePrefs(theme, get().language);
+  toggleTheme: () => get().setThemePref(get().theme === 'light' ? 'dark' : 'light'),
+  setTheme: (theme) => get().setThemePref(theme),
+  setThemePref: (themePref) => {
+    const theme = resolve(themePref);
+    set({ themePref, theme, colors: colors[theme] });
+    savePrefs(themePref, get().language);
   },
   language: (i18n.language as Lang) || 'en',
   setLanguage: (lang) => {
     i18n.changeLanguage(lang);
     set({ language: lang });
-    savePrefs(get().theme, lang);
+    savePrefs(get().themePref, lang);
   },
   loadPrefs: async () => {
+    if (!appearanceListening) {
+      appearanceListening = true;
+      Appearance.addChangeListener(() => {
+        if (get().themePref !== 'system') return;
+        const theme = resolve('system');
+        set({ theme, colors: colors[theme] });
+      });
+    }
     try {
       const raw = await SecureStore.getItemAsync(PREFS_KEY);
       if (!raw) return;
-      const p = JSON.parse(raw) as { theme?: ThemeMode; language?: Lang };
-      if (p.theme === 'light' || p.theme === 'dark') set({ theme: p.theme, colors: colors[p.theme] });
+      const p = JSON.parse(raw) as { theme?: ThemePref; language?: Lang };
+      if (p.theme === 'light' || p.theme === 'dark' || p.theme === 'system') {
+        const theme = resolve(p.theme);
+        set({ themePref: p.theme, theme, colors: colors[theme] });
+      }
       if (p.language && ['en', 'hi', 'or'].includes(p.language)) {
         i18n.changeLanguage(p.language);
         set({ language: p.language });
@@ -57,21 +75,5 @@ export const useUiStore = create<UiState>((set, get) => ({
       // keep defaults
     }
   },
-  toasts: [],
-  showToast: (message, type = 'info') => {
-    const id = Date.now().toString();
-    set((state) => ({
-      toasts: [...state.toasts, { id, type, message }],
-    }));
-    setTimeout(() => {
-      set((state) => ({
-        toasts: state.toasts.filter((t) => t.id !== id),
-      }));
-    }, 3000);
-  },
-  dismissToast: (id) =>
-    set((state) => ({
-      toasts: state.toasts.filter((t) => t.id !== id),
-    })),
+  showToast: (message, type = 'info') => useToastStore.getState().show(message, type),
 }));
-

@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
-  Text,
   StyleSheet,
   TouchableOpacity,
   ScrollView,
   ImageBackground,
-  TextInput,
   Modal,
   Platform,
   KeyboardAvoidingView,
@@ -16,6 +14,7 @@ import {
   LayoutAnimation,
   UIManager,
 } from 'react-native';
+import { Text, TextInput } from '../../components/ui/Text';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
 import * as Haptics from 'expo-haptics';

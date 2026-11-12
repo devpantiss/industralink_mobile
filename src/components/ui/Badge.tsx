@@ -1,5 +1,11 @@
 import React from 'react';
-import { View, Text, StyleSheet, ViewStyle, TextStyle } from 'react-native';
+import {
+  View,
+  StyleSheet,
+  ViewStyle,
+  TextStyle,
+} from 'react-native';
+import { Text } from '../../components/ui/Text';
 import { useUiStore } from '../../store/uiStore';
 import { radii, spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
