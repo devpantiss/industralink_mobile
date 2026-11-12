@@ -154,7 +154,7 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
   const handleWorkerSubmit = async () => {
     if (!workerName.trim() || workerName.trim().length < 2) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-      showToast(t('Please enter your full name as on Aadhaar.'), 'warning');
+      showToast(t('Please enter your full name.'), 'warning');
       return;
     }
     if (!workerPhone || workerPhone.length < 10) {
@@ -307,8 +307,8 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
           bounces={false}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
+          style={[styles.scrollView, { backgroundColor: colors.surface }]}
+          contentContainerStyle={[styles.scrollContent, { backgroundColor: colors.surface }]}
         >
           {/* ================= HERO CONTAINER (Dark Background Behind Radius) ================= */}
           <View style={[styles.heroOuterWrapper, { backgroundColor: '#0B1120' }]}>
@@ -434,7 +434,7 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
                     {/* Main Glassmorphic Candidate Card */}
                     <View style={styles.mainGlassCard}>
                       <View style={styles.glassCardTopRow}>
-                        <View style={[styles.companyGlyphBox, { backgroundColor: '#0284C7' }]}>
+                        <View style={[styles.companyGlyphBox, { backgroundColor: '#2454E6' }]}>
                           <HardHat size={17} color="#FFFFFF" />
                         </View>
                         <View style={{ flex: 1, marginLeft: 10 }}>
@@ -442,8 +442,8 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
                             <Text style={styles.jobTitleText} numberOfLines={1}>
                               Ramesh Kumar · ITI Welder
                             </Text>
-                            <View style={[styles.payPill, { backgroundColor: '#E0F2FE' }]}>
-                              <Text style={[styles.payPillText, { color: '#0369A1' }]}>
+                            <View style={[styles.payPill, { backgroundColor: '#EBF0FE' }]}>
+                              <Text style={[styles.payPillText, { color: '#1D45C4' }]}>
                                 5 yrs exp
                               </Text>
                             </View>
@@ -461,8 +461,8 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
 
                       <View style={styles.cardBadgesRow}>
                         <View style={styles.featureBadge}>
-                          <ShieldCheck size={13} color="#0284C7" />
-                          <Text style={[styles.featureBadgeText, { color: '#0284C7' }]}>
+                          <ShieldCheck size={13} color="#2454E6" />
+                          <Text style={[styles.featureBadgeText, { color: '#2454E6' }]}>
                             Certificates uploaded
                           </Text>
                         </View>
@@ -495,7 +495,7 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
           </View>
 
           {/* ================= REFINED FORM CONTAINER (White all the way to bottom) ================= */}
-          <View style={styles.formContainer}>
+          <View style={[styles.formContainer, { backgroundColor: colors.surface }]}>
             {/* Title & Subtitle */}
             <View style={styles.titleBlock}>
               <Text style={[styles.mainTitle, { color: colors.ink }]}>
@@ -503,7 +503,7 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
               </Text>
               <Text style={[styles.mainSubtitle, { color: colors.inkSecondary }]}>
                 {role === 'worker'
-                  ? t('Takes less than a minute. As on Aadhaar so plant HR can trust it.')
+                  ? t('Takes less than a minute. Free for workers, always.')
                   : 'Register your company or plant to hire certified industrial talent.'}
               </Text>
             </View>
@@ -574,7 +574,7 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
                     styles.segmentIconCircle,
                     {
                       backgroundColor:
-                        role === 'employer' ? '#0284C7' : 'transparent',
+                        role === 'employer' ? colors.primary : 'transparent',
                     },
                   ]}
                 >
@@ -652,7 +652,7 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
                           )}
                         </View>
                         <Text style={[styles.fieldHint, { color: colors.inkMuted }]}>
-                          {t('As on your Aadhaar, so plant HR can trust and verify it.')}
+                          {t('Use your real name so employers know who is applying.')}
                         </Text>
                       </View>
 
@@ -725,7 +725,7 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
                         ) : (
                           <View style={styles.btnRow}>
                             <Text style={styles.primaryBtnText}>
-                              {t('Continue to Onboarding')}
+                              {t('Continue')}
                             </Text>
                             <ArrowRight size={18} color="#FFFFFF" style={{ marginLeft: 6 }} />
                           </View>
@@ -986,13 +986,13 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
                     style={[
                       styles.trustNoteCard,
                       {
-                        backgroundColor: '#F0F9FF',
-                        borderColor: '#BAE6FD',
+                        backgroundColor: colors.infoBg,
+                        borderColor: colors.infoBg,
                       },
                     ]}
                   >
-                    <ShieldCheck size={18} color="#0284C7" style={{ marginTop: 1 }} />
-                    <Text style={[styles.trustNoteText, { color: '#0369A1' }]}>
+                    <ShieldCheck size={18} color={colors.infoFg} style={{ marginTop: 1 }} />
+                    <Text style={[styles.trustNoteText, { color: colors.infoFg }]}>
                       We check every factory and company before jobs go live. This keeps workers safe from fake contractors.
                     </Text>
                   </View>
@@ -1004,7 +1004,7 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
                     activeOpacity={0.88}
                     style={[
                       styles.primaryActionBtn,
-                      { backgroundColor: '#0284C7' },
+                      { backgroundColor: colors.primary },
                     ]}
                   >
                     {loading ? (
@@ -1057,7 +1057,7 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
               { backgroundColor: colors.surface, borderColor: colors.border },
             ]}
           >
-            <View style={styles.modalHeader}>
+            <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
               <Text style={[styles.modalTitle, { color: colors.ink }]}>
                 Choose Language
               </Text>
@@ -1104,11 +1104,9 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   scrollContent: {
     flexGrow: 1,
-    backgroundColor: '#FFFFFF',
   },
 
   /* HERO (Dark container behind top rounded corners) */
@@ -1302,7 +1300,6 @@ const styles = StyleSheet.create({
   /* FORM CARD (White all the way to screen bottom with no gray cutoff) */
   formContainer: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     marginTop: -36,
@@ -1542,7 +1539,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     paddingBottom: 8,
     borderBottomWidth: 1,
-    borderBottomColor: '#E2E8F0',
   },
   modalTitle: {
     fontSize: 16,

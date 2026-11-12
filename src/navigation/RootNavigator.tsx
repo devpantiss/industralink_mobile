@@ -82,11 +82,15 @@ export const RootNavigator: React.FC = () => {
     loadPrefs().finally(() => initAuth());
   }, []);
 
-  // Demo links (mock data only): industrialink://demo/worker | employer | admin signs in as that role.
+  // Demo links (mock data only): industrialink://demo/worker | employer | admin signs in as that role,
+  // demo/logout signs out, demo/light | dark | system sets the theme.
   useEffect(() => {
     if (!USE_MOCKS) return;
     const handle = (url: string | null) => {
       const path = url ? Linking.parse(url).path ?? '' : '';
+      if (path === 'demo/logout') return void useAuthStore.getState().logout();
+      const th = path.match(/^demo\/(light|dark|system)$/);
+      if (th) return useUiStore.getState().setThemePref(th[1] as 'light' | 'dark' | 'system');
       const m = path.match(/^demo\/(worker|employer|admin)$/);
       if (m) useAuthStore.getState().loginAsDemo(m[1] as Role);
     };

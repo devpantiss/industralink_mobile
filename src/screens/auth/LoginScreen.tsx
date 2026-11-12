@@ -273,8 +273,8 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
           bounces={false}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
+          style={[styles.scrollView, { backgroundColor: colors.surface }]}
+          contentContainerStyle={[styles.scrollContent, { backgroundColor: colors.surface }]}
         >
           {/* ================= HERO CONTAINER (Dark Background Behind Radius) ================= */}
           <View style={[styles.heroOuterWrapper, { backgroundColor: '#0B1120' }]}>
@@ -389,7 +389,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
           </View>
 
           {/* ================= REFINED FORM CONTAINER (White all the way to bottom) ================= */}
-          <View style={styles.formContainer}>
+          <View style={[styles.formContainer, { backgroundColor: colors.surface }]}>
             {/* Title & Subtitle */}
             <View style={styles.titleBlock}>
               <Text style={[styles.mainTitle, { color: colors.ink }]}>
@@ -893,7 +893,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
             style={[styles.modalSheet, { backgroundColor: colors.surface }]}
             onStartShouldSetResponder={() => true}
           >
-            <View style={styles.modalHeader}>
+            <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
               <Text style={[typography.h3, { color: colors.ink, fontWeight: '700' }]}>
                 Select Language
               </Text>
@@ -941,11 +941,9 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
 const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
   },
   scrollContent: {
     flexGrow: 1,
-    backgroundColor: '#FFFFFF',
   },
 
   /* HERO (Dark container behind top rounded corners) */
@@ -1135,7 +1133,6 @@ const styles = StyleSheet.create({
   /* FORM CARD (White all the way to screen bottom with no gray cutoff) */
   formContainer: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     marginTop: -36,
