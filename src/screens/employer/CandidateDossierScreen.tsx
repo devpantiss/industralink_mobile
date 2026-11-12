@@ -10,7 +10,7 @@ import {
   TextInput,
   ActivityIndicator,
 } from 'react-native';
-import { DrawerScreenProps } from '@react-navigation/drawer';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Phone,
@@ -30,7 +30,7 @@ import {
   Building2,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
-import type { EmployerDrawerParamList } from '../../navigation/types';
+import type { EmployerStackParamList } from '../../navigation/types';
 import { Screen } from '../../components/layout/Screen';
 import { Avatar } from '../../components/ui/Avatar';
 import { employerApi } from '../../api/employerApi';
@@ -43,11 +43,11 @@ import {
   STAGE_LABEL,
   TRADE_LABEL,
 } from '../../lib/labels';
-import { formatDate, formatDateTime, formatNumber } from '../../lib/format';
+import { formatDate, formatDateTime, formatNumber, formatPhone, telUrl } from '../../lib/format';
 import { t } from '../../lib/i18n';
 import type { ApplicationStage } from '../../types';
 
-type Props = DrawerScreenProps<EmployerDrawerParamList, 'CandidateDossier'>;
+type Props = NativeStackScreenProps<EmployerStackParamList, 'CandidateDossier'>;
 
 export const CandidateDossierScreen: React.FC<Props> = ({ route, navigation }) => {
   const { candidateId } = route.params;
@@ -101,7 +101,7 @@ export const CandidateDossierScreen: React.FC<Props> = ({ route, navigation }) =
   const w = candidate.worker;
 
   const handleCall = () => {
-    Linking.openURL(`tel:+91${w.phone}`).catch(() => {
+    Linking.openURL(telUrl(w.phone)).catch(() => {
       showToast('Cannot make phone call on this device', 'error');
     });
   };
@@ -140,7 +140,7 @@ export const CandidateDossierScreen: React.FC<Props> = ({ route, navigation }) =
           {/* Quick Call Button */}
           <TouchableOpacity onPress={handleCall} style={[styles.callBtn, { backgroundColor: colors.primary }]}>
             <Phone size={16} color="#FFF" />
-            <Text style={styles.callBtnText}>+91 {w.phone} · Call Candidate</Text>
+            <Text style={styles.callBtnText}>{formatPhone(w.phone)} · Call Candidate</Text>
           </TouchableOpacity>
         </View>
 

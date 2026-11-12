@@ -40,7 +40,7 @@ import {
   AVAILABILITY_LABEL,
   EMPLOYMENT_TYPE_LABEL,
 } from '../../lib/labels';
-import { formatDate, formatNumber } from '../../lib/format';
+import { formatDate, formatNumber, formatPhone } from '../../lib/format';
 import { t } from '../../lib/i18n';
 import type { DocType, WorkerDocument } from '../../types';
 
@@ -189,7 +189,7 @@ export const WorkerProfileScreen: React.FC = () => {
               </View>
 
               <Text style={[styles.profileTradeSubtitle, { color: colors.inkSecondary }]}>
-                {profile.trade ? t(TRADE_LABEL[profile.trade]) : t('Trade not added')} · +91 {profile.phone}
+                {profile.trade ? t(TRADE_LABEL[profile.trade]) : t('Trade not added')} · {formatPhone(profile.phone)}
               </Text>
             </View>
           </View>
@@ -337,7 +337,7 @@ export const WorkerProfileScreen: React.FC = () => {
               </View>
 
               <DefinitionRow label={t('Name')} value={profile.name} />
-              <DefinitionRow label={t('Mobile')} value={`+91 ${profile.phone}`} />
+              <DefinitionRow label={t('Mobile')} value={formatPhone(profile.phone)} />
               <DefinitionRow label={t('Email')} value={profile.email || '—'} />
               <DefinitionRow
                 label={t('Date of birth')}

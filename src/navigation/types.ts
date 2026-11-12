@@ -35,11 +35,14 @@ export type EmployerTabParamList = {
 
 export type EmployerDrawerParamList = {
   EmployerMain: NavigatorScreenParams<EmployerTabParamList>;
+  Settings: undefined;
+};
+
+/** Full-screen employer screens pushed above the drawer, so Back returns to where you came from. */
+export type EmployerStackParamList = {
+  EmployerDrawer: NavigatorScreenParams<EmployerDrawerParamList>;
   PostJobWizard: undefined;
   CandidateDossier: { candidateId: string };
-  CompanyProfile: undefined;
-  Analytics: undefined;
-  Settings: undefined;
 };
 
 export type AdminDrawerParamList = {
@@ -53,6 +56,6 @@ export type AdminDrawerParamList = {
 export type RootStackParamList = {
   Auth: NavigatorScreenParams<AuthStackParamList>;
   Worker: NavigatorScreenParams<WorkerStackParamList>;
-  Employer: NavigatorScreenParams<EmployerDrawerParamList>;
+  Employer: NavigatorScreenParams<EmployerStackParamList>;
   Admin: NavigatorScreenParams<AdminDrawerParamList>;
 };

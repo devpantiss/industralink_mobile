@@ -213,7 +213,7 @@ class MockDatabase {
       interviews,
       saved: this.savedJobIds.size,
       profileStrength: 85,
-      profileHint: 'Add ITI Diploma Certificate for 100% verification',
+      profileHint: 'Upload your ITI certificate so employers can see it',
       missing: [{ key: 'iti', label: 'ITI Certificate', link: '/worker/profile?tab=documents' }],
       nextStep: {
         title: 'Gate Interview Scheduled',

@@ -464,7 +464,7 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
                         <View style={styles.featureBadge}>
                           <ShieldCheck size={13} color="#0284C7" />
                           <Text style={[styles.featureBadgeText, { color: '#0284C7' }]}>
-                            Aadhaar & ITI Verified
+                            Certificates uploaded
                           </Text>
                         </View>
                         <View style={styles.featureBadge}>

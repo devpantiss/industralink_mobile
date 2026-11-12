@@ -39,28 +39,8 @@ export const useAuthStore = create<AuthStoreState>((set, get) => ({
           isLoading: false,
         });
       } else {
-        // Fallback default authenticated worker for testing
-        const defaultWorker: User = {
-          id: 'usr_worker_1',
-          name: 'Ramesh Kumar',
-          phone: '+91 98765 43210',
-          role: 'worker',
-          verified: true,
-          onboarded: true,
-          city: 'Jamshedpur',
-          trade: 'welder',
-          status: 'active',
-          createdAt: new Date().toISOString(),
-        };
-        await storage.setToken('mock-jwt-token-worker');
-        await storage.setUser(defaultWorker);
-        set({
-          token: 'mock-jwt-token-worker',
-          user: defaultWorker,
-          isAuthenticated: true,
-          role: 'worker',
-          isLoading: false,
-        });
+        // No saved session: show the login screen.
+        set({ isAuthenticated: false, isLoading: false });
       }
     } catch {
       set({ isLoading: false });
@@ -72,7 +52,6 @@ export const useAuthStore = create<AuthStoreState>((set, get) => ({
   },
 
   verifyOtp: async (phone: string, otp: string) => {
-    set({ isLoading: true });
     try {
       const { token, user } = await authApi.verifyOtp(phone, otp);
       await storage.setToken(token);
@@ -82,16 +61,13 @@ export const useAuthStore = create<AuthStoreState>((set, get) => ({
         user,
         isAuthenticated: true,
         role: user.role,
-        isLoading: false,
       });
     } catch (err) {
-      set({ isLoading: false });
       throw err;
     }
   },
 
   loginWithEmail: async (email: string, pass: string) => {
-    set({ isLoading: true });
     try {
       const { token, user } = await authApi.loginWithEmail(email, pass);
       await storage.setToken(token);
@@ -101,10 +77,8 @@ export const useAuthStore = create<AuthStoreState>((set, get) => ({
         user,
         isAuthenticated: true,
         role: user.role,
-        isLoading: false,
       });
     } catch (err) {
-      set({ isLoading: false });
       throw err;
     }
   },
@@ -160,9 +134,12 @@ export const useAuthStore = create<AuthStoreState>((set, get) => ({
         createdAt: new Date().toISOString(),
       };
     }
+    const token = `mock-jwt-token-${role}`;
+    storage.setToken(token);
     storage.setUser(mockUser);
     set({
       role,
+      token,
       user: mockUser,
       isAuthenticated: true,
     });

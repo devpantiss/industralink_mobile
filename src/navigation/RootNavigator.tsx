@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { View, ActivityIndicator, StyleSheet } from 'react-native';
-import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme, DarkTheme, LinkingOptions } from '@react-navigation/native';
+import * as Linking from 'expo-linking';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { RootStackParamList } from './types';
 import { AuthNavigator } from './AuthNavigator';
@@ -15,12 +16,68 @@ import '../lib/i18n';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
+/** Deep links, e.g. industrialink://job/job_1 (shared job links, notifications). */
+const linking: LinkingOptions<RootStackParamList> = {
+  prefixes: [Linking.createURL('/'), 'industrialink://'],
+  config: {
+    screens: {
+      Auth: { screens: { Login: 'login', Signup: 'signup' } },
+      Worker: {
+        initialRouteName: 'WorkerTabs',
+        screens: {
+          WorkerTabs: {
+            screens: {
+              WorkerHome: 'home',
+              FindJobs: 'jobs',
+              Applications: 'applications',
+              SavedJobs: 'saved',
+              WorkerProfile: 'profile',
+            },
+          },
+          JobDetail: 'job/:jobId',
+          ApplicationDetail: 'application/:applicationId',
+          CompanyDetail: 'company/:companyId',
+          ChatThread: 'chat/:threadId',
+          Settings: 'settings',
+        },
+      },
+      Employer: {
+        initialRouteName: 'EmployerDrawer',
+        screens: {
+          EmployerDrawer: {
+            screens: {
+              EmployerMain: {
+                screens: {
+                  EmployerDashboard: 'employer',
+                  EmployerJobs: 'employer/jobs',
+                  Candidates: 'employer/candidates',
+                  FindWorkers: 'employer/workers',
+                },
+              },
+              Settings: 'employer/settings',
+            },
+          },
+          PostJobWizard: 'employer/post-job',
+          CandidateDossier: 'employer/candidate/:candidateId',
+        },
+      },
+      Admin: {
+        screens: {
+          VerificationsQueue: 'admin',
+          UsersManagement: 'admin/users',
+          Settings: 'admin/settings',
+        },
+      },
+    },
+  },
+};
+
 export const RootNavigator: React.FC = () => {
   const { isAuthenticated, role, isLoading, initAuth } = useAuthStore();
-  const { theme, colors } = useUiStore();
+  const { theme, colors, loadPrefs } = useUiStore();
 
   useEffect(() => {
-    initAuth();
+    loadPrefs().finally(() => initAuth());
   }, []);
 
   const navigationTheme = theme === 'dark' ? {
@@ -54,7 +111,7 @@ export const RootNavigator: React.FC = () => {
   }
 
   return (
-    <NavigationContainer theme={navigationTheme}>
+    <NavigationContainer theme={navigationTheme} linking={linking}>
       <OfflineBanner />
       <Stack.Navigator screenOptions={{ headerShown: false, animation: 'fade' }}>
         {!isAuthenticated ? (

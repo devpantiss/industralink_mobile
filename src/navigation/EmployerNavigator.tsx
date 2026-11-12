@@ -4,9 +4,11 @@ import {
   createDrawerNavigator,
   DrawerContentScrollView,
   DrawerItemList,
+  DrawerItem,
   DrawerContentComponentProps,
 } from '@react-navigation/drawer';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import {
   LayoutDashboard,
   Briefcase,
@@ -17,7 +19,7 @@ import {
   Settings,
   LogOut,
 } from 'lucide-react-native';
-import { EmployerTabParamList, EmployerDrawerParamList } from './types';
+import { EmployerTabParamList, EmployerDrawerParamList, EmployerStackParamList } from './types';
 import { EmployerHomeScreen } from '../screens/employer/EmployerHomeScreen';
 import { EmployerJobsScreen } from '../screens/employer/EmployerJobsScreen';
 import { CandidatesScreen } from '../screens/employer/CandidatesScreen';
@@ -32,6 +34,7 @@ import { typography } from '../theme/typography';
 
 const Tab = createBottomTabNavigator<EmployerTabParamList>();
 const Drawer = createDrawerNavigator<EmployerDrawerParamList>();
+const Stack = createNativeStackNavigator<EmployerStackParamList>();
 
 const EmployerTabs: React.FC = () => {
   const { colors } = useUiStore();
@@ -45,8 +48,6 @@ const EmployerTabs: React.FC = () => {
         tabBarStyle: {
           backgroundColor: colors.surface,
           borderTopColor: colors.border,
-          height: 60,
-          paddingBottom: 8,
           paddingTop: 6,
         },
         tabBarLabelStyle: {
@@ -111,6 +112,16 @@ const CustomDrawer: React.FC<DrawerContentComponentProps> = (props) => {
 
       <DrawerContentScrollView {...props} contentContainerStyle={styles.drawerItems}>
         <DrawerItemList {...props} />
+        <DrawerItem
+          label="Post a new job"
+          icon={({ color, size }) => <PlusCircle size={size - 2} color={color} />}
+          inactiveTintColor={colors.ink}
+          labelStyle={{ fontSize: 14, fontWeight: '600' }}
+          onPress={() => {
+            props.navigation.closeDrawer();
+            props.navigation.getParent()?.navigate('PostJobWizard');
+          }}
+        />
       </DrawerContentScrollView>
 
       <View style={[styles.drawerFooter, { borderTopColor: colors.border }]}>
@@ -125,7 +136,7 @@ const CustomDrawer: React.FC<DrawerContentComponentProps> = (props) => {
   );
 };
 
-export const EmployerNavigator: React.FC = () => {
+const EmployerDrawer: React.FC = () => {
   const { colors } = useUiStore();
 
   return (
@@ -151,21 +162,6 @@ export const EmployerNavigator: React.FC = () => {
         }}
       />
       <Drawer.Screen
-        name="PostJobWizard"
-        component={PostJobWizardScreen}
-        options={{
-          drawerLabel: 'Post a New Job',
-          drawerIcon: ({ color, size }) => <PlusCircle size={size - 2} color={color} />,
-        }}
-      />
-      <Drawer.Screen
-        name="CandidateDossier"
-        component={CandidateDossierScreen}
-        options={{
-          drawerItemStyle: { display: 'none' }, // Accessed directly from Candidate card
-        }}
-      />
-      <Drawer.Screen
         name="Settings"
         component={SettingsScreen}
         options={{
@@ -176,6 +172,18 @@ export const EmployerNavigator: React.FC = () => {
     </Drawer.Navigator>
   );
 };
+
+export const EmployerNavigator: React.FC = () => (
+  <Stack.Navigator screenOptions={{ headerShown: false, animation: 'slide_from_right' }}>
+    <Stack.Screen name="EmployerDrawer" component={EmployerDrawer} />
+    <Stack.Screen name="CandidateDossier" component={CandidateDossierScreen} />
+    <Stack.Screen
+      name="PostJobWizard"
+      component={PostJobWizardScreen}
+      options={{ animation: 'slide_from_bottom', gestureEnabled: false }}
+    />
+  </Stack.Navigator>
+);
 
 const styles = StyleSheet.create({
   drawerContainer: {

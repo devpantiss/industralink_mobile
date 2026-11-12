@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { ArrowLeft, Moon, Sun, Shield, Briefcase, HardHat } from 'lucide-react-native';
-import { useNavigation } from '@react-navigation/native';
+import { ArrowLeft, Moon, Sun, Menu, Settings } from 'lucide-react-native';
+import { useNavigation, DrawerActions } from '@react-navigation/native';
 import { useUiStore } from '../../store/uiStore';
 import { useAuthStore } from '../../store/authStore';
 import { spacing } from '../../theme/spacing';
@@ -20,24 +20,10 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
 }) => {
   const navigation = useNavigation();
   const { colors, theme, toggleTheme } = useUiStore();
-  const { role, switchRole } = useAuthStore();
-
-  const handleRoleCycle = () => {
-    if (role === 'worker') switchRole('employer');
-    else if (role === 'employer') switchRole('admin');
-    else switchRole('worker');
-  };
-
-  const getRoleIcon = () => {
-    switch (role) {
-      case 'worker':
-        return <HardHat size={16} color={colors.primary} />;
-      case 'employer':
-        return <Briefcase size={16} color={colors.primary} />;
-      case 'admin':
-        return <Shield size={16} color={colors.primary} />;
-    }
-  };
+  const role = useAuthStore((st) => st.role);
+  // Employer and admin live inside a drawer; workers use bottom tabs and reach Settings from here.
+  const hasDrawer = role === 'employer' || role === 'admin';
+  const canGoBack = showBack && navigation.canGoBack();
 
   return (
     <View
@@ -50,7 +36,17 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
       ]}
     >
       <View style={styles.left}>
-        {showBack && navigation.canGoBack() && (
+        {!canGoBack && hasDrawer && (
+          <TouchableOpacity
+            onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
+            style={styles.iconBtn}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            accessibilityLabel="Open menu"
+          >
+            <Menu size={22} color={colors.ink} />
+          </TouchableOpacity>
+        )}
+        {canGoBack && (
           <TouchableOpacity
             onPress={() => navigation.goBack()}
             style={styles.iconBtn}
@@ -81,27 +77,10 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
       </View>
 
       <View style={styles.right}>
-        {/* Quick Role Switcher Pill for easy switching during development */}
-        <TouchableOpacity
-          onPress={handleRoleCycle}
-          style={[styles.rolePill, { backgroundColor: colors.primarySoft }]}
-          activeOpacity={0.8}
-        >
-          {getRoleIcon()}
-          <Text
-            style={[
-              typography.caption,
-              styles.roleText,
-              { color: colors.primary },
-            ]}
-          >
-            {role.toUpperCase()}
-          </Text>
-        </TouchableOpacity>
-
         {/* Theme Toggle Button */}
         <TouchableOpacity
           onPress={toggleTheme}
+          accessibilityLabel="Switch light or dark mode"
           style={[styles.themeBtn, { backgroundColor: colors.surfaceMuted }]}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
@@ -111,6 +90,17 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
             <Sun size={18} color={colors.accent} />
           )}
         </TouchableOpacity>
+
+        {role === 'worker' && !canGoBack && (
+          <TouchableOpacity
+            onPress={() => (navigation as any).navigate('Settings')}
+            style={[styles.themeBtn, { backgroundColor: colors.surfaceMuted, marginLeft: 8 }]}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            accessibilityLabel="Settings"
+          >
+            <Settings size={18} color={colors.ink} />
+          </TouchableOpacity>
+        )}
 
         {rightAction}
       </View>
@@ -152,22 +142,10 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     marginRight: 6,
   },
-  rolePill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    marginRight: 8,
-  },
-  roleText: {
-    fontWeight: '700',
-    marginLeft: 4,
-  },
   themeBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },

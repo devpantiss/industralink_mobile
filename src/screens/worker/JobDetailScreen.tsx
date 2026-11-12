@@ -630,8 +630,8 @@ const styles = StyleSheet.create({
     marginBottom: 18,
   },
   tile: {
-    flex: 1,
-    minWidth: '47%',
+    flexGrow: 1,
+    flexBasis: '45%',
     paddingVertical: 12,
     paddingHorizontal: 10,
     borderRadius: 14,
@@ -750,8 +750,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   coFactCard: {
-    flex: 1,
-    minWidth: '47%',
+    flexGrow: 1,
+    flexBasis: '45%',
     padding: 12,
     borderRadius: 12,
     borderWidth: 1,

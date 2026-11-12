@@ -33,7 +33,7 @@ import { workerApi } from '../../api/workerApi';
 import { queryKeys } from '../../api/keys';
 import { useUiStore } from '../../store/uiStore';
 import { STAGE_LABEL_WORKER } from '../../lib/labels';
-import { formatDateTime, timeAgo } from '../../lib/format';
+import { formatDateTime, telUrl, timeAgo } from '../../lib/format';
 import { t } from '../../lib/i18n';
 import type { WorkerApplication } from '../../types';
 
@@ -265,7 +265,7 @@ function ApplicationCard({
 
         {app.contact && (
           <TouchableOpacity
-            onPress={() => Linking.openURL(`tel:+91${app.contact!.phone}`)}
+            onPress={() => Linking.openURL(telUrl(app.contact!.phone))}
             style={[styles.callHrBtn, { backgroundColor: colors.primary }]}
           >
             <Phone size={13} color="#FFFFFF" />

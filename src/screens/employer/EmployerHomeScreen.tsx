@@ -451,8 +451,8 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   statTile: {
-    flex: 1,
-    minWidth: '47%',
+    flexGrow: 1,
+    flexBasis: '45%',
     padding: 14,
     borderRadius: 14,
   },

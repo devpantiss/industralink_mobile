@@ -692,9 +692,10 @@ const styles = StyleSheet.create({
     marginBottom: 14,
   },
   statTile: {
-    flex: 1,
-    minWidth: '47%',
-    padding: 14,
+    flexGrow: 1,
+    flexBasis: '45%',
+    paddingVertical: 16,
+    paddingHorizontal: 8,
     borderRadius: 14,
     borderWidth: 1,
     alignItems: 'center',

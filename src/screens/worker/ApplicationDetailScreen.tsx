@@ -33,7 +33,7 @@ import { CompanyLogo } from '../../components/domain/CompanyLogo';
 import { workerApi } from '../../api/workerApi';
 import { queryKeys } from '../../api/keys';
 import { useUiStore } from '../../store/uiStore';
-import { formatDate, formatDateTime, formatNumber, formatPay } from '../../lib/format';
+import { formatDate, formatDateTime, formatNumber, formatPay, telUrl, whatsappUrl } from '../../lib/format';
 import { PAY_TYPE_LABEL, STAGE_LABEL_WORKER } from '../../lib/labels';
 import { t } from '../../lib/i18n';
 import type { Offer } from '../../types';
@@ -354,7 +354,7 @@ export const ApplicationDetailScreen: React.FC = () => {
               </Text>
               <View style={styles.contactButtonsRow}>
                 <TouchableOpacity
-                  onPress={() => Linking.openURL(`tel:+91${a.contact!.phone}`)}
+                  onPress={() => Linking.openURL(telUrl(a.contact!.phone))}
                   style={[styles.dialBtn, { backgroundColor: colors.primary }]}
                 >
                   <Phone size={15} color="#FFF" />
@@ -362,7 +362,7 @@ export const ApplicationDetailScreen: React.FC = () => {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  onPress={() => Linking.openURL(`https://wa.me/91${a.contact!.phone}`)}
+                  onPress={() => Linking.openURL(whatsappUrl(a.contact!.phone))}
                   style={[styles.dialBtn, { backgroundColor: '#1FA855' }]}
                 >
                   <MessageCircle size={15} color="#FFF" />

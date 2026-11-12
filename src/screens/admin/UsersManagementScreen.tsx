@@ -15,6 +15,7 @@ import { AppHeader } from '../../components/layout/AppHeader';
 import { Avatar } from '../../components/ui/Avatar';
 import { useUiStore } from '../../store/uiStore';
 import { t } from '../../lib/i18n';
+import { formatPhone } from '../../lib/format';
 
 interface UserItem {
   id: string;
@@ -151,7 +152,7 @@ export const UsersManagementScreen: React.FC = () => {
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.userName, { color: colors.ink }]}>{u.name}</Text>
                   <Text style={[styles.userMeta, { color: colors.inkSecondary }]}>
-                    {u.role} · +91 {u.phone} {u.companyName ? `· ${u.companyName}` : ''}
+                    {u.role} · {formatPhone(u.phone)} {u.companyName ? `· ${u.companyName}` : ''}
                   </Text>
                 </View>
                 <View

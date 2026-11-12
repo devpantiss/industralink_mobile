@@ -83,3 +83,17 @@ export function greeting() {
   return t(h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening');
 }
 
+
+/** Last 10 digits of an Indian mobile number, whatever format it was stored in. */
+export function phoneDigits(phone?: string | null): string {
+  return (phone ?? '').replace(/\D/g, '').slice(-10);
+}
+
+/** "+91 98765 43210" */
+export function formatPhone(phone?: string | null): string {
+  const d = phoneDigits(phone);
+  return d.length === 10 ? `+91 ${d.slice(0, 5)} ${d.slice(5)}` : phone ?? '';
+}
+
+export const telUrl = (phone?: string | null) => `tel:+91${phoneDigits(phone)}`;
+export const whatsappUrl = (phone?: string | null) => `https://wa.me/91${phoneDigits(phone)}`;

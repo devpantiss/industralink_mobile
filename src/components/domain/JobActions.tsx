@@ -17,6 +17,7 @@ import { queryKeys } from '../../api/keys';
 import { useUiStore } from '../../store/uiStore';
 import { t } from '../../lib/i18n';
 import type { ReportReason } from '../../types';
+import { formatPhone } from '../../lib/format';
 
 interface ApplyModalProps {
   visible: boolean;
@@ -186,7 +187,7 @@ export const ApplyModal: React.FC<ApplyModalProps> = ({
                   {t('Employer will call you on')}
                 </Text>
                 <Text style={[styles.phoneNumber, { color: colors.ink }]}>
-                  +91 {profile?.phone || '...'} <Text style={{ color: colors.successFg }}>✓ {t('verified')}</Text>
+                  {profile?.phone ? formatPhone(profile.phone) : '...'} <Text style={{ color: colors.successFg }}>✓ {t('verified')}</Text>
                 </Text>
               </View>
 

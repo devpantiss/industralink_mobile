@@ -25,9 +25,9 @@ Run lint and typecheck before declaring any task done.
 
 ## Navigation & Routing
 
-- Use **Expo Router** for all navigation. Routes live in `src/app/` — every file there is a screen, `_layout.tsx` files define navigators. Keep non-route code (components, hooks, utils) outside `src/app/`.
-- Import `Link`, `router`, and `useLocalSearchParams` from `expo-router`.
-- Docs: https://docs.expo.dev/router/introduction.md
+- This app uses **React Navigation v7** (not Expo Router). Navigators live in `src/navigation/`, screens in `src/screens/<role>/`.
+- Root stack switches on the signed-in role: Auth stack, Worker (stack over bottom tabs), Employer (stack over drawer over bottom tabs), Admin (drawer).
+- Add every new route to `src/navigation/types.ts` and, if it should open from a link, to the `linking` config in `RootNavigator.tsx`.
 
 ## Building with EAS
 

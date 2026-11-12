@@ -9,6 +9,7 @@ import { Button } from '../ui/Button';
 import { useUiStore } from '../../store/uiStore';
 import { spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
+import { telUrl } from '../../lib/format';
 
 interface CandidateCardProps {
   candidate: Candidate;
@@ -28,7 +29,7 @@ export const CandidateCard: React.FC<CandidateCardProps> = ({
 
   const handleCall = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    Linking.openURL(`tel:${worker.phone}`).catch(() => {
+    Linking.openURL(telUrl(worker.phone)).catch(() => {
       showToast(`Cannot dial ${worker.phone}`, 'error');
     });
   };
