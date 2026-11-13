@@ -208,6 +208,8 @@ export interface Interview {
   place: string;
   contactPerson?: string;
   bring?: string;
+  /** Extra words from HR, e.g. "Come through gate 3". */
+  note?: string;
   response?: 'attending' | 'cant_attend';
   responseNote?: string;
   respondedAt?: string;
@@ -225,6 +227,10 @@ export interface Application {
   sentWith: 'profile' | 'document';
   documentId?: string;
   rejectionNote?: string;
+  /** HR's private note about this candidate. Never shown to the worker. */
+  hrNote?: string;
+  /** The date the worker actually joined (set when HR marks hired). */
+  joinedAt?: string;
   offer?: Offer;
   offerResponse?: 'accepted' | 'declined';
 }
@@ -247,6 +253,8 @@ export interface WorkerApplication extends Application {
 }
 
 export interface Candidate extends Application {
+  /** How well the worker fits the job, 0 to 100 (trade, experience, education, city). */
+  match?: number;
   worker: WorkerProfile;
   jobTitle: string;
   documents: WorkerDocument[];

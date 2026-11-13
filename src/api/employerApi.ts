@@ -75,6 +75,14 @@ export const employerApi = {
     await apiClient.patch(`/employer/applications/${appId}/stage`, { stage, payload });
   },
 
+  async saveNote(appId: string, note: string): Promise<void> {
+    if (USE_MOCKS) {
+      await delay(80);
+      return mockDb.saveCandidateNote(appId, note);
+    }
+    await apiClient.patch(`/employer/applications/${appId}/note`, { note });
+  },
+
   async searchTalent(params?: any): Promise<TalentProfile[]> {
     if (USE_MOCKS) {
       await delay();

@@ -1,12 +1,13 @@
 import React from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
-import { ChevronRight, FileText } from 'lucide-react-native';
+import { Check, ChevronRight, FileText } from 'lucide-react-native';
 import { Text } from '../ui/Text';
 import { Avatar } from '../ui/Avatar';
 import { PressableScale } from '../ui/PressableScale';
 import { useUiStore } from '../../store/uiStore';
 import { EXPERIENCE_LABEL, STAGE_LABEL, TRADE_LABEL } from '../../lib/labels';
-import { timeAgo } from '../../lib/format';
+import { timeAgo, formatNumber } from '../../lib/format';
+import { ageOf } from '../../lib/dob';
 import type { ThemeColors } from '../../theme/colors';
 import type { ApplicationStage, Candidate } from '../../types';
 import { shadows } from '../../theme/shadows';
@@ -48,9 +49,11 @@ interface Props {
   showJob?: boolean;
   /** Optional quick button, e.g. "Shortlist". */
   action?: { label: string; onPress: () => void; disabled?: boolean };
+  /** Selection mode: shows a tick box instead of the arrow. */
+  selecting?: { selected: boolean };
 }
 
-export const CandidateRow: React.FC<Props> = ({ candidate: c, onPress, showJob = true, action }) => {
+export const CandidateRow: React.FC<Props> = ({ candidate: c, onPress, showJob = true, action, selecting }) => {
   const colors = useUiStore((s) => s.colors);
   const w = c.worker;
   const chips = [...w.qualifications.slice(0, 2), ...w.licences.slice(0, 1)];
@@ -76,10 +79,25 @@ export const CandidateRow: React.FC<Props> = ({ candidate: c, onPress, showJob =
               .filter(Boolean)
               .join(' · ')}
           </Text>
+          <Text style={[styles.meta, { color: colors.inkMuted }]} numberOfLines={1}>
+            {[
+              w.dob ? `${ageOf(w.dob)} yrs` : undefined,
+              w.expectedPay ? `₹${formatNumber(w.expectedPay)}/mo` : undefined,
+              w.availability === 'immediate' ? 'Can join now' : w.availability === '15_days' ? 'Joins in 15 days' : w.availability === '30_days' ? 'Joins in 30 days' : undefined,
+            ]
+              .filter(Boolean)
+              .join(' · ')}
+          </Text>
         </View>
         <View style={styles.side}>
           <Text style={[styles.time, { color: colors.inkMuted }]}>{timeAgo(c.updatedAt)}</Text>
-          <ChevronRight size={18} color={colors.inkMuted} />
+          {selecting ? (
+            <View style={[styles.tick, { borderColor: selecting.selected ? colors.primary : colors.borderStrong, backgroundColor: selecting.selected ? colors.primary : 'transparent' }]}>
+              {selecting.selected ? <Check size={14} color="#FFF" strokeWidth={3} /> : null}
+            </View>
+          ) : (
+            <ChevronRight size={18} color={colors.inkMuted} />
+          )}
         </View>
       </View>
 
@@ -110,6 +128,11 @@ export const CandidateRow: React.FC<Props> = ({ candidate: c, onPress, showJob =
       <View style={[styles.foot, { borderTopColor: colors.border }]}>
         <View style={styles.footLeft}>
           <StageBadge stage={c.stage} />
+          {c.match !== undefined && c.match >= 70 ? (
+            <View style={[styles.stageBadge, { backgroundColor: colors.tiles.green.bg }]}>
+              <Text style={[styles.stageBadgeText, { color: colors.tiles.green.text }]}>{c.match}% fit</Text>
+            </View>
+          ) : null}
           {showJob && (
             <Text style={[styles.job, { color: colors.inkMuted }]} numberOfLines={1}>
               {c.jobTitle}
@@ -141,6 +164,7 @@ const styles = StyleSheet.create({
   main: { flex: 1, gap: 2 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   name: { fontSize: 15, fontWeight: '700', flexShrink: 1 },
+  tick: { width: 22, height: 22, borderRadius: 11, borderWidth: 1.5, alignItems: 'center', justifyContent: 'center' },
   newDot: { width: 8, height: 8, borderRadius: 4 },
   meta: { fontSize: 13 },
   side: { alignItems: 'flex-end', gap: 4 },

@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { Text, TextInput } from '../../components/ui/Text';
 import { useNavigation } from '@react-navigation/native';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Search, UserSearch } from 'lucide-react-native';
 import { ErrorState } from '../../components/ui/ErrorState';
 import { ListSkeleton } from '../../components/ui/Skeleton';
@@ -20,6 +20,9 @@ import { employerApi } from '../../api/employerApi';
 import { queryKeys } from '../../api/keys';
 import { useUiStore } from '../../store/uiStore';
 import { t } from '../../lib/i18n';
+import { RejectSheet } from '../../components/domain/PipelineSheets';
+import { Button } from '../../components/ui/Button';
+import { errorText } from '../../lib/errors';
 import type { ApplicationStage } from '../../types';
 
 export const CandidatesScreen: React.FC = () => {
@@ -28,6 +31,12 @@ export const CandidatesScreen: React.FC = () => {
 
   const [q, setQ] = useState('');
   const [stageFilter, setStageFilter] = useState<ApplicationStage | ''>('');
+  const [sort, setSort] = useState<'new' | 'match'>('new');
+  const [selecting, setSelecting] = useState(false);
+  const [picked, setPicked] = useState<string[]>([]);
+  const [rejecting, setRejecting] = useState(false);
+  const qc = useQueryClient();
+  const showToast = useUiStore((s) => s.showToast);
 
   const { data: candidates, isLoading, isError, isRefetching, refetch } = useQuery({
     queryKey: queryKeys.employer.allCandidates({ stage: stageFilter || undefined }),
@@ -37,13 +46,36 @@ export const CandidatesScreen: React.FC = () => {
   const filtered = useMemo(() => {
     const list = candidates ?? [];
     const search = q.trim().toLowerCase();
-    if (!search) return list;
-    return list.filter((c) =>
+    const sorted = sort === 'match' ? [...list].sort((a, b) => (b.match ?? 0) - (a.match ?? 0)) : list;
+    if (!search) return sorted;
+    return sorted.filter((c) =>
       `${c.worker.name} ${c.worker.location?.city ?? ''} ${c.worker.skills.join(' ')} ${c.worker.licences.join(' ')} ${c.jobTitle}`
         .toLowerCase()
         .includes(search)
     );
-  }, [candidates, q]);
+  }, [candidates, q, sort]);
+
+  const byId = new Map((candidates ?? []).map((c) => [c.id, c]));
+  const canShortlist = picked.filter((id) => byId.get(id)?.stage === 'applied');
+  const canReject = picked.filter((id) => ['applied', 'shortlisted', 'interview', 'offer'].includes(byId.get(id)?.stage ?? ''));
+
+  const bulk = useMutation({
+    mutationFn: async ({ ids, stage, payload }: { ids: string[]; stage: ApplicationStage; payload?: unknown }) => {
+      const results = await Promise.allSettled(ids.map((id) => employerApi.updateStage(id, stage, payload)));
+      const failed = results.filter((r) => r.status === 'rejected') as PromiseRejectedResult[];
+      return { done: ids.length - failed.length, failed: failed.length, first: failed[0]?.reason };
+    },
+    onSuccess: ({ done, failed, first }) => {
+      qc.invalidateQueries({ queryKey: queryKeys.employer.all });
+      setRejecting(false);
+      setPicked([]);
+      setSelecting(false);
+      showToast(failed ? `${done} updated, ${failed} failed. ${errorText(first, '')}` : t('{n} candidates updated', { n: done }), failed ? 'warning' : 'success');
+    },
+    onError: (e) => showToast(errorText(e, 'Could not update. Try again.'), 'error'),
+  });
+
+  const toggle = (id: string) => setPicked((p) => (p.includes(id) ? p.filter((x) => x !== id) : [...p, id]));
 
   const stages: { key: '' | ApplicationStage; label: string }[] = [
     { key: '', label: t('All stages') },
@@ -87,6 +119,24 @@ export const CandidatesScreen: React.FC = () => {
 
         {/* Stage filter */}
         <FilterChips<'' | ApplicationStage> options={stages} value={stageFilter} onChange={setStageFilter} style={styles.stageChipsRow} />
+        <View style={styles.toolRow}>
+          <FilterChips<'new' | 'match'>
+            options={[{ key: 'new', label: t('Newest') }, { key: 'match', label: t('Best fit') }]}
+            value={sort}
+            onChange={setSort}
+            style={styles.stageChipsRow}
+          />
+          <TouchableOpacity
+            onPress={() => {
+              setSelecting(!selecting);
+              setPicked([]);
+            }}
+            hitSlop={8}
+            accessibilityRole="button"
+          >
+            <Text style={{ color: colors.primary, fontWeight: '700', fontSize: 15 }}>{selecting ? t('Cancel') : t('Select')}</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <FlatList
@@ -107,7 +157,8 @@ export const CandidatesScreen: React.FC = () => {
         renderItem={({ item: c }) => (
           <CandidateRow
             candidate={c}
-            onPress={() => navigation.navigate('CandidateDossier', { candidateId: c.id })}
+            selecting={selecting ? { selected: picked.includes(c.id) } : undefined}
+            onPress={() => (selecting ? toggle(c.id) : navigation.navigate('CandidateDossier', { candidateId: c.id }))}
           />
         )}
         ListEmptyComponent={
@@ -127,6 +178,31 @@ export const CandidatesScreen: React.FC = () => {
             </View>
           )
         }
+      />
+
+      {selecting && picked.length > 0 ? (
+        <View style={[styles.bulkBar, { backgroundColor: colors.surface, borderTopColor: colors.border }]}>
+          <Text style={{ color: colors.inkSecondary, fontSize: 13, marginBottom: 8 }}>{t('{n} selected', { n: picked.length })}</Text>
+          <View style={styles.bulkRow}>
+            <Button
+              label={`${t('Shortlist')} (${canShortlist.length})`}
+              onPress={() => bulk.mutate({ ids: canShortlist, stage: 'shortlisted' })}
+              disabled={canShortlist.length === 0}
+              loading={bulk.isPending && !rejecting}
+              style={{ flex: 1 }}
+            />
+            <Button label={`${t('Reject')} (${canReject.length})`} variant="outline" onPress={() => setRejecting(true)} disabled={canReject.length === 0} style={{ flex: 1 }} />
+          </View>
+        </View>
+      ) : null}
+
+      <RejectSheet
+        key={`bulk${rejecting}`}
+        visible={rejecting}
+        onClose={() => setRejecting(false)}
+        loading={bulk.isPending}
+        title={t('Reject {n} candidates?', { n: canReject.length })}
+        onSubmit={(payload) => bulk.mutate({ ids: canReject, stage: 'rejected', payload })}
       />
     </Screen>
   );
@@ -162,6 +238,9 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
   },
+  toolRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  bulkBar: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 12, borderTopWidth: StyleSheet.hairlineWidth },
+  bulkRow: { flexDirection: 'row', gap: 12 },
   stageChipsRow: {
     gap: 8,
     paddingBottom: 4,

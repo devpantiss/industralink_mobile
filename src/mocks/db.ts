@@ -1,4 +1,5 @@
 import { findFeeWording } from '../lib/scam';
+import { matchScore } from '../lib/match';
 import {
   Job,
   JobForWorker,
@@ -723,7 +724,7 @@ class MockDatabase {
   private forWorker(a: Application): WorkerApplication | null {
     const job = this.jobs.find((j) => j.id === a.jobId);
     if (!job) return null;
-    const { rejectionNote: _hidden, ...rest } = a;
+    const { rejectionNote: _hidden, hrNote: _private, ...rest } = a;
     return {
       ...rest,
       timeline: a.timeline.map((e) => (e.stage === 'rejected' ? { stage: e.stage, at: e.at } : e)),
@@ -1091,10 +1092,14 @@ class MockDatabase {
         jobTitle: '',
         documents: shown(a, this.workerDocs[a.workerId] ?? []),
       }));
+    const score = (c: Candidate) => {
+      const j = this.jobs.find((x) => x.id === c.jobId);
+      return j ? matchScore(c.worker, j) : undefined;
+    };
     const pool = this.pool.filter((c) => mineIds.has(c.jobId));
     return [...own, ...pool]
       .filter((c) => (!jobId ? true : c.jobId === jobId))
-      .map((c) => ({ ...c, jobTitle: this.jobs.find((j) => j.id === c.jobId)?.title || 'Industrial Worker' }))
+      .map((c) => ({ ...c, match: score(c), jobTitle: this.jobs.find((j) => j.id === c.jobId)?.title || 'Industrial Worker' }))
       .sort((a, b) => +new Date(b.updatedAt) - +new Date(a.updatedAt));
   }
   async getCompanyDocuments(): Promise<CompanyDocument[]> {
@@ -1265,6 +1270,7 @@ class MockDatabase {
         place: payload?.place || 'The plant gate',
         contactPerson: payload?.contactPerson || undefined,
         bring: payload?.bring || undefined,
+        note: payload?.note || undefined,
       };
     }
     if (stage === 'offer') {
@@ -1281,6 +1287,16 @@ class MockDatabase {
       app.offerResponse = undefined;
     }
     if (stage === 'rejected') app.rejectionNote = payload?.reason ? String(payload.reason) : undefined;
+    if (stage === 'hired') {
+      app.joinedAt = payload?.joinedAt || at.slice(0, 10);
+      // Count the people hired for this job; at zero openings left, tell HR to close it.
+      if (job) {
+        const hired = [...this.applications, ...this.pool].filter((x) => x.jobId === job.id && x.stage === 'hired').length;
+        if (hired >= job.openings) {
+          this.notify(this.jobOwnerAcct(job), 'All openings filled', `${job.title} has ${hired} of ${job.openings} people hired. Close the job so workers stop applying.`, 'jobs');
+        }
+      }
+    }
 
     // Tell the worker. A rejection is always a kind, generic message: HR's note stays private.
     const link = `application:${app.id}`;
@@ -1293,6 +1309,11 @@ class MockDatabase {
       tell('Update on your application', `${company} has chosen other candidates for ${title} for now. Keep applying: more jobs are waiting.`);
     }
   }
+  async saveCandidateNote(appId: string, note: string): Promise<void> {
+    const app = this.findApplication(appId);
+    if (!app) this.fail('This application is not available.', 'NOT_FOUND');
+    app.hrNote = note.trim().slice(0, 500) || undefined;
+  }
   async searchTalent(params?: { trade?: string; city?: string }): Promise<TalentProfile[]> {
     if (!this.platformSettings.talentSearchEnabled) this.fail('Find workers is turned off for now.', 'DISABLED');
     if (this.myCompany.verification !== 'approved') this.fail('You can search workers after your company is verified.', 'NOT_VERIFIED');
@@ -1302,11 +1323,16 @@ class MockDatabase {
         (!params?.city || t.location?.city.toLowerCase().includes(params.city.toLowerCase()))
     );
   }
+  private inviteLog: Record<string, number> = {};
   async inviteTalent(workerId: string, jobId: string): Promise<void> {
     if (this.myCompany.verification !== 'approved') this.fail('You can invite workers after your company is verified.', 'NOT_VERIFIED');
     const t = this.talent.find((x) => x.userId === workerId);
     if (!t) return;
     if (t.appliedTo.includes(jobId) || t.invitedTo.includes(jobId)) this.fail('This worker was already invited or has applied.', 'ALREADY_DONE');
+    const today = new Date().toISOString().slice(0, 10);
+    const used = this.inviteLog[`${this.companyId}:${today}`] ?? 0;
+    if (used >= 20) this.fail('You can send 20 invites a day. Try again tomorrow.', 'LIMIT');
+    this.inviteLog[`${this.companyId}:${today}`] = used + 1;
     t.invitedTo = [...t.invitedTo, jobId];
     const job = this.jobs.find((j) => j.id === jobId);
     this.notify(workerId, 'A company invited you', `${this.myCompany.name} invited you to apply for ${job?.title ?? 'a job'}.`, 'jobs');

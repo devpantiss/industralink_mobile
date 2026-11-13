@@ -24,7 +24,6 @@ import {
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import type { EmployerStackParamList } from '../../navigation/types';
-import { Sheet } from '../../components/ui/Sheet';
 import { SegmentedTabs } from '../../components/ui/SegmentedTabs';
 import { Screen } from '../../components/layout/Screen';
 import { Avatar } from '../../components/ui/Avatar';
@@ -32,12 +31,16 @@ import { employerApi } from '../../api/employerApi';
 import { queryKeys } from '../../api/keys';
 import { useUiStore } from '../../store/uiStore';
 import {
+  AVAILABILITY_LABEL,
   DOC_TYPE_LABEL,
   EXPERIENCE_LABEL,
   STAGE_LABEL,
   TRADE_LABEL,
 } from '../../lib/labels';
-import { formatBytes, formatPhone, timeAgo } from '../../lib/format';
+import { formatBytes, formatPhone, timeAgo, formatDate, formatDateTime, formatNumber } from '../../lib/format';
+import { ageOf } from '../../lib/dob';
+import { errorText } from '../../lib/errors';
+import { InterviewSheet, OfferSheet, RejectSheet, JoinedSheet } from '../../components/domain/PipelineSheets';
 import { openContact } from '../../lib/contact';
 import { t } from '../../lib/i18n';
 import type { ApplicationStage, WorkerDocument } from '../../types';
@@ -53,17 +56,14 @@ export const CandidateDossierScreen: React.FC<Props> = ({ route, navigation }) =
   const [activeTab, setActiveTab] = useState<'profile' | 'documents'>('profile');
   const [viewDoc, setViewDoc] = useState<WorkerDocument | null>(null);
 
-  // Modals for stage progression
-  const [interviewModal, setInterviewModal] = useState(false);
-  const [interviewAt, setInterviewAt] = useState('2026-11-20T10:30');
-  const [interviewPlace, setInterviewPlace] = useState('Gate 3, Plant Site, Kalinganagar');
-
-  const [offerModal, setOfferModal] = useState(false);
-  const [offerPay, setOfferPay] = useState('22000');
-  const [offerJoiningDate, setOfferJoiningDate] = useState('2026-12-01');
-
-  const [rejectModal, setRejectModal] = useState(false);
-  const [rejectReason, setRejectReason] = useState('');
+  // Sheets for stage progression. The key restarts a sheet's fields every time it opens.
+  const [sheet, setSheet] = useState<null | 'interview' | 'offer' | 'reject' | 'joined'>(null);
+  const [sheetKey, setSheetKey] = useState(0);
+  const openSheet = (k: 'interview' | 'offer' | 'reject' | 'joined') => {
+    setSheetKey((n) => n + 1);
+    setSheet(k);
+  };
+  const [note, setNote] = useState<string | undefined>();
 
   const { data: candidates, isLoading } = useQuery({
     queryKey: queryKeys.employer.allCandidates({}),
@@ -87,11 +87,19 @@ export const CandidateDossierScreen: React.FC<Props> = ({ route, navigation }) =
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       qc.invalidateQueries({ queryKey: queryKeys.employer.all });
       showToast(t(`Candidate stage updated to {stage}`, { stage: STAGE_LABEL[stage] }), 'success');
-      setInterviewModal(false);
-      setOfferModal(false);
-      setRejectModal(false);
+      setSheet(null);
     },
-    onError: (e: Error) => showToast(e.message || t('Could not update. Try again.'), 'error'),
+    onError: (e: Error) => showToast(errorText(e, 'Could not update. Try again.'), 'error'),
+  });
+
+  const company = useQuery({ queryKey: queryKeys.employer.company, queryFn: () => employerApi.getCompany() });
+  const saveNote = useMutation({
+    mutationFn: (text: string) => employerApi.saveNote(candidate!.id, text),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.employer.all });
+      showToast(t('Note saved'), 'success');
+    },
+    onError: (e: Error) => showToast(errorText(e, 'Could not save the note.'), 'error'),
   });
 
   if (isLoading || !candidate) {
@@ -219,7 +227,7 @@ export const CandidateDossierScreen: React.FC<Props> = ({ route, navigation }) =
 
             {(candidate.stage === 'applied' || candidate.stage === 'shortlisted') && (
               <TouchableOpacity
-                onPress={() => setInterviewModal(true)}
+                onPress={() => openSheet('interview')}
                 style={[styles.stageActionBtn, { backgroundColor: colors.tiles.purple.text }]}
               >
                 <CalendarClock size={15} color="#FFF" />
@@ -228,38 +236,90 @@ export const CandidateDossierScreen: React.FC<Props> = ({ route, navigation }) =
             )}
 
             {candidate.stage === 'interview' && (
-              <TouchableOpacity
-                onPress={() => setOfferModal(true)}
-                style={[styles.stageActionBtn, { backgroundColor: colors.primary }]}
-              >
-                <Gift size={15} color="#FFF" />
-                <Text style={styles.stageActionBtnText}>{t('Send Offer')}</Text>
-              </TouchableOpacity>
+              <>
+                <TouchableOpacity onPress={() => openSheet('offer')} style={[styles.stageActionBtn, { backgroundColor: colors.primary }]}>
+                  <Gift size={15} color="#FFF" />
+                  <Text style={styles.stageActionBtnText}>{t('Send Offer')}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => openSheet('interview')} style={[styles.stageActionBtnSecondary, { borderColor: colors.border }]}>
+                  <CalendarClock size={15} color={colors.ink} />
+                  <Text style={[styles.stageActionBtnSecondaryText, { color: colors.ink }]}>{t('Change interview')}</Text>
+                </TouchableOpacity>
+              </>
             )}
 
             {candidate.stage === 'offer' && (
-              <TouchableOpacity
-                onPress={() => updateStageMutation.mutate({ stage: 'hired' })}
-                style={[styles.stageActionBtn, { backgroundColor: colors.successFg }]}
-              >
+              <TouchableOpacity onPress={() => openSheet('joined')} style={[styles.stageActionBtn, { backgroundColor: colors.successFg }]}>
                 <CheckCircle2 size={15} color="#FFF" />
-                <Text style={styles.stageActionBtnText}>{t('Mark Hired')}</Text>
+                <Text style={styles.stageActionBtnText}>{t('Mark joined')}</Text>
               </TouchableOpacity>
             )}
 
-            {candidate.stage !== 'rejected' && (
-              <TouchableOpacity
-                onPress={() => setRejectModal(true)}
-                style={[styles.stageActionBtnSecondary, { borderColor: colors.border }]}
-              >
+            {['applied', 'shortlisted', 'interview', 'offer'].includes(candidate.stage) && (
+              <TouchableOpacity onPress={() => openSheet('reject')} style={[styles.stageActionBtnSecondary, { borderColor: colors.border }]}>
                 <XCircle size={15} color={colors.dangerFg} />
-                <Text style={[styles.stageActionBtnSecondaryText, { color: colors.dangerFg }]}>
-                  {t('Reject')}
-                </Text>
+                <Text style={[styles.stageActionBtnSecondaryText, { color: colors.dangerFg }]}>{t('Reject')}</Text>
               </TouchableOpacity>
             )}
           </View>
         </View>
+
+        {/* What the worker said, and the key facts HR needs */}
+        <View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Text style={[styles.cardHeading, { color: colors.ink }]}>{t('Key facts')}</Text>
+          <Fact label={t('Age')} value={w.dob ? `${ageOf(w.dob)} ${t('years')}` : undefined} />
+          <Fact label={t('Expected pay')} value={w.expectedPay ? `₹${formatNumber(w.expectedPay)} ${t('a month')}` : undefined} />
+          <Fact label={t('Can join')} value={w.availability ? t(AVAILABILITY_LABEL[w.availability]) : undefined} />
+          <Fact label={t('Languages')} value={w.languages?.length ? w.languages.join(', ') : undefined} />
+          {candidate.match !== undefined ? <Fact label={t('Fit for this job')} value={`${candidate.match}%`} /> : null}
+        </View>
+
+        {candidate.interview ? (
+          <View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={[styles.cardHeading, { color: colors.ink }]}>{t('Interview')}</Text>
+            <Fact label={t('When')} value={formatDateTime(candidate.interview.at)} />
+            <Fact label={t('Where')} value={candidate.interview.place} />
+            <Fact label={t('Ask for')} value={candidate.interview.contactPerson} />
+            <Fact label={t('Bring')} value={candidate.interview.bring} />
+            <Fact
+              label={t('Worker reply')}
+              value={
+                candidate.interview.response === 'attending'
+                  ? t('Will attend')
+                  : candidate.interview.response === 'cant_attend'
+                    ? `${t('Cannot attend')}${candidate.interview.responseNote ? `: ${candidate.interview.responseNote}` : ''}`
+                    : t('No reply yet')
+              }
+              tone={candidate.interview.response === 'cant_attend' ? 'bad' : candidate.interview.response === 'attending' ? 'good' : undefined}
+            />
+          </View>
+        ) : null}
+
+        {candidate.offer ? (
+          <View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+            <Text style={[styles.cardHeading, { color: colors.ink }]}>{t('Offer')}</Text>
+            <Fact label={t('Pay')} value={`₹${formatNumber(candidate.offer.pay)} ${candidate.offer.payPeriod === 'day' ? t('a day') : t('a month')}`} />
+            <Fact label={t('Joining date')} value={candidate.offer.joiningDate ? formatDate(candidate.offer.joiningDate) : undefined} />
+            <Fact label={t('Reply by')} value={candidate.offer.replyBy ? formatDate(candidate.offer.replyBy) : undefined} />
+            <Fact
+              label={t('Worker reply')}
+              value={candidate.offerResponse === 'accepted' ? t('Accepted') : candidate.offerResponse === 'declined' ? t('Declined') : t('No reply yet')}
+              tone={candidate.offerResponse === 'accepted' ? 'good' : candidate.offerResponse === 'declined' ? 'bad' : undefined}
+            />
+          </View>
+        ) : null}
+
+        {candidate.stage === 'hired' && candidate.joinedAt ? (
+          <View style={[styles.infoCard, { backgroundColor: colors.tiles.green.bg, borderColor: colors.border }]}>
+            <Text style={{ color: colors.tiles.green.text, fontWeight: '700' }}>{t('Joined on {date}', { date: formatDate(candidate.joinedAt) })}</Text>
+          </View>
+        ) : null}
+
+        {candidate.stage === 'withdrawn' ? (
+          <View style={[styles.infoCard, { backgroundColor: colors.surfaceMuted, borderColor: colors.border }]}>
+            <Text style={{ color: colors.inkSecondary }}>{t('The worker withdrew this application.')}</Text>
+          </View>
+        ) : null}
 
         {/* Tab Switcher */}
         <SegmentedTabs
@@ -369,6 +429,24 @@ export const CandidateDossierScreen: React.FC<Props> = ({ route, navigation }) =
             )}
           </View>
         )}
+        <View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Text style={[styles.cardHeading, { color: colors.ink }]}>{t('Private note')}</Text>
+          <Text style={{ color: colors.inkMuted, fontSize: 12 }}>{t('Only you and your team can see this.')}</Text>
+          <TextInput
+            value={note ?? candidate.hrNote ?? ''}
+            onChangeText={setNote}
+            multiline
+            maxLength={500}
+            placeholder={t('e.g. Good welding test, call back on Monday')}
+            placeholderTextColor={colors.inkMuted}
+            style={[styles.modalInput, { borderColor: colors.border, color: colors.ink, minHeight: 72, textAlignVertical: 'top' }]}
+          />
+          {note !== undefined && note !== (candidate.hrNote ?? '') ? (
+            <TouchableOpacity onPress={() => saveNote.mutate(note)} style={[styles.modalBtnPrimary, { backgroundColor: colors.primary }]}>
+              <Text style={{ color: '#FFF', fontWeight: '700' }}>{t('Save note')}</Text>
+            </TouchableOpacity>
+          ) : null}
+        </View>
       </ScrollView>
 
       <DocumentViewer
@@ -377,130 +455,65 @@ export const CandidateDossierScreen: React.FC<Props> = ({ route, navigation }) =
         onClose={() => setViewDoc(null)}
       />
 
-      {/* Schedule Interview Modal */}
-      <Sheet
-        visible={interviewModal}
-        onClose={() => setInterviewModal(false)}
-        title={t('Schedule interview')}
-        subtitle={`Invite ${w.name} for an on-site interview.`}
-        footer={
-          <View style={styles.modalBtnRow}>
-          <TouchableOpacity
-            onPress={() => setInterviewModal(false)}
-            style={[styles.modalBtnSecondary, { borderColor: colors.border }]}
-          >
-            <Text style={{ color: colors.ink, fontWeight: '600' }}>{t('Cancel')}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() =>
-              updateStageMutation.mutate({
-                stage: 'interview',
-                payload: { at: interviewAt, place: interviewPlace },
-              })
-            }
-            style={[styles.modalBtnPrimary, { backgroundColor: colors.primary }]}
-          >
-            <Text style={{ color: '#FFF', fontWeight: '700' }}>{t('Schedule')}</Text>
-          </TouchableOpacity>
-          </View>
-        }
-      >
-
-        <TextInput
-          value={interviewAt}
-          onChangeText={setInterviewAt}
-          placeholder="Date & Time (YYYY-MM-DDTHH:MM)"
-          style={[styles.modalInput, { borderColor: colors.border, color: colors.ink }]}
-        />
-
-        <TextInput
-          value={interviewPlace}
-          onChangeText={setInterviewPlace}
-          placeholder="Interview Location / Plant Gate"
-          style={[styles.modalInput, { borderColor: colors.border, color: colors.ink }]}
-        />
-
-      </Sheet>
-
-      {/* Send Offer Modal */}
-      <Sheet
-        visible={offerModal}
-        onClose={() => setOfferModal(false)}
-        title={t('Send Job Offer')}
-        subtitle={`Make an official offer to ${w.name}.`}
-        footer={
-          <View style={styles.modalBtnRow}>
-          <TouchableOpacity
-            onPress={() => setOfferModal(false)}
-            style={[styles.modalBtnSecondary, { borderColor: colors.border }]}
-          >
-            <Text style={{ color: colors.ink, fontWeight: '600' }}>{t('Cancel')}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() =>
-              updateStageMutation.mutate({
-                stage: 'offer',
-                payload: { pay: parseInt(offerPay, 10), joiningDate: offerJoiningDate },
-              })
-            }
-            style={[styles.modalBtnPrimary, { backgroundColor: colors.primary }]}
-          >
-            <Text style={{ color: '#FFF', fontWeight: '700' }}>{t('Send Offer')}</Text>
-          </TouchableOpacity>
-          </View>
-        }
-      >
-
-        <TextInput
-          value={offerPay}
-          onChangeText={setOfferPay}
-          placeholder="Monthly Pay (₹)"
-          keyboardType="numeric"
-          style={[styles.modalInput, { borderColor: colors.border, color: colors.ink }]}
-        />
-
-        <TextInput
-          value={offerJoiningDate}
-          onChangeText={setOfferJoiningDate}
-          placeholder="Joining Date (YYYY-MM-DD)"
-          style={[styles.modalInput, { borderColor: colors.border, color: colors.ink }]}
-        />
-
-      </Sheet>
-
-      {/* Reject Modal */}
-      <Sheet
-        visible={rejectModal}
-        onClose={() => setRejectModal(false)}
-        title={t('Reject Candidate?')}
-        subtitle={`Candidate will be notified politely that they were not selected this time.`}
-        footer={
-          <View style={styles.modalBtnRow}>
-          <TouchableOpacity
-            onPress={() => setRejectModal(false)}
-            style={[styles.modalBtnSecondary, { borderColor: colors.border }]}
-          >
-            <Text style={{ color: colors.ink, fontWeight: '600' }}>{t('Cancel')}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => updateStageMutation.mutate({ stage: 'rejected', payload: { reason: rejectReason.trim(), notify: true } })}
-            style={[styles.modalBtnPrimary, { backgroundColor: colors.dangerFg }]}
-          >
-            <Text style={{ color: '#FFF', fontWeight: '700' }}>{t('Reject')}</Text>
-          </TouchableOpacity>
-          </View>
-        }
-      >
-
-        <TextInput
-          value={rejectReason}
-          onChangeText={setRejectReason}
-          placeholder="Reason (e.g. Position filled, experience required)"
-          style={[styles.modalInput, { borderColor: colors.border, color: colors.ink }]}
-        />
-
-      </Sheet>
+      <InterviewSheet
+        key={`i${sheetKey}`}
+        visible={sheet === 'interview'}
+        onClose={() => setSheet(null)}
+        loading={updateStageMutation.isPending}
+        name={w.name}
+        sites={company.data?.sites ?? []}
+        defaultPlace={candidate.interview?.place ?? company.data?.address ?? company.data?.sites?.[0]}
+        rescheduling={candidate.stage === 'interview'}
+        onSubmit={(payload) => updateStageMutation.mutate({ stage: 'interview', payload })}
+      />
+      <OfferSheet
+        key={`o${sheetKey}`}
+        visible={sheet === 'offer'}
+        onClose={() => setSheet(null)}
+        loading={updateStageMutation.isPending}
+        name={w.name}
+        defaultPay={w.expectedPay}
+        defaultPlace={company.data?.address ?? company.data?.location.city}
+        onSubmit={(payload) => updateStageMutation.mutate({ stage: 'offer', payload })}
+      />
+      <RejectSheet
+        key={`r${sheetKey}`}
+        visible={sheet === 'reject'}
+        onClose={() => setSheet(null)}
+        loading={updateStageMutation.isPending}
+        onSubmit={(payload) => updateStageMutation.mutate({ stage: 'rejected', payload })}
+      />
+      <JoinedSheet
+        key={`j${sheetKey}`}
+        visible={sheet === 'joined'}
+        onClose={() => setSheet(null)}
+        loading={updateStageMutation.isPending}
+        name={w.name}
+        defaultDate={candidate.offer?.joiningDate}
+        onSubmit={(joinedAt) => updateStageMutation.mutate({ stage: 'hired', payload: { joinedAt } })}
+      />
     </Screen>
+  );
+};
+
+const Fact: React.FC<{ label: string; value?: string; tone?: 'good' | 'bad' }> = ({ label, value, tone }) => {
+  const colors = useUiStore((s) => s.colors);
+  if (!value) return null;
+  return (
+    <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: 12, paddingVertical: 4 }}>
+      <Text style={{ color: colors.inkMuted, fontSize: 14 }}>{label}</Text>
+      <Text
+        style={{
+          color: tone === 'good' ? colors.successFg : tone === 'bad' ? colors.dangerFg : colors.ink,
+          fontSize: 14,
+          fontWeight: '600',
+          flexShrink: 1,
+          textAlign: 'right',
+        }}
+      >
+        {value}
+      </Text>
+    </View>
   );
 };
 
