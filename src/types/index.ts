@@ -151,6 +151,8 @@ export interface WalkIn {
 }
 
 export interface Job {
+  /** Demo data only: which employer account owns this job (seed jobs belong to the demo employer). */
+  ownerCompanyId?: string;
   id: string;
   companyId: string;
   companyName: string;
@@ -228,6 +230,8 @@ export interface Application {
 }
 
 export interface Offer {
+  /** Last day the worker should answer (optional). */
+  replyBy?: string;
   pay: number;
   payPeriod: PayPeriod;
   payType?: PayType;
@@ -322,6 +326,7 @@ export type ReportStatus = 'open' | 'dismissed' | 'job_removed';
 
 export interface JobReport {
   id: string;
+  reporterId?: string;
   jobId: string;
   jobTitle: string;
   companyName: string;

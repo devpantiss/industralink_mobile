@@ -151,6 +151,11 @@ export const employerApi = {
     await apiClient.delete(`/employer/company/documents/${id}`);
   },
 
+  async markViewed(appId: string): Promise<void> {
+    if (USE_MOCKS) return mockDb.markViewed(appId);
+    await apiClient.post(`/employer/applications/${appId}/view`);
+  },
+
   async getAnalytics(): Promise<EmployerAnalytics> {
     if (USE_MOCKS) {
       await delay();

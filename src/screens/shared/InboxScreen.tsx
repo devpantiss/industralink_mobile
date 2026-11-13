@@ -45,6 +45,8 @@ export const InboxScreen: React.FC = () => {
     const l = n.link ?? '';
     if (l.startsWith('application:')) navigation.navigate('ApplicationDetail', { applicationId: l.slice(12) });
     else if (l === 'jobs') navigation.navigate('WorkerTabs', { screen: 'FindJobs' });
+    else if (l.startsWith('thread:')) navigation.navigate('ChatThread', { threadId: l.slice(7), recipientName: '' });
+    else if (l === 'company') navigation.navigate('EmployerDrawer', { screen: 'Company' });
     else if (l === 'candidates') navigation.navigate('EmployerDrawer', { screen: 'EmployerMain', params: { screen: 'Candidates' } });
   };
 

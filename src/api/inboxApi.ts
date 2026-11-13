@@ -2,7 +2,7 @@ import { apiClient, USE_MOCKS, delay } from './client';
 import { mockDb } from '../mocks/db';
 import type { AppNotification, Message, MessageThread } from '../types';
 
-export type InboxRole = 'worker' | 'employer';
+export type InboxRole = 'worker' | 'employer' | 'admin';
 
 export const inboxApi = {
   async notifications(role: InboxRole): Promise<AppNotification[]> {
@@ -27,7 +27,7 @@ export const inboxApi = {
   async threads(role: InboxRole): Promise<MessageThread[]> {
     if (USE_MOCKS) {
       await delay(60);
-      return mockDb.getThreads(role);
+      return mockDb.getThreads(role === 'admin' ? 'employer' : role);
     }
     const res = await apiClient.get('/messages');
     return res.data;
@@ -36,7 +36,7 @@ export const inboxApi = {
   async thread(role: InboxRole, applicationId: string): Promise<{ thread: MessageThread; messages: Message[] }> {
     if (USE_MOCKS) {
       await delay(60);
-      return mockDb.getThread(role, applicationId);
+      return mockDb.getThread(role === 'admin' ? 'employer' : role, applicationId);
     }
     const res = await apiClient.get(`/messages/${applicationId}`);
     return res.data;
@@ -45,7 +45,7 @@ export const inboxApi = {
   async send(role: InboxRole, applicationId: string, text: string): Promise<Message> {
     if (USE_MOCKS) {
       await delay(80);
-      return mockDb.sendMessage(role, applicationId, text);
+      return mockDb.sendMessage(role === 'admin' ? 'employer' : role, applicationId, text);
     }
     const res = await apiClient.post(`/messages/${applicationId}`, { text });
     return res.data;

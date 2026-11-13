@@ -472,7 +472,7 @@ export const SEED_ADMIN_USERS: AdminUserRow[] = [
   { id: 'usr_pool_4', role: 'worker', name: 'Pooja Sahu', contact: '7008123456', city: 'Surat', status: 'active', joinedAt: '2026-11-08T07:40:00Z' },
   { id: 'usr_pool_8', role: 'worker', name: 'Bikash Mohanty', contact: '9439988776', city: 'Angul', status: 'active', joinedAt: '2026-09-21T12:00:00Z' },
   { id: 'usr_bad_1', role: 'worker', name: 'Raju Contractor', contact: '9000011111', city: 'Bhubaneswar', status: 'suspended', joinedAt: '2026-10-28T10:00:00Z' },
-  { id: 'usr_employer_1', role: 'employer', name: 'Eastline Heavy Engineering', contact: '9437000111', city: 'Kalinganagar', status: 'active', verification: 'approved', joinedAt: '2024-01-15T10:00:00Z' },
+  { id: 'emp_demo', role: 'employer', name: 'Eastline Heavy Engineering', contact: '9437000111', city: 'Kalinganagar', status: 'active', verification: 'approved', joinedAt: '2024-01-15T10:00:00Z' },
   { id: 'comp_1', role: 'employer', name: 'National Heavy Engineering', contact: '9811122334', city: 'Kalinganagar', status: 'active', verification: 'pending', joinedAt: '2026-11-10T10:00:00Z' },
   { id: 'comp_v3', role: 'employer', name: 'Kalinganagar Manpower Services', contact: '7008144556', city: 'Jajpur', status: 'active', verification: 'pending', joinedAt: '2026-11-11T08:15:00Z' },
   { id: 'comp_v4', role: 'employer', name: 'Paradip Bulk Handling Pvt Ltd', contact: '9437122001', city: 'Paradip', status: 'active', verification: 'rejected', joinedAt: '2026-11-04T11:00:00Z' },

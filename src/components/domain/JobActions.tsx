@@ -27,7 +27,7 @@ export const ApplyModal: React.FC<ApplyModalProps> = ({
   title,
   onTrackApplication,
 }) => {
-  const { colors } = useUiStore();
+  const { colors, showToast } = useUiStore();
   const qc = useQueryClient();
   const [choice, setChoice] = useState<'profile' | string>('profile');
   const [doneId, setDoneId] = useState<string>();
@@ -56,6 +56,11 @@ export const ApplyModal: React.FC<ApplyModalProps> = ({
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       setDoneId(res.id);
       qc.invalidateQueries({ queryKey: queryKeys.worker.all });
+    },
+    // Closed job, already applied, incomplete profile...: say why in plain words.
+    onError: (e: Error) => {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      showToast(e.message || t('Could not apply. Try again.'), 'warning');
     },
   });
 
@@ -202,20 +207,28 @@ const REPORT_REASONS: { value: ReportReason; label: string }[] = [
 ];
 
 export const ReportModal: React.FC<ReportModalProps> = ({ visible, onClose, jobId }) => {
-  const { colors } = useUiStore();
+  const { colors, showToast } = useUiStore();
   const [reason, setReason] = useState<ReportReason>('asks_money');
   const [details, setDetails] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
-  const handleSubmit = () => {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    setSubmitted(true);
-    setTimeout(() => {
-      setSubmitted(false);
-      setDetails('');
-      onClose();
-    }, 1500);
-  };
+  const send = useMutation({
+    mutationFn: () => workerApi.reportJob(jobId, reason, details),
+    onSuccess: () => {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      setSubmitted(true);
+      setTimeout(() => {
+        setSubmitted(false);
+        setDetails('');
+        onClose();
+      }, 1500);
+    },
+    onError: (e: Error) => {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      showToast(e.message || t('Could not send the report. Try again.'), 'warning');
+    },
+  });
+  const handleSubmit = () => send.mutate();
 
   return (
     <Sheet visible={visible} onClose={onClose} title={t('Report this job')}>

@@ -2,26 +2,22 @@ import { apiClient, USE_MOCKS, delay } from './client';
 import { mockDb } from '../mocks/db';
 import { User } from '../types';
 
-/** The demo worker's number: the only one that counts as an existing account in mock mode. */
-export const DEMO_WORKER_PHONE = '9876543210';
-
 export const authApi = {
   async sendOtp(phone: string): Promise<{ success: boolean; message: string; isNewUser?: boolean }> {
     if (USE_MOCKS) {
       await delay();
-      // In the demo, only the prefilled number already has an account.
-      return { ...(await mockDb.loginWithOtp(phone)), isNewUser: phone !== DEMO_WORKER_PHONE };
+      return { ...(await mockDb.loginWithOtp(phone)), isNewUser: !mockDb.workerExists(phone) };
     }
     const res = await apiClient.post('/auth/otp/send', { phone });
     return res.data;
   },
 
-  async verifyOtp(phone: string, otp: string): Promise<{ token: string; user: User }> {
+  async verifyOtp(phone: string, otp: string, name?: string): Promise<{ token: string; user: User }> {
     if (USE_MOCKS) {
       await delay();
-      return mockDb.verifyOtp(phone, otp);
+      return mockDb.verifyOtp(phone, otp, name);
     }
-    const res = await apiClient.post('/auth/otp/verify', { phone, otp });
+    const res = await apiClient.post('/auth/otp/verify', { phone, code: otp, name });
     return res.data;
   },
 
@@ -42,19 +38,7 @@ export const authApi = {
   }): Promise<{ token: string; user: User }> {
     if (USE_MOCKS) {
       await delay();
-      const user: User = {
-        id: `usr_employer_${Date.now()}`,
-        name: body.name,
-        phone: '',
-        email: body.email,
-        role: 'employer',
-        verified: false,
-        onboarded: false,
-        companyName: body.companyName,
-        status: 'pending',
-        createdAt: new Date().toISOString(),
-      };
-      return { token: 'mock-jwt-token-employer', user };
+      return mockDb.registerEmployer(body);
     }
     const res = await apiClient.post('/auth/signup/employer', body);
     return res.data;
@@ -77,6 +61,14 @@ export const authApi = {
     }
     const res = await apiClient.post('/auth/password/reset', { token, password });
     return res.data;
+  },
+
+  async completeOnboarding(userId: string): Promise<void> {
+    if (USE_MOCKS) {
+      mockDb.markOnboarded(userId);
+      return;
+    }
+    await apiClient.post('/auth/onboarding/complete');
   },
 
   async getMe(token: string): Promise<User> {

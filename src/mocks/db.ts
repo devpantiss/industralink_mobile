@@ -27,6 +27,7 @@ import {
   AccountStatus,
   CompanyDocument,
   CompanyDocType,
+  ReportReason,
   PlatformSettings,
   AppNotification,
   Message,
@@ -86,7 +87,7 @@ const poolCandidates: Candidate[] = SEED_APPLICANT_POOL.map((p, i) => {
 class MockDatabase {
   private jobs: Job[] = [...SEED_JOBS];
   private companies: Company[] = [...SEED_COMPANIES];
-  private workerProfile: WorkerProfile = {
+  private seedProfile: WorkerProfile = {
     ...SEED_WORKER,
     safetyTrainingHours: 40,
     languages: ['Hindi', 'Odia', 'English'],
@@ -100,8 +101,8 @@ class MockDatabase {
       { company: 'Mahanadi Steel & Power', role: 'Trainee Welder', from: '2019', to: '2021' },
     ],
   };
-  private savedJobIds: Set<string> = new Set(['job_1']);
-  private documents: WorkerDocument[] = [
+  private seedSaved: string[] = ['job_1'];
+  private seedDocs: WorkerDocument[] = [
     {
       id: 'doc_1',
       ownerId: 'usr_worker_1',
@@ -177,7 +178,7 @@ class MockDatabase {
   private audit: AuditEntry[] = [...SEED_AUDIT];
 
   private log(action: string, target: string) {
-    this.audit.unshift({ id: `aud_${Date.now()}`, at: new Date().toISOString(), actor: 'Admin', action, target });
+    this.audit.unshift({ id: this.uid('aud'), at: new Date().toISOString(), actor: 'Admin', action, target });
   }
   private pool: Candidate[] = poolCandidates;
   private talent: TalentProfile[] = [
@@ -234,8 +235,8 @@ class MockDatabase {
     },
   ];
   /** The signed-in employer's own company (shown on Company profile and in the drawer). */
-  private myCompany: Company = {
-    id: 'comp_1',
+  private seedMyCompany: Company = {
+    id: 'emp_demo',
     name: 'Eastline Heavy Engineering',
     sector: 'metals',
     size: '1000+',
@@ -255,6 +256,205 @@ class MockDatabase {
     createdAt: '2024-01-15T10:00:00Z',
   };
 
+
+  // ---- Demo accounts: who is signed in, and each account's own data ----
+  private workerId = 'usr_worker_1';
+  private companyId = 'emp_demo';
+  private profiles: Record<string, WorkerProfile> = { usr_worker_1: this.seedProfile };
+  private workerDocs: Record<string, WorkerDocument[]> = { usr_worker_1: this.seedDocs };
+  private workerSaved: Record<string, string[]> = { usr_worker_1: this.seedSaved };
+  private employerCompanies: Record<string, Company> = { emp_demo: this.seedMyCompany };
+  private companyDocs: Record<string, CompanyDocument[]> = {
+    emp_demo: [
+      {
+        id: 'cdoc_1',
+        companyId: 'emp_demo',
+        name: 'GST_Certificate.pdf',
+        type: 'gst',
+        sizeBytes: 1024 * 320,
+        mimeType: 'application/pdf',
+        uploadedAt: '2026-10-20T09:00:00Z',
+      },
+    ],
+  };
+  private employerAccounts: { email: string; password: string; name: string; companyId: string }[] = [
+    { email: 'recruiter@nationaleng.demo', password: 'password123', name: 'Pradeep Mohanty', companyId: 'emp_demo' },
+    { email: 'hr@eastline.demo', password: 'password123', name: 'Pradeep Mohanty', companyId: 'emp_demo' },
+  ];
+  /** Accounts that signed up but have not finished the short setup yet. */
+  private pendingOnboarding: string[] = [];
+
+  private get workerProfile(): WorkerProfile {
+    return this.profiles[this.workerId] ?? this.seedProfile;
+  }
+  private set workerProfile(v: WorkerProfile) {
+    this.profiles[this.workerId] = v;
+  }
+  private get documents(): WorkerDocument[] {
+    return (this.workerDocs[this.workerId] ??= []);
+  }
+  private set documents(v: WorkerDocument[]) {
+    this.workerDocs[this.workerId] = v;
+  }
+  private get savedJobIds(): Set<string> {
+    return new Set(this.workerSaved[this.workerId] ?? []);
+  }
+  private get myCompany(): Company {
+    return this.employerCompanies[this.companyId] ?? this.seedMyCompany;
+  }
+  private set myCompany(v: Company) {
+    this.employerCompanies[this.companyId] = v;
+  }
+
+  private seq = 0;
+  /** Unique ids even when two things are created in the same millisecond. */
+  private uid(prefix: string) {
+    return `${prefix}_${Date.now()}_${++this.seq}`;
+  }
+  private digits = (s?: string) => (s ?? '').replace(/\D/g, '');
+  private acct(role: 'worker' | 'employer' | 'admin') {
+    return role === 'worker' ? this.workerId : role === 'employer' ? `emp:${this.companyId}` : 'admin';
+  }
+  private ownerOf(j: Job) {
+    return j.ownerCompanyId ?? 'emp_demo';
+  }
+  private isSuspended(id?: string) {
+    const r = this.adminUsers.find((u) => u.id === id);
+    return !!r && (r.status === 'suspended' || r.status === 'blocked');
+  }
+  /** A job workers can see and apply to. */
+  private jobOpen(j: Job) {
+    const late = !!j.deadline && new Date(j.deadline) < new Date();
+    return j.status === 'active' && !late && !this.isSuspended(j.companyId) && !this.isSuspended(this.ownerOf(j));
+  }
+  private allCompanies(): Company[] {
+    return [...this.companies, ...Object.values(this.employerCompanies)];
+  }
+  private fail(message: string, code: string): never {
+    throw Object.assign(new Error(message), { code });
+  }
+  /** One place that creates a notification, so every event reaches the right person. */
+  private notify(userId: string, title: string, body: string, link?: string) {
+    this.notifications.unshift({
+      id: `n_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+      userId,
+      title,
+      body,
+      at: new Date().toISOString(),
+      read: false,
+      link,
+    });
+  }
+  private jobOwnerAcct(j: Job) {
+    return `emp:${this.ownerOf(j)}`;
+  }
+
+  workerExists(phone: string): boolean {
+    const d = this.digits(phone).slice(-10);
+    return Object.values(this.profiles).some((p) => this.digits(p.phone).slice(-10) === d);
+  }
+
+  useDemoAccount(role: 'worker' | 'employer' | 'admin') {
+    if (role === 'worker') this.workerId = 'usr_worker_1';
+    if (role === 'employer') this.companyId = 'emp_demo';
+  }
+
+  markOnboarded(userId: string) {
+    this.pendingOnboarding = this.pendingOnboarding.filter((x) => x !== userId);
+  }
+
+  private createWorker(name: string, tenDigits: string): WorkerProfile {
+    const id = this.uid('usr_w');
+    const p: WorkerProfile = {
+      userId: id,
+      name,
+      phone: `+91 ${tenDigits.slice(0, 5)} ${tenDigits.slice(5)}`,
+      qualifications: [],
+      licences: [],
+      willingToRelocate: true,
+      availability: 'immediate',
+      skills: [],
+    };
+    this.profiles[id] = p;
+    this.workerDocs[id] = [];
+    this.workerSaved[id] = [];
+    this.adminUsers.unshift({ id, role: 'worker', name, contact: tenDigits, city: '', status: 'active', joinedAt: new Date().toISOString() });
+    this.pendingOnboarding.push(id);
+    this.notify('admin', 'New worker joined', `${name} created an account.`, 'users');
+    return p;
+  }
+
+  private workerUser(p: WorkerProfile): User {
+    return {
+      id: p.userId,
+      name: p.name,
+      phone: p.phone,
+      role: 'worker',
+      verified: true,
+      status: 'active',
+      onboarded: !this.pendingOnboarding.includes(p.userId),
+      city: p.location?.city,
+      trade: p.trade,
+      createdAt: new Date().toISOString(),
+    } as User;
+  }
+
+  private employerUser(acc: { email: string; name: string; companyId: string }): User {
+    const c = this.employerCompanies[acc.companyId]!;
+    return {
+      id: `emp:${acc.companyId}`,
+      name: acc.name,
+      phone: c.hrPhone ?? '',
+      email: acc.email,
+      role: 'employer',
+      verified: c.verification === 'approved',
+      status: c.verification === 'approved' ? 'active' : 'pending',
+      onboarded: !this.pendingOnboarding.includes(`emp:${acc.companyId}`),
+      companyId: acc.companyId,
+      companyName: c.name,
+      createdAt: c.createdAt,
+    } as User;
+  }
+
+  async registerEmployer(body: { name: string; email: string; password: string; companyName: string }): Promise<{ token: string; user: User }> {
+    const email = body.email.trim().toLowerCase();
+    if (this.employerAccounts.some((a) => a.email === email)) {
+      this.fail('An account with this email already exists. Log in instead.', 'EXISTS');
+    }
+    const id = this.uid('emp');
+    const auto = this.platformSettings.autoApproveCompanies;
+    const company: Company = {
+      id,
+      name: body.companyName.trim(),
+      sector: 'metals',
+      size: '1–50',
+      hiringType: 'direct',
+      location: { city: '', state: '' },
+      verification: auto ? 'approved' : 'pending',
+      status: 'active',
+      createdAt: new Date().toISOString(),
+    };
+    this.employerCompanies[id] = company;
+    this.companyDocs[id] = [];
+    this.employerAccounts.push({ email, password: body.password, name: body.name.trim(), companyId: id });
+    this.adminUsers.unshift({ id, role: 'employer', name: company.name, contact: email, city: '', status: 'active', verification: company.verification, joinedAt: company.createdAt });
+    this.verifications.unshift({
+      id,
+      kind: 'company',
+      title: company.name,
+      subtitle: 'Direct employer',
+      submittedAt: company.createdAt,
+      status: company.verification,
+      details: {},
+      documents: [],
+    });
+    this.pendingOnboarding.push(`emp:${id}`);
+    this.companyId = id;
+    this.notify('admin', 'New company to review', `${company.name} signed up and needs approval.`, 'verifications');
+    this.log('New company signed up', company.name);
+    return { token: 'mock-jwt-token-employer', user: this.employerUser({ email, name: body.name.trim(), companyId: id }) };
+  }
+
   // Auth Operations
   async loginWithOtp(phone: string): Promise<{ success: boolean; message: string }> {
     return {
@@ -263,54 +463,39 @@ class MockDatabase {
     };
   }
 
-  async verifyOtp(phone: string, otp: string): Promise<{ token: string; user: User }> {
-    if (otp !== '123456' && otp.length !== 6) {
-      throw new Error('Invalid OTP. Please enter 123456 for demo verification.');
+  async verifyOtp(phone: string, otp: string, name?: string): Promise<{ token: string; user: User }> {
+    if (otp !== '123456') this.fail('That code is not right. For the demo, use 123456.', 'WRONG_OTP');
+    const d = this.digits(phone).slice(-10);
+    let p = Object.values(this.profiles).find((x) => this.digits(x.phone).slice(-10) === d);
+    if (!p) {
+      if (!name?.trim()) this.fail('No account found for this number. Create one to continue.', 'NOT_FOUND');
+      p = this.createWorker(name.trim(), d);
     }
-    const user: User = {
-      id: 'usr_worker_1',
-      name: this.workerProfile.name,
-      phone: `+91 ${phone}`,
-      role: 'worker',
-      status: 'active',
-      onboarded: true,
-      city: this.workerProfile.location?.city,
-      trade: this.workerProfile.trade,
-      createdAt: new Date().toISOString(),
-    };
-    return { token: 'mock-jwt-token-worker', user };
+    if (this.isSuspended(p.userId)) this.fail('Your account is suspended. Please contact help.', 'BLOCKED');
+    this.workerId = p.userId;
+    return { token: 'mock-jwt-token-worker', user: this.workerUser(p) };
   }
-
-  async loginWithEmail(email: string, _password: string): Promise<{ token: string; user: User }> {
-    if (email.includes('admin')) {
+  async loginWithEmail(email: string, password: string): Promise<{ token: string; user: User }> {
+    const e = email.trim().toLowerCase();
+    if (e.includes('admin')) {
       const user: User = {
-        id: 'usr_admin_1',
+        id: 'admin',
         name: 'IndustriaLink Admin',
         phone: '+91 99999 88888',
-        email,
+        email: e,
         role: 'admin',
         status: 'active',
         onboarded: true,
         createdAt: new Date().toISOString(),
-      };
+      } as User;
       return { token: 'mock-jwt-token-admin', user };
     }
-
-    const user: User = {
-      id: 'usr_employer_1',
-      name: 'Pradeep Mohanty',
-      phone: '+91 98111 22334',
-      email,
-      role: 'employer',
-      status: 'active',
-      onboarded: true,
-      companyId: 'comp_1',
-      companyName: 'Eastline Heavy Engineering',
-      createdAt: new Date().toISOString(),
-    };
-    return { token: 'mock-jwt-token-employer', user };
+    const acc = this.employerAccounts.find((a) => a.email === e);
+    if (!acc || acc.password !== password) this.fail('The email or password is not right.', 'INVALID_CREDENTIALS');
+    if (this.isSuspended(acc.companyId)) this.fail('Your account is suspended. Please contact help.', 'BLOCKED');
+    this.companyId = acc.companyId;
+    return { token: 'mock-jwt-token-employer', user: this.employerUser(acc) };
   }
-
   async getMe(token: string): Promise<User> {
     if (token.includes('admin')) {
       return {
@@ -325,14 +510,14 @@ class MockDatabase {
     }
     if (token.includes('employer')) {
       return {
-        id: 'usr_employer_1',
+        id: 'emp:emp_demo',
         name: 'Pradeep Mohanty',
         phone: '+91 98111 22334',
         email: 'hr@eastline.demo',
         role: 'employer',
         status: 'active',
         onboarded: true,
-        companyId: 'comp_1',
+        companyId: 'emp_demo',
         companyName: 'Eastline Heavy Engineering',
         createdAt: '2026-01-01T00:00:00Z',
       };
@@ -352,28 +537,61 @@ class MockDatabase {
 
   // Worker Operations
   async getWorkerSummary(): Promise<WorkerSummary> {
-    const activeApps = this.applications.filter((a) => !['hired', 'rejected', 'withdrawn'].includes(a.stage)).length;
-    const interviews = this.applications.filter((a) => a.stage === 'interview').length;
+    const mine = this.applications.filter((a) => a.workerId === this.workerId);
+    const activeApps = mine.filter((a) => !['hired', 'rejected', 'withdrawn'].includes(a.stage)).length;
+    const interviews = mine.filter((a) => a.stage === 'interview').length;
+    const p = this.workerProfile;
+    const docs = this.documents;
+    // Each item adds its points when done; what is not done becomes the "missing" list.
+    const items: { key: string; label: string; hint: string; points: number; done: boolean; link: string }[] = [
+      { key: 'trade', label: 'Your trade', hint: 'Add your trade so the right jobs show first', points: 15, done: !!p.trade, link: '/worker/profile?edit=work' },
+      { key: 'experience', label: 'Your experience', hint: 'Add how long you have worked', points: 10, done: !!p.experience, link: '/worker/profile?edit=work' },
+      { key: 'location', label: 'Your city and state', hint: 'Add your city and state', points: 10, done: !!(p.location?.city && p.location?.state), link: '/worker/profile?edit=personal' },
+      { key: 'dob', label: 'Date of birth', hint: 'Add your date of birth', points: 10, done: !!p.dob, link: '/worker/profile?edit=personal' },
+      { key: 'education', label: 'Education', hint: 'Add your education so employers can shortlist you', points: 10, done: p.qualifications.length > 0, link: '/worker/profile?edit=work' },
+      { key: 'pay', label: 'Expected pay', hint: 'Add the pay you expect', points: 5, done: !!p.expectedPay, link: '/worker/profile?edit=preferences' },
+      { key: 'about', label: 'About you', hint: 'Write one line about your work', points: 5, done: !!p.about, link: '/worker/profile?edit=personal' },
+      { key: 'skills', label: 'Skills', hint: 'Add your skills', points: 5, done: p.skills.length > 0, link: '/worker/profile?edit=work' },
+      { key: 'history', label: 'Past jobs', hint: 'Add where you worked before', points: 5, done: (p.workHistory?.length ?? 0) > 0, link: '/worker/profile?edit=work' },
+      { key: 'photo', label: 'Profile photo', hint: 'Add a clear photo of your face', points: 5, done: !!p.photoUrl, link: '/worker/profile' },
+      { key: 'resume', label: 'Resume', hint: 'Upload your resume so employers can see it', points: 10, done: docs.some((d) => d.type === 'resume'), link: '/worker/profile?tab=documents' },
+      { key: 'certificate', label: 'ITI certificate', hint: 'Upload your ITI certificate so employers can see it', points: 10, done: docs.some((d) => d.type === 'iti_diploma'), link: '/worker/profile?tab=documents' },
+    ];
+    const profileStrength = items.filter((i) => i.done).reduce((n, i) => n + i.points, 0);
+    const missing = items.filter((i) => !i.done);
+    // The next thing that needs the worker: a coming interview, else an offer waiting for an answer.
+    const upcoming = mine
+      .filter((a) => a.stage === 'interview' && a.interview && new Date(a.interview.at).getTime() > Date.now() - 6 * 3600_000)
+      .sort((a, b) => +new Date(a.interview!.at) - +new Date(b.interview!.at))[0];
+    const offer = mine.find((a) => a.stage === 'offer' && !a.offerResponse);
+    const jobOf = (a: Application) => this.jobs.find((j) => j.id === a.jobId);
     return {
       activeApplications: activeApps,
       interviews,
-      saved: this.savedJobIds.size,
-      profileStrength: 85,
-      profileHint: 'Upload your ITI certificate so employers can see it',
-      missing: [{ key: 'iti', label: 'ITI Certificate', link: '/worker/profile?tab=documents' }],
-      nextStep: {
-        title: 'Interview scheduled',
-        subtitle: 'Plant Gate 4, Kalinganagar with National Heavy Engineering HR',
-        link: '/worker/applications/app_1',
-        at: '2026-11-20T10:30:00Z',
-      },
+      saved: this.workerSaved[this.workerId]?.length ?? 0,
+      profileStrength,
+      profileHint: missing[0]?.hint,
+      missing: missing.map((m) => ({ key: m.key, label: m.label, link: m.link })),
+      nextStep: upcoming
+        ? {
+            title: 'Interview scheduled',
+            subtitle: `${upcoming.interview!.place} with ${jobOf(upcoming)?.companyName ?? 'the company'}`,
+            link: `/worker/applications/${upcoming.id}`,
+            at: upcoming.interview!.at,
+          }
+        : offer
+        ? {
+            title: 'You have a job offer',
+            subtitle: `${jobOf(offer)?.title ?? 'Job'} at ${jobOf(offer)?.companyName ?? 'the company'}. Reply to accept or decline.`,
+            link: `/worker/applications/${offer.id}`,
+          }
+        : undefined,
     };
   }
-
   async getJobs(params?: { search?: string; trade?: string }): Promise<JobForWorker[]> {
     return this.jobs
       .filter((j) => {
-        if (j.status !== 'active') return false;
+        if (!this.jobOpen(j)) return false;
         if (params?.trade && j.trade !== params.trade) return false;
         if (params?.search) {
           const s = params.search.toLowerCase();
@@ -389,7 +607,7 @@ class MockDatabase {
   }
 
   async searchJobs(params?: JobSearchParams): Promise<Paginated<JobForWorker>> {
-    let items = this.jobs.filter((j) => j.status === 'active').map((j) => this.mapJobForWorker(j));
+    let items = this.jobs.filter((j) => this.jobOpen(j)).map((j) => this.mapJobForWorker(j));
     if (params?.trade) {
       items = items.filter((j) => j.trade === params.trade);
     }
@@ -451,128 +669,144 @@ class MockDatabase {
   }
 
   async toggleSaveJob(id: string, forceState?: boolean): Promise<boolean> {
-    if (forceState !== undefined) {
-      if (forceState) this.savedJobIds.add(id);
-      else this.savedJobIds.delete(id);
-      return forceState;
-    }
-    if (this.savedJobIds.has(id)) {
-      this.savedJobIds.delete(id);
-      return false;
-    }
-    this.savedJobIds.add(id);
-    return true;
+    const list = new Set(this.workerSaved[this.workerId] ?? []);
+    const next = forceState ?? !list.has(id);
+    if (next) list.add(id);
+    else list.delete(id);
+    this.workerSaved[this.workerId] = [...list];
+    return next;
   }
-
   async applyJob(
     jobId: string,
     payload?: { sentWith?: string; documentId?: string }
   ): Promise<Application> {
-    const existing = this.applications.find((a) => a.jobId === jobId);
-    if (existing) return existing;
+    const job = this.jobs.find((j) => j.id === jobId);
+    if (!job || !this.jobOpen(job)) this.fail('This job is closed. You cannot apply to it now.', 'JOB_CLOSED');
+    const mine = this.applications.filter((a) => a.jobId === jobId && a.workerId === this.workerId);
+    const live = mine.find((a) => a.stage !== 'withdrawn');
+    if (live) {
+      this.fail(
+        live.stage === 'rejected' ? 'This company has already replied to your application.' : 'You already applied to this job.',
+        'ALREADY_APPLIED'
+      );
+    }
+    const p = this.workerProfile;
+    const lacking = [
+      !p.trade && 'your trade',
+      !p.experience && 'your experience',
+      !(p.location?.city && p.location?.state) && 'your city and state',
+      !p.dob && 'your date of birth',
+    ].filter(Boolean) as string[];
+    if (lacking.length) this.fail(`Add ${lacking.join(', ')} to your profile before you apply.`, 'PROFILE_INCOMPLETE');
 
+    const now = new Date().toISOString();
+    // A withdrawn application can be sent again: it becomes a new application.
     const newApp: Application = {
-      id: `app_${Date.now()}`,
+      id: this.uid('app'),
       jobId,
-      workerId: 'usr_worker_1',
+      workerId: this.workerId,
       stage: 'applied',
-      appliedAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      appliedAt: now,
+      updatedAt: now,
       sentWith: (payload?.sentWith as any) || 'profile',
       documentId: payload?.documentId,
-      timeline: [{ stage: 'applied', at: new Date().toISOString() }],
+      timeline: [{ stage: 'applied', at: now }],
     };
     this.applications.unshift(newApp);
-
-    const job = this.jobs.find((j) => j.id === jobId);
-    if (job) {
-      job.applicantsCount += 1;
-      job.newApplicantsCount += 1;
-    }
-
+    job.applicantsCount += 1;
+    job.newApplicantsCount += 1;
+    this.notify(this.jobOwnerAcct(job), 'New applicant', `${p.name} applied for ${job.title}.`, 'candidates');
     return newApp;
+  }
+  /** What a worker may see of an application: HR-only notes are removed. */
+  private forWorker(a: Application): WorkerApplication | null {
+    const job = this.jobs.find((j) => j.id === a.jobId);
+    if (!job) return null;
+    const { rejectionNote: _hidden, ...rest } = a;
+    return {
+      ...rest,
+      timeline: a.timeline.map((e) => (e.stage === 'rejected' ? { stage: e.stage, at: e.at } : e)),
+      job,
+      contact:
+        ['shortlisted', 'interview', 'offer', 'hired'].includes(a.stage) && job.allowCalls
+          ? { phone: job.hrPhone || '', hours: job.callHours }
+          : undefined,
+    } as WorkerApplication;
   }
 
   async getApplications(): Promise<WorkerApplication[]> {
     return this.applications
-      .map((a) => {
-        const job = this.jobs.find((j) => j.id === a.jobId);
-        if (!job) return null;
-        return {
-          ...a,
-          job,
-          contact:
-            ['shortlisted', 'interview', 'offer', 'hired'].includes(a.stage) && job.allowCalls
-              ? { phone: job.hrPhone || '9876543210', hours: job.callHours }
-              : undefined,
-        };
-      })
+      .filter((a) => a.workerId === this.workerId)
+      .map((a) => this.forWorker(a))
       .filter(Boolean) as WorkerApplication[];
   }
-
   async getApplicationById(id: string): Promise<WorkerApplication | null> {
-    const a = this.applications.find((app) => app.id === id);
-    if (!a) return null;
-    const job = this.jobs.find((j) => j.id === a.jobId);
-    if (!job) return null;
-    return {
-      ...a,
-      job,
-      contact:
-        ['shortlisted', 'interview', 'offer', 'hired'].includes(a.stage) && job.allowCalls
-          ? { phone: job.hrPhone || '9876543210', hours: job.callHours }
-          : undefined,
-    };
+    const a = this.applications.find((app) => app.id === id && app.workerId === this.workerId);
+    return a ? this.forWorker(a) : null;
   }
-
   async withdrawApplication(id: string): Promise<void> {
-    const app = this.applications.find((a) => a.id === id);
-    if (app) {
-      app.stage = 'withdrawn';
-      app.updatedAt = new Date().toISOString();
-      app.timeline.push({ stage: 'withdrawn', at: new Date().toISOString() });
-    }
+    const app = this.applications.find((a) => a.id === id && a.workerId === this.workerId);
+    if (!app) return;
+    if (['hired', 'rejected', 'withdrawn'].includes(app.stage)) this.fail('This application is already closed.', 'CLOSED');
+    const job = this.jobs.find((j) => j.id === app.jobId);
+    app.stage = 'withdrawn';
+    app.updatedAt = new Date().toISOString();
+    app.timeline.push({ stage: 'withdrawn', at: app.updatedAt });
+    if (job) this.notify(this.jobOwnerAcct(job), 'Application withdrawn', `${this.workerProfile.name} withdrew from ${job.title}.`, 'candidates');
   }
-
   async replyInterview(
     id: string,
     response: 'attending' | 'cant_attend',
     note?: string
   ): Promise<void> {
-    const app = this.applications.find((a) => a.id === id);
-    if (app && app.interview) {
-      app.interview.response = response;
-      app.interview.responseNote = note;
-      app.interview.respondedAt = new Date().toISOString();
+    const app = this.applications.find((a) => a.id === id && a.workerId === this.workerId);
+    if (!app || !app.interview) return;
+    app.interview.response = response;
+    app.interview.responseNote = note;
+    app.interview.respondedAt = new Date().toISOString();
+    const job = this.jobs.find((j) => j.id === app.jobId);
+    if (job) {
+      this.notify(
+        this.jobOwnerAcct(job),
+        response === 'attending' ? 'Interview confirmed' : 'Cannot attend the interview',
+        `${this.workerProfile.name} ${response === 'attending' ? 'will attend' : 'cannot attend'} the interview for ${job.title}.${note ? ` "${note}"` : ''}`,
+        'candidates'
+      );
     }
   }
-
   async replyOffer(
     id: string,
     response: 'accepted' | 'declined',
     note?: string
   ): Promise<void> {
-    const app = this.applications.find((a) => a.id === id);
-    if (app) {
-      app.offerResponse = response;
-      if (response === 'accepted') {
-        app.stage = 'hired';
-      } else {
-        app.stage = 'withdrawn';
-        app.rejectionNote = note;
-      }
-      app.updatedAt = new Date().toISOString();
+    const app = this.applications.find((a) => a.id === id && a.workerId === this.workerId);
+    if (!app || app.stage !== 'offer') return;
+    app.offerResponse = response;
+    app.updatedAt = new Date().toISOString();
+    // Accepting keeps the stage at "offer" until HR confirms the joining; declining ends the application.
+    if (response === 'declined') {
+      app.stage = 'withdrawn';
+      app.rejectionNote = note;
+      app.timeline.push({ stage: 'withdrawn', at: app.updatedAt });
+    }
+    const job = this.jobs.find((j) => j.id === app.jobId);
+    if (job) {
+      this.notify(
+        this.jobOwnerAcct(job),
+        response === 'accepted' ? 'Offer accepted' : 'Offer declined',
+        `${this.workerProfile.name} ${response === 'accepted' ? 'accepted' : 'declined'} the offer for ${job.title}.${note ? ` "${note}"` : ''}`,
+        'candidates'
+      );
     }
   }
-
   async getDocuments(): Promise<WorkerDocument[]> {
     return this.documents;
   }
 
   async uploadDocument(doc: { name: string; type: any; fileUrl: string }): Promise<WorkerDocument> {
     const newDoc: WorkerDocument = {
-      id: `doc_${Date.now()}`,
-      ownerId: 'usr_worker_1',
+      id: this.uid('doc'),
+      ownerId: this.workerId,
       name: doc.name,
       type: doc.type,
       sizeBytes: 1024 * 350,
@@ -615,39 +849,40 @@ class MockDatabase {
   }
 
   async getCompanyForWorker(id: string): Promise<CompanyForWorker | null> {
-    const company = this.companies.find((c) => c.id === id) || this.companies[0];
-    if (!company) return null;
-    const jobs = this.jobs
-      .filter((j) => j.companyId === company.id)
-      .map((j) => this.mapJobForWorker(j));
+    const company = this.allCompanies().find((c) => c.id === id);
+    if (!company || this.isSuspended(company.id)) return null;
+    const jobs = this.jobs.filter((j) => j.companyId === company.id && this.jobOpen(j)).map((j) => this.mapJobForWorker(j));
     return { company, jobs };
   }
-
   async listCompanies(params?: { q?: string; sector?: string }): Promise<{ company: Company; openJobs: number }[]> {
     const q = params?.q?.trim().toLowerCase();
-    return this.companies
-      .filter((c) => c.verification === 'approved' && c.status !== 'blocked')
+    return this.allCompanies()
+      .filter((c) => c.verification === 'approved' && !this.isSuspended(c.id))
       .filter((c) => !params?.sector || c.sector === params.sector)
       .filter((c) => !q || c.name.toLowerCase().includes(q) || c.location.city.toLowerCase().includes(q))
       .map((company) => ({
         company,
-        openJobs: this.jobs.filter((j) => j.companyId === company.id && j.status === 'active').length,
+        openJobs: this.jobs.filter((j) => j.companyId === company.id && this.jobOpen(j)).length,
       }))
       .sort((a, b) => b.openJobs - a.openJobs);
   }
-
   // ---- Inbox: notifications and messages ----
   private notifications: AppNotification[] = [
-    { id: 'n_w1', link: 'application:app_1', userId: 'worker', title: 'Interview scheduled', body: 'Gate interview at Kalinganagar Plant tomorrow, 10:30 AM. Bring your ITI certificate.', at: '2026-11-12T08:30:00Z', read: false },
-    { id: 'n_w2', link: 'application:app_1', userId: 'worker', title: 'You were shortlisted', body: 'Your application for Welder was shortlisted.', at: '2026-11-11T14:10:00Z', read: false },
-    { id: 'n_w3', link: 'jobs', userId: 'worker', title: 'New jobs near you', body: '5 new welding jobs were posted in Kalinganagar.', at: '2026-11-10T07:00:00Z', read: true },
-    { id: 'n_e1', link: 'candidates', userId: 'employer', title: 'New applicants', body: '3 new applicants are waiting for your review.', at: '2026-11-12T09:00:00Z', read: false },
-    { id: 'n_e2', link: 'candidates', userId: 'employer', title: 'Interview reply', body: 'A worker confirmed they will attend the gate interview.', at: '2026-11-11T16:40:00Z', read: false },
-    { id: 'n_e3', userId: 'employer', title: 'Company approved', body: 'Your company is verified. Workers can now see your jobs.', at: '2026-10-21T11:00:00Z', read: true },
+    { id: 'n_w1', link: 'application:app_1', userId: 'usr_worker_1', title: 'Interview scheduled', body: 'Gate interview at Kalinganagar Plant tomorrow, 10:30 AM. Bring your ITI certificate.', at: '2026-11-12T08:30:00Z', read: false },
+    { id: 'n_w2', link: 'application:app_1', userId: 'usr_worker_1', title: 'You were shortlisted', body: 'Your application for Welder was shortlisted.', at: '2026-11-11T14:10:00Z', read: false },
+    { id: 'n_w3', link: 'jobs', userId: 'usr_worker_1', title: 'New jobs near you', body: '5 new welding jobs were posted in Kalinganagar.', at: '2026-11-10T07:00:00Z', read: true },
+    { id: 'n_e1', link: 'candidates', userId: 'emp:emp_demo', title: 'New applicants', body: '3 new applicants are waiting for your review.', at: '2026-11-12T09:00:00Z', read: false },
+    { id: 'n_e2', link: 'candidates', userId: 'emp:emp_demo', title: 'Interview reply', body: 'A worker confirmed they will attend the gate interview.', at: '2026-11-11T16:40:00Z', read: false },
+    { id: 'n_e3', userId: 'emp:emp_demo', title: 'Company approved', body: 'Your company is verified. Workers can now see your jobs.', at: '2026-10-21T11:00:00Z', read: true },
   ];
 
   private messages: Message[] = [];
+  private seedAdminNotes: AppNotification[] = [
+    { id: 'n_a1', userId: 'admin', title: 'Company waiting for approval', body: 'Kalinganagar Manpower Services is waiting for your review.', at: '2026-11-11T08:20:00Z', read: false, link: 'verifications' },
+    { id: 'n_a2', userId: 'admin', title: 'Job reported', body: 'Automotive Spot & Robotic Welder has 2 reports about asking for money.', at: '2026-11-12T05:40:00Z', read: false, link: 'reports' },
+  ];
   private lastRead: Record<string, string> = {};
+  private adminNotesAdded = false;
   private messagesSeeded = false;
 
   private async eligibleThreads(role: 'worker' | 'employer'): Promise<MessageThread[]> {
@@ -660,7 +895,7 @@ class MockDatabase {
     const base =
       role === 'worker'
         ? this.applications
-            .filter((a) => ok(a.stage))
+            .filter((a) => a.workerId === this.workerId && ok(a.stage))
             .map((a) => {
               const job = this.jobs.find((j) => j.id === a.jobId);
               return { id: a.id, stage: a.stage, jobTitle: job?.title ?? 'Job', companyName: job?.companyName ?? 'Company', workerName: this.workerProfile.name, otherName: `${job?.companyName ?? 'Company'} HR` };
@@ -670,7 +905,7 @@ class MockDatabase {
             .map((c) => ({ id: c.id, stage: c.stage, jobTitle: c.jobTitle, companyName: this.myCompany.name, workerName: c.worker.name, otherName: c.worker.name }));
     if (!this.messagesSeeded && base[0]) {
       this.messagesSeeded = true;
-      const id = this.applications.find((a) => ok(a.stage))?.id ?? base[0].id;
+      const id = this.applications.find((a) => a.workerId === 'usr_worker_1' && ok(a.stage))?.id ?? base[0].id;
       this.messages.push(
         { id: 'm_seed1', applicationId: id, fromUserId: 'usr_employer_1', fromRole: 'employer', text: 'Hello. Your profile was shortlisted. Can you visit the plant gate tomorrow?', at: '2026-11-12T10:15:00Z' },
         { id: 'm_seed2', applicationId: id, fromUserId: 'usr_worker_1', fromRole: 'worker', text: 'Yes, I can come at 10:30 AM. Should I bring my original ITI certificate?', at: '2026-11-12T10:18:00Z' },
@@ -698,31 +933,44 @@ class MockDatabase {
   }
 
   async sendMessage(role: 'worker' | 'employer', applicationId: string, text: string): Promise<Message> {
+    if (!this.platformSettings.messagingEnabled) this.fail('Messaging is turned off for now.', 'DISABLED');
+    const thread = (await this.eligibleThreads(role)).find((t) => t.applicationId === applicationId);
+    if (!thread) this.fail('You can message after the worker is shortlisted.', 'NOT_ALLOWED');
     const m: Message = {
-      id: `m_${Date.now()}`,
+      id: this.uid('m'),
       applicationId,
-      fromUserId: role === 'worker' ? 'usr_worker_1' : 'usr_employer_1',
+      fromUserId: role === 'worker' ? this.workerId : `emp:${this.companyId}`,
       fromRole: role,
       text: text.trim(),
       at: new Date().toISOString(),
     };
     this.messages.push(m);
     this.lastRead[`${role}:${applicationId}`] = m.at;
+    const app = this.applications.find((a) => a.id === applicationId) ?? this.pool.find((a) => a.id === applicationId);
+    const job = app ? this.jobs.find((j) => j.id === app.jobId) : undefined;
+    if (role === 'worker') {
+      if (job) this.notify(this.jobOwnerAcct(job), `Message from ${thread.workerName}`, m.text.slice(0, 90), `thread:${applicationId}`);
+    } else if (app) {
+      this.notify(app.workerId, `Message from ${thread.companyName}`, m.text.slice(0, 90), `thread:${applicationId}`);
+    }
     return m;
   }
-
-  async getNotifications(role: 'worker' | 'employer'): Promise<AppNotification[]> {
-    return this.notifications.filter((n) => n.userId === role).sort((a, b) => b.at.localeCompare(a.at));
+  async getNotifications(role: 'worker' | 'employer' | 'admin'): Promise<AppNotification[]> {
+    if (!this.adminNotesAdded) {
+      this.adminNotesAdded = true;
+      this.notifications.push(...this.seedAdminNotes);
+    }
+    const me = this.acct(role);
+    return this.notifications.filter((n) => n.userId === me).sort((a, b) => b.at.localeCompare(a.at));
   }
-
   async markNotificationRead(id: string): Promise<void> {
     this.notifications = this.notifications.map((n) => (n.id === id ? { ...n, read: true } : n));
   }
 
-  async markAllNotificationsRead(role: 'worker' | 'employer'): Promise<void> {
-    this.notifications = this.notifications.map((n) => (n.userId === role ? { ...n, read: true } : n));
+  async markAllNotificationsRead(role: 'worker' | 'employer' | 'admin'): Promise<void> {
+    const me = this.acct(role);
+    this.notifications = this.notifications.map((n) => (n.userId === me ? { ...n, read: true } : n));
   }
-
   // Employer Operations
   async getEmployerSummary(): Promise<EmployerSummary> {
     const all = await this.getCandidates();
@@ -761,9 +1009,14 @@ class MockDatabase {
     };
   }
 
+  /** Jobs that belong to the signed-in company. */
+  private ownJobs(): Job[] {
+    return this.jobs.filter((j) => this.ownerOf(j) === this.companyId);
+  }
+
   async getEmployerJobs(status?: string): Promise<Job[]> {
     const all = await this.getCandidates();
-    return this.jobs
+    return this.ownJobs()
       .filter((j) => !status || j.status === status)
       .map((j) => {
         const mine = all.filter((c) => c.jobId === j.id);
@@ -774,13 +1027,18 @@ class MockDatabase {
         };
       });
   }
-
   async createJob(data: any): Promise<Job> {
+    const c = this.myCompany;
+    if (data?.status !== 'draft' && c.verification !== 'approved') {
+      this.fail('You can publish jobs after your company is verified. Save it as a draft for now.', 'NOT_VERIFIED');
+    }
     const newJob: Job = {
-      id: `job_${Date.now()}`,
-      companyId: 'comp_1',
-      companyName: 'National Heavy Engineering',
-      companyVerified: true,
+      id: this.uid('job'),
+      companyId: c.id,
+      ownerCompanyId: c.id,
+      companyName: c.name,
+      companyLogoUrl: c.logoUrl,
+      companyVerified: c.verification === 'approved',
       postedAt: new Date().toISOString(),
       applicantsCount: 0,
       newApplicantsCount: 0,
@@ -799,51 +1057,45 @@ class MockDatabase {
     this.jobs.unshift(newJob);
     return newJob;
   }
-
   async updateJob(id: string, changes: any): Promise<Job> {
-    const i = this.jobs.findIndex((j) => j.id === id);
-    if (i < 0) throw new Error('This job no longer exists.');
+    const i = this.jobs.findIndex((j) => j.id === id && this.ownerOf(j) === this.companyId);
+    if (i < 0) this.fail('This job no longer exists.', 'NOT_FOUND');
+    const wasLive = this.jobs[i]!.status === 'active';
+    if (changes?.status === 'active' && !wasLive && this.myCompany.verification !== 'approved') {
+      this.fail('You can publish jobs after your company is verified. Save it as a draft for now.', 'NOT_VERIFIED');
+    }
     this.jobs[i] = { ...this.jobs[i]!, ...changes, id };
     return this.jobs[i]!;
   }
-
   async deleteJob(id: string): Promise<void> {
-    this.jobs = this.jobs.filter((j) => j.id !== id);
+    this.jobs = this.jobs.filter((j) => !(j.id === id && this.ownerOf(j) === this.companyId));
   }
-
   async getCandidates(jobId?: string): Promise<Candidate[]> {
-    const own: Candidate[] = this.applications.map((a) => ({
-      ...a,
-      worker: this.workerProfile,
-      jobTitle: '',
-      documents: this.documents,
-    }));
-    return [...own, ...this.pool]
+    const mineIds = new Set(this.ownJobs().map((j) => j.id));
+    // ID proof is shown to HR only after the worker is shortlisted.
+    const shown = (a: Application, docs: WorkerDocument[]) =>
+      docs.filter((d) => d.type !== 'id_proof' || ['shortlisted', 'interview', 'offer', 'hired'].includes(a.stage));
+    const own: Candidate[] = this.applications
+      .filter((a) => mineIds.has(a.jobId))
+      .map((a) => ({
+        ...a,
+        worker: this.profiles[a.workerId] ?? this.seedProfile,
+        jobTitle: '',
+        documents: shown(a, this.workerDocs[a.workerId] ?? []),
+      }));
+    const pool = this.pool.filter((c) => mineIds.has(c.jobId));
+    return [...own, ...pool]
       .filter((c) => (!jobId ? true : c.jobId === jobId))
       .map((c) => ({ ...c, jobTitle: this.jobs.find((j) => j.id === c.jobId)?.title || 'Industrial Worker' }))
       .sort((a, b) => +new Date(b.updatedAt) - +new Date(a.updatedAt));
   }
-
-  private companyDocuments: CompanyDocument[] = [
-    {
-      id: 'cdoc_1',
-      companyId: 'comp_1',
-      name: 'GST_Certificate.pdf',
-      type: 'gst',
-      sizeBytes: 1024 * 320,
-      mimeType: 'application/pdf',
-      uploadedAt: '2026-10-20T09:00:00Z',
-    },
-  ];
-
   async getCompanyDocuments(): Promise<CompanyDocument[]> {
-    return this.companyDocuments;
+    return this.companyDocs[this.companyId] ?? [];
   }
-
   async uploadCompanyDocument(doc: { name: string; type: CompanyDocType; fileUrl: string; sizeBytes?: number; mimeType?: string }): Promise<CompanyDocument> {
     const d: CompanyDocument = {
-      id: `cdoc_${Date.now()}`,
-      companyId: 'comp_1',
+      id: this.uid('cdoc'),
+      companyId: this.companyId,
       name: doc.name,
       type: doc.type,
       sizeBytes: doc.sizeBytes ?? 1024 * 300,
@@ -851,14 +1103,15 @@ class MockDatabase {
       uploadedAt: new Date().toISOString(),
       url: doc.fileUrl,
     };
-    this.companyDocuments = [...this.companyDocuments, d];
+    this.companyDocs[this.companyId] = [...(this.companyDocs[this.companyId] ?? []), d];
     return d;
   }
-
   async deleteCompanyDocument(id: string): Promise<void> {
-    this.companyDocuments = this.companyDocuments.filter((d) => d.id !== id);
+    if (this.myCompany.verification === 'approved') {
+      this.fail('Documents cannot be removed after your company is approved.', 'LOCKED');
+    }
+    this.companyDocs[this.companyId] = (this.companyDocs[this.companyId] ?? []).filter((d) => d.id !== id);
   }
-
   private platformSettings: PlatformSettings = {
     autoApproveCompanies: false,
     messagingEnabled: true,
@@ -878,11 +1131,37 @@ class MockDatabase {
     return this.myCompany;
   }
 
-  async updateMyCompany(changes: Partial<Company>): Promise<Company> {
-    this.myCompany = { ...this.myCompany, ...changes };
+  async updateMyCompany(changes: Partial<Company> & { resubmit?: boolean }): Promise<Company> {
+    const { resubmit, ...rest } = changes;
+    const before = this.myCompany;
+    let next: Company = { ...before, ...rest };
+    if (resubmit) {
+      if ((this.companyDocs[this.companyId] ?? []).length === 0) {
+        this.fail('Add your GST certificate before you send the company for review.', 'NO_DOCUMENTS');
+      }
+      next = { ...next, verification: 'pending', rejectionReason: undefined };
+      const v = this.verifications.find((x) => x.id === this.companyId);
+      if (v) {
+        v.status = 'pending';
+        v.submittedAt = new Date().toISOString();
+        delete v.details['Rejection reason'];
+      }
+      const u = this.adminUsers.find((x) => x.id === this.companyId);
+      if (u) u.verification = 'pending';
+      this.notify('admin', 'Company sent again for review', `${next.name} fixed its details and sent them again.`, 'verifications');
+    }
+    this.myCompany = next;
+    // The company name and logo also appear on its jobs.
+    if (rest.name || rest.logoUrl !== undefined) {
+      this.jobs.forEach((j) => {
+        if (this.ownerOf(j) === this.companyId) {
+          if (rest.name) j.companyName = rest.name;
+          if (rest.logoUrl !== undefined) j.companyLogoUrl = rest.logoUrl;
+        }
+      });
+    }
     return this.myCompany;
   }
-
   async getEmployerAnalytics(): Promise<EmployerAnalytics> {
     const all = await this.getCandidates();
     const jobs = await this.getEmployerJobs();
@@ -930,47 +1209,100 @@ class MockDatabase {
   }
 
   async getEmployerJob(id: string): Promise<Job | null> {
-    return this.jobs.find((j) => j.id === id) ?? null;
+    return this.ownJobs().find((j) => j.id === id) ?? null;
+  }
+  /** Which step each application may move to next. */
+  private static readonly NEXT: Partial<Record<ApplicationStage, ApplicationStage[]>> = {
+    applied: ['shortlisted', 'interview', 'offer', 'rejected'],
+    shortlisted: ['interview', 'offer', 'rejected'],
+    interview: ['interview', 'offer', 'rejected'],
+    offer: ['offer', 'hired', 'rejected'],
+  };
+
+  private findApplication(id: string): Application | undefined {
+    const mineIds = new Set(this.ownJobs().map((j) => j.id));
+    const a = this.applications.find((x) => x.id === id) ?? this.pool.find((x) => x.id === id);
+    return a && mineIds.has(a.jobId) ? a : undefined;
+  }
+
+  /** HR opened the application: the worker sees "Seen by employer" (once). */
+  async markViewed(appId: string): Promise<void> {
+    const app = this.findApplication(appId);
+    if (!app || app.timeline.some((e) => e.stage === 'viewed')) return;
+    const at = new Date().toISOString();
+    app.timeline.push({ stage: 'viewed', at });
+    app.updatedAt = at;
   }
 
   async updateCandidateStage(appId: string, stage: ApplicationStage, payload?: any): Promise<void> {
-    const app: Application | undefined =
-      this.applications.find((a) => a.id === appId) ?? this.pool.find((a) => a.id === appId);
-    if (app) {
-      app.stage = stage;
-      app.updatedAt = new Date().toISOString();
-      app.timeline.push({ stage, at: new Date().toISOString() });
-      if (stage === 'interview' && payload) {
-        app.interview = {
-          at: payload.at || new Date(Date.now() + 86400000).toISOString(),
-          place: payload.place || 'Plant Gate 4',
-        };
-      }
-      if (stage === 'offer' && payload) {
-        app.offer = {
-          pay: payload.pay || 22000,
-          payPeriod: 'month',
-          joiningDate: payload.joiningDate || '2026-12-01',
-          place: 'Main Factory Plant Gate',
-          sentAt: new Date().toISOString(),
-        };
-      }
+    const app = this.findApplication(appId);
+    if (!app) this.fail('This application is not available.', 'NOT_FOUND');
+    if (!(MockDatabase.NEXT[app.stage] ?? []).includes(stage)) {
+      this.fail('This move is not possible from the current step.', 'INVALID_STEP');
+    }
+    const job = this.jobs.find((j) => j.id === app.jobId);
+    const company = job?.companyName ?? 'the company';
+    const title = job?.title ?? 'the job';
+    const at = new Date().toISOString();
+    await this.markViewed(appId);
+
+    const rescheduled = stage === 'interview' && app.stage === 'interview';
+    app.stage = stage;
+    app.updatedAt = at;
+    app.timeline.push({ stage, at, ...(stage === 'rejected' && payload?.reason ? { note: String(payload.reason) } : {}) });
+
+    if (stage === 'interview') {
+      app.interview = {
+        at: payload?.at || new Date(Date.now() + 86400000).toISOString(),
+        place: payload?.place || 'The plant gate',
+        contactPerson: payload?.contactPerson || undefined,
+        bring: payload?.bring || undefined,
+      };
+    }
+    if (stage === 'offer') {
+      app.offer = {
+        pay: Number(payload?.pay) || 0,
+        payPeriod: payload?.payPeriod || 'month',
+        payType: payload?.payType,
+        joiningDate: payload?.joiningDate || '',
+        place: payload?.place || this.myCompany.address || this.myCompany.location.city,
+        note: payload?.note || undefined,
+        replyBy: payload?.replyBy || undefined,
+        sentAt: at,
+      };
+      app.offerResponse = undefined;
+    }
+    if (stage === 'rejected') app.rejectionNote = payload?.reason ? String(payload.reason) : undefined;
+
+    // Tell the worker. A rejection is always a kind, generic message: HR's note stays private.
+    const link = `application:${app.id}`;
+    const tell = (t: string, b: string) => this.notify(app.workerId, t, b, link);
+    if (stage === 'shortlisted') tell('You were shortlisted', `${company} shortlisted you for ${title}.`);
+    if (stage === 'interview') tell(rescheduled ? 'Interview moved' : 'Interview scheduled', `${company} has set an interview for ${title}. Open it to see the time and place.`);
+    if (stage === 'offer') tell('You have a job offer', `${company} sent you an offer for ${title}. Reply to accept or decline.`);
+    if (stage === 'hired') tell('Welcome aboard', `${company} confirmed your joining for ${title}.`);
+    if (stage === 'rejected' && payload?.notify !== false) {
+      tell('Update on your application', `${company} has chosen other candidates for ${title} for now. Keep applying: more jobs are waiting.`);
     }
   }
-
   async searchTalent(params?: { trade?: string; city?: string }): Promise<TalentProfile[]> {
+    if (!this.platformSettings.talentSearchEnabled) this.fail('Find workers is turned off for now.', 'DISABLED');
+    if (this.myCompany.verification !== 'approved') this.fail('You can search workers after your company is verified.', 'NOT_VERIFIED');
     return this.talent.filter(
       (t) =>
         (!params?.trade || t.trade === params.trade) &&
         (!params?.city || t.location?.city.toLowerCase().includes(params.city.toLowerCase()))
     );
   }
-
   async inviteTalent(workerId: string, jobId: string): Promise<void> {
+    if (this.myCompany.verification !== 'approved') this.fail('You can invite workers after your company is verified.', 'NOT_VERIFIED');
     const t = this.talent.find((x) => x.userId === workerId);
-    if (t && !t.invitedTo.includes(jobId)) t.invitedTo = [...t.invitedTo, jobId];
+    if (!t) return;
+    if (t.appliedTo.includes(jobId) || t.invitedTo.includes(jobId)) this.fail('This worker was already invited or has applied.', 'ALREADY_DONE');
+    t.invitedTo = [...t.invitedTo, jobId];
+    const job = this.jobs.find((j) => j.id === jobId);
+    this.notify(workerId, 'A company invited you', `${this.myCompany.name} invited you to apply for ${job?.title ?? 'a job'}.`, 'jobs');
   }
-
   // Admin Operations
   async getAdminSummary(): Promise<AdminSummary> {
     const pending = this.verifications.filter((v) => v.status === 'pending').length;
@@ -1012,12 +1344,19 @@ class MockDatabase {
 
   async setUserStatus(id: string, status: AccountStatus): Promise<AdminUserRow> {
     const u = this.adminUsers.find((x) => x.id === id);
-    if (!u) throw new Error('User not found');
+    if (!u) this.fail('User not found', 'NOT_FOUND');
     u.status = status;
     this.log(status === 'suspended' ? 'Suspended' : 'Reactivated', u.name);
     return u;
   }
 
+  /** How many open jobs and applicants a company has (shown before blocking it). */
+  async getUserImpact(id: string): Promise<{ activeJobs: number; applicants: number }> {
+    const jobs = this.jobs.filter((j) => j.status === 'active' && (this.ownerOf(j) === id || j.companyId === id));
+    const ids = new Set(jobs.map((j) => j.id));
+    const applicants = [...this.applications, ...this.pool].filter((a) => ids.has(a.jobId)).length;
+    return { activeJobs: jobs.length, applicants };
+  }
   async getAdminJobs(params?: { q?: string; status?: string }): Promise<AdminJobRow[]> {
     const s = params?.q?.trim().toLowerCase();
     return this.jobs
@@ -1028,7 +1367,7 @@ class MockDatabase {
 
   async removeJob(id: string, reason: string): Promise<void> {
     const j = this.jobs.find((x) => x.id === id);
-    if (!j) throw new Error('Job not found');
+    if (!j) this.fail('Job not found', 'NOT_FOUND');
     j.status = 'closed';
     j.removedByAdmin = true;
     this.reports.forEach((r) => {
@@ -1039,8 +1378,29 @@ class MockDatabase {
       }
     });
     this.log(`Removed job (${reason})`, j.title);
+    this.notify(this.jobOwnerAcct(j), 'Your job was removed', `${j.title} was removed by our team. Reason: ${reason}`, 'jobs');
   }
 
+  async reportJob(jobId: string, reason: ReportReason, details?: string): Promise<void> {
+    const j = this.jobs.find((x) => x.id === jobId);
+    if (!j) this.fail('This job no longer exists.', 'NOT_FOUND');
+    if (this.reports.some((r) => r.jobId === jobId && r.reporterId === this.workerId)) {
+      this.fail('You already reported this job. Our team is looking at it.', 'ALREADY_REPORTED');
+    }
+    this.reports.unshift({
+      id: this.uid('rep'),
+      jobId,
+      jobTitle: j.title,
+      companyName: j.companyName,
+      reporterId: this.workerId,
+      reporterName: this.workerProfile.name,
+      reason,
+      details: details?.trim() || undefined,
+      at: new Date().toISOString(),
+      status: 'open',
+    });
+    this.notify('admin', 'Job reported', `${j.title} was reported by a worker.`, 'reports');
+  }
   async getReports(status: string): Promise<AdminReportRow[]> {
     return this.reports
       .filter((r) => status === 'all' || r.status === status)
@@ -1063,11 +1423,11 @@ class MockDatabase {
   }
 
   async createTicket(t: Omit<SupportTicket, 'id' | 'at' | 'status'>): Promise<SupportTicket> {
-    const ticket: SupportTicket = { ...t, id: `tkt_${Date.now()}`, at: new Date().toISOString(), status: 'open' };
+    const ticket: SupportTicket = { ...t, id: this.uid('tkt'), at: new Date().toISOString(), status: 'open' };
     this.tickets = [ticket, ...this.tickets];
+    this.notify('admin', 'New help request', `${t.name}: ${t.topic}`, 'reports');
     return ticket;
   }
-
   async getTickets(status: string): Promise<SupportTicket[]> {
     return this.tickets
       .filter((t) => status === 'all' || t.status === status)
@@ -1076,37 +1436,71 @@ class MockDatabase {
 
   async closeTicket(id: string): Promise<void> {
     const t = this.tickets.find((x) => x.id === id);
-    if (!t) throw new Error('Request not found');
+    if (!t) this.fail('Request not found', 'NOT_FOUND');
     t.status = 'closed';
     this.log('Closed help request from', t.name);
+    if (t.userId) this.notify(t.userId, 'Your help request was answered', `We closed your request about "${t.topic}". If it is not solved, send us a new message.`);
   }
-
   async getAudit(): Promise<AuditEntry[]> {
     return this.audit;
   }
 
   async getVerifications(): Promise<VerificationItem[]> {
-    return this.verifications;
+    return this.verifications.map((v) => {
+      const c = this.employerCompanies[v.id];
+      if (!c || v.id === 'emp_demo') return v;
+      return {
+        ...v,
+        title: c.name,
+        subtitle: `${c.hiringType === 'agency' ? 'Contractor or agency' : 'Direct employer'}${c.location.city ? ` · ${c.location.city}, ${c.location.state}` : ''}`,
+        details: {
+          ...v.details,
+          'GST number': c.gstNumber || 'Not given',
+          'Entity Name': c.name,
+          'City': c.location.city ? `${c.location.city}, ${c.location.state}` : 'Not given',
+          'HR Contact': c.hrPhone ? `${c.hrName ?? ''} (+91 ${c.hrPhone})` : 'Not given',
+          'Hiring as': c.hiringType === 'agency' ? 'Contractor or agency' : 'Direct employer',
+        },
+        documents: (this.companyDocs[v.id] ?? []).map(({ id, name, type, url, mimeType, uploadedAt }) => ({ id, name, type, url, mimeType, uploadedAt })),
+      };
+    });
   }
-
   async updateVerification(
     id: string,
     decision: 'approved' | 'rejected',
     reason?: string
   ): Promise<VerificationItem> {
     const item = this.verifications.find((v) => v.id === id);
-    if (!item) throw new Error('Item not found');
+    if (!item) this.fail('Item not found', 'NOT_FOUND');
+    if (item.status !== 'pending') this.fail('This company was already decided.', 'ALREADY_DONE');
+    if (decision === 'rejected' && !reason?.trim()) this.fail('Write the reason so the company can fix it.', 'VALIDATION');
     item.status = decision;
     this.log(decision === 'approved' ? 'Approved company' : 'Rejected company', item.title);
     const u = this.adminUsers.find((x) => x.id === id);
     if (u) u.verification = decision;
     if (decision === 'rejected') {
-      if (!item.details) item.details = {};
-      item.details['Rejection reason'] = reason || 'Document did not meet compliance criteria';
+      item.details = item.details ?? {};
+      item.details['Rejection reason'] = reason!.trim();
     }
+    // The company itself changes too, and the people behind it are told.
+    const own = this.employerCompanies[id];
+    const seeded = this.companies.find((c) => c.id === id);
+    for (const c of [own, seeded]) {
+      if (!c) continue;
+      c.verification = decision;
+      c.rejectionReason = decision === 'rejected' ? reason!.trim() : undefined;
+    }
+    this.jobs.forEach((j) => {
+      if (this.ownerOf(j) === id || j.companyId === id) j.companyVerified = decision === 'approved';
+    });
+    this.notify(
+      `emp:${id}`,
+      decision === 'approved' ? 'Your company is approved' : 'Your company needs changes',
+      decision === 'approved' ? 'You can now publish jobs and find workers.' : `Reason: ${reason!.trim()}. Fix it in Company profile and send it again.`,
+      'company'
+    );
     return item;
   }
-
   async decideVerification(
     _kind: string,
     id: string,
@@ -1121,9 +1515,15 @@ class MockDatabase {
     return {
       jobs: this.jobs,
       companies: this.companies,
-      workerProfile: this.workerProfile,
-      savedJobIds: [...this.savedJobIds],
-      documents: this.documents,
+      workerId: this.workerId,
+      companyId: this.companyId,
+      profiles: this.profiles,
+      workerDocs: this.workerDocs,
+      workerSaved: this.workerSaved,
+      employerCompanies: this.employerCompanies,
+      companyDocs: this.companyDocs,
+      employerAccounts: this.employerAccounts,
+      pendingOnboarding: this.pendingOnboarding,
       applications: this.applications,
       verifications: this.verifications,
       adminUsers: this.adminUsers,
@@ -1132,22 +1532,25 @@ class MockDatabase {
       audit: this.audit,
       pool: this.pool,
       talent: this.talent,
-      myCompany: this.myCompany,
+      notifications: this.notifications,
+      messages: this.messages,
+      lastRead: this.lastRead,
+      adminNotesAdded: this.adminNotesAdded,
+      messagesSeeded: this.messagesSeeded,
+      platformSettings: this.platformSettings,
     };
   }
 
   restore(data: Partial<ReturnType<MockDatabase['snapshot']>>) {
-    const { savedJobIds, ...rest } = data;
-    Object.assign(this, rest);
-    if (savedJobIds) this.savedJobIds = new Set(savedJobIds);
+    Object.assign(this, data);
   }
 
   // Helper
   private mapJobForWorker(j: Job): JobForWorker {
-    const app = this.applications.find((a) => a.jobId === j.id && a.workerId === 'usr_worker_1');
+    const app = this.applications.find((a) => a.jobId === j.id && a.workerId === this.workerId && a.stage !== 'withdrawn');
     return {
       ...j,
-      saved: this.savedJobIds.has(j.id),
+      saved: (this.workerSaved[this.workerId] ?? []).includes(j.id),
       appliedApplicationId: app?.id,
     };
   }

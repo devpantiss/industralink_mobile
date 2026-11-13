@@ -213,9 +213,11 @@ export const WorkerProfileScreen: React.FC = () => {
               {summary.profileHint && (
                 <TouchableOpacity
                   onPress={() => {
-                    // Documents missing -> the documents tab; otherwise open the work details to fill in.
-                    if (summary.missing.some((m) => m.link.includes('documents'))) setTab('documents');
-                    else setEditing('work');
+                    // The first missing item says where to fix it: the documents tab or an edit sheet.
+                    const link = summary.missing[0]?.link ?? '';
+                    const edit = link.match(/edit=(work|personal|preferences)/)?.[1] as ProfileSection | undefined;
+                    if (link.includes('documents')) setTab('documents');
+                    else if (edit) setEditing(edit);
                   }}
                   hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >

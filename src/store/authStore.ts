@@ -2,6 +2,8 @@ import { create } from 'zustand';
 import { User, Role } from '../types';
 import { storage } from '../lib/storage';
 import { authApi } from '../api/authApi';
+import { mockDb } from '../mocks/db';
+import { USE_MOCKS } from '../api/client';
 
 interface AuthStoreState {
   user: User | null;
@@ -55,7 +57,7 @@ export const useAuthStore = create<AuthStoreState>((set, get) => ({
 
   verifyOtp: async (phone: string, otp: string, extra?: Partial<User>) => {
     try {
-      const res = await authApi.verifyOtp(phone, otp);
+      const res = await authApi.verifyOtp(phone, otp, extra?.name);
       const token = res.token;
       // `extra` is merged before signing in, so a new account goes straight to onboarding.
       const user = { ...res.user, ...extra };
@@ -80,7 +82,9 @@ export const useAuthStore = create<AuthStoreState>((set, get) => ({
   },
 
   completeOnboarding: (partial) => {
+    const id = get().user?.id;
     get().updateUser({ ...partial, onboarded: true });
+    if (id) void authApi.completeOnboarding(id).catch(() => {});
   },
 
   loginWithEmail: async (email: string, pass: string) => {
@@ -125,13 +129,14 @@ export const useAuthStore = create<AuthStoreState>((set, get) => ({
       };
     } else if (role === 'employer') {
       mockUser = {
-        id: 'usr_employer_1',
+        id: 'emp:emp_demo',
         name: 'Pradeep Mohanty',
         phone: '+91 98111 22334',
         email: 'recruiter@eastline.demo',
         role: 'employer',
         verified: true,
         onboarded: true,
+        companyId: 'emp_demo',
         companyName: 'Eastline Heavy Engineering',
         city: 'Kalinganagar',
         status: 'active',
@@ -139,7 +144,7 @@ export const useAuthStore = create<AuthStoreState>((set, get) => ({
       };
     } else {
       mockUser = {
-        id: 'usr_admin_1',
+        id: 'admin',
         name: 'IndustriaLink Admin',
         phone: '+91 99999 88888',
         email: 'ops@industrialink.in',
@@ -150,6 +155,8 @@ export const useAuthStore = create<AuthStoreState>((set, get) => ({
         createdAt: new Date().toISOString(),
       };
     }
+    // Demo buttons switch the demo data to that account too.
+    if (USE_MOCKS) mockDb.useDemoAccount(role);
     const token = `mock-jwt-token-${role}`;
     storage.setToken(token);
     storage.setUser(mockUser);

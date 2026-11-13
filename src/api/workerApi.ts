@@ -12,6 +12,7 @@ import type {
   CompanyForWorker,
   Company,
   DocType,
+  ReportReason,
 } from '../types';
 
 export const workerApi = {
@@ -198,6 +199,14 @@ export const workerApi = {
     }
     const res = await apiClient.get('/worker/companies', { params });
     return res.data;
+  },
+
+  async reportJob(jobId: string, reason: ReportReason, details?: string): Promise<void> {
+    if (USE_MOCKS) {
+      await delay(120);
+      return mockDb.reportJob(jobId, reason, details);
+    }
+    await apiClient.post(`/jobs/${jobId}/report`, { reason, details });
   },
 
   async getCompany(id: string): Promise<CompanyForWorker> {

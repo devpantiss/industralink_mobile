@@ -179,6 +179,8 @@ export const PostJobWizardScreen: React.FC = () => {
       );
       navigation.goBack();
     },
+    // For example: "You can publish jobs after your company is verified. Save it as a draft for now."
+    onError: (e: Error) => showToast(e.message || t('Could not save the job. Try again.'), 'error'),
   });
 
   const handleNext = () => {

@@ -70,6 +70,14 @@ export const CandidateDossierScreen: React.FC<Props> = ({ route, navigation }) =
 
   const candidate = candidates?.find((c) => c.id === candidateId) || candidates?.[0];
 
+  // Opening a candidate tells the worker "Seen by employer" (once).
+  const viewedFor = React.useRef<string | null>(null);
+  React.useEffect(() => {
+    if (!candidate || viewedFor.current === candidate.id) return;
+    viewedFor.current = candidate.id;
+    employerApi.markViewed(candidate.id).then(() => qc.invalidateQueries({ queryKey: queryKeys.employer.all })).catch(() => {});
+  }, [candidate, qc]);
+
   const updateStageMutation = useMutation({
     mutationFn: ({ stage, payload }: { stage: ApplicationStage; payload?: any }) =>
       employerApi.updateStage(candidate!.id, stage, payload),
@@ -81,6 +89,7 @@ export const CandidateDossierScreen: React.FC<Props> = ({ route, navigation }) =
       setOfferModal(false);
       setRejectModal(false);
     },
+    onError: (e: Error) => showToast(e.message || t('Could not update. Try again.'), 'error'),
   });
 
   if (isLoading || !candidate) {
@@ -463,7 +472,7 @@ export const CandidateDossierScreen: React.FC<Props> = ({ route, navigation }) =
             <Text style={{ color: colors.ink, fontWeight: '600' }}>{t('Cancel')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => updateStageMutation.mutate({ stage: 'rejected' })}
+            onPress={() => updateStageMutation.mutate({ stage: 'rejected', payload: { reason: rejectReason.trim(), notify: true } })}
             style={[styles.modalBtnPrimary, { backgroundColor: colors.dangerFg }]}
           >
             <Text style={{ color: '#FFF', fontWeight: '700' }}>{t('Reject')}</Text>
