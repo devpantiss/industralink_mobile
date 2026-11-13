@@ -1,3 +1,4 @@
+import { VerificationBanner } from '../../components/domain/VerificationBanner';
 import React from 'react';
 import {
   View,
@@ -37,6 +38,7 @@ export const EmployerHomeScreen: React.FC = () => {
   const { colors } = useUiStore();
   const { user } = useAuthStore();
 
+  const companyQuery = useQuery({ queryKey: queryKeys.employer.company, queryFn: () => employerApi.getCompany() });
   const summaryQuery = useQuery({
     queryKey: queryKeys.employer.summary,
     queryFn: () => employerApi.getSummary(),
@@ -84,7 +86,7 @@ export const EmployerHomeScreen: React.FC = () => {
         }
       >
         <Hero
-          eyebrow={t('Verified employer')}
+          eyebrow={companyQuery.data?.verification === 'approved' ? t('Verified employer') : t('Employer')}
           title={`${greeting()}, ${firstName}`}
           subtitle={`Hiring at ${user?.companyName || 'your company'}${
             s ? ` · ${s.newApplicants} new applicant${s.newApplicants === 1 ? '' : 's'} waiting` : ''
@@ -107,6 +109,10 @@ export const EmployerHomeScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
         </Hero>
+
+        <View style={{ paddingHorizontal: 16, marginTop: 12 }}>
+          <VerificationBanner />
+        </View>
 
         {/* 4 Pastel Stat Cards (2x2 Grid) */}
         <View style={styles.statsGrid}>

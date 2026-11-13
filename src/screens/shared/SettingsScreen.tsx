@@ -134,7 +134,8 @@ export const SettingsScreen: React.FC = () => {
           )}
         </Card>
 
-        {/* Vernacular Language Selector */}
+        {/* Vernacular Language Selector (workers only) */}
+        {role === 'worker' && (
         <Card style={styles.card}>
           <Text style={[typography.h3, styles.sectionTitle, { color: colors.ink }]}>
             {t('Language')} (भाषा / ଭାଷା)
@@ -166,6 +167,7 @@ export const SettingsScreen: React.FC = () => {
             );
           })}
         </Card>
+        )}
 
 
         {/* Alerts */}

@@ -1,3 +1,5 @@
+import { errorText } from '../../lib/errors';
+import { VerificationBanner } from '../../components/domain/VerificationBanner';
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
@@ -21,6 +23,7 @@ import { formatDate } from '../../lib/format';
 import type { Company, CompanyDocType, HiringType, Sector } from '../../types';
 import { shadows } from '../../theme/shadows';
 
+const GSTIN = /^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
 const SIZES = ['1–50', '50–200', '200–1000', '1000+'];
 
 /** Employer's company page (web: CompanyPage). Workers see this on every job. */
@@ -44,6 +47,16 @@ export const CompanyProfileScreen: React.FC = () => {
       showToast('Company profile saved', 'success');
     },
     onError: () => showToast('Could not save. Please try again.', 'error'),
+  });
+
+  const resubmit = useMutation({
+    mutationFn: (next: Company) => employerApi.updateCompany({ ...next, resubmit: true } as Partial<Company>),
+    onSuccess: (saved) => {
+      qc.setQueryData(queryKeys.employer.company, saved);
+      setDraft(undefined);
+      showToast('Sent to our team for review', 'success');
+    },
+    onError: (e: Error) => showToast(errorText(e, 'Could not send for review.'), 'error'),
   });
 
   // Verification documents (admin checks these before the company goes live)
@@ -97,6 +110,7 @@ export const CompanyProfileScreen: React.FC = () => {
     if (!c.location.state.trim()) e.state = 'Enter the state.';
     if (c.hrPhone && !/^[6-9]\d{9}$/.test(c.hrPhone)) e.hrPhone = 'Enter a 10-digit mobile number.';
     if (c.pincode && !/^\d{6}$/.test(c.pincode)) e.pincode = 'Pincode has 6 digits.';
+    if (c.gstNumber && !GSTIN.test(c.gstNumber)) e.gst = 'A GST number has 15 characters, like 21ABCDE1234F1Z5.';
     setErrors(e);
     if (Object.keys(e).length) return showToast('Please fix the highlighted fields.', 'error');
     save.mutate(c);
@@ -116,6 +130,15 @@ export const CompanyProfileScreen: React.FC = () => {
           <Text style={[styles.title, { color: colors.ink }]}>Company</Text>
           <Text style={[styles.subtitle, { color: colors.inkSecondary }]}>Workers see this on every job you post.</Text>
 
+          <VerificationBanner onCompanyScreen />
+          {c.verification === 'rejected' ? (
+            <Button
+              label="Send again for review"
+              loading={resubmit.isPending}
+              onPress={() => resubmit.mutate(c)}
+              style={{ marginTop: 12 }}
+            />
+          ) : null}
           {/* Identity */}
           <View style={[styles.card, styles.identity, { backgroundColor: colors.surface, borderColor: colors.border }]}>
             <CompanyLogo job={{ companyName: c.name || '?', sector: c.sector, companyLogoUrl: c.logoUrl }} size="lg" />
@@ -188,6 +211,7 @@ export const CompanyProfileScreen: React.FC = () => {
               label="GST number"
               value={c.gstNumber ?? ''}
               maxLength={15}
+              error={errors.gst}
               autoCapitalize="characters"
               onChangeText={(g) => set({ gstNumber: g.toUpperCase() })}
             />
@@ -279,7 +303,7 @@ export const CompanyProfileScreen: React.FC = () => {
                     {COMPANY_DOC_LABEL[d.type]} · {formatDate(d.uploadedAt)}
                   </Text>
                 </View>
-                <Pressable
+                {!approved && <Pressable
                   onPress={() =>
                     Alert.alert('Delete this document?', d.name, [
                       { text: 'Cancel', style: 'cancel' },
@@ -291,17 +315,19 @@ export const CompanyProfileScreen: React.FC = () => {
                   style={styles.docDelete}
                 >
                   <Trash2 size={18} color={colors.inkMuted} />
-                </Pressable>
+                </Pressable>}
               </View>
             ))}
-            <Button
+            {approved ? (
+              <Text style={[styles.hint, { color: colors.inkMuted }]}>Your company is approved, so documents are locked. Contact help to change them.</Text>
+            ) : <Button
               label="Add a document"
               variant="outline"
               loading={uploadDoc.isPending}
               icon={<Plus size={16} color={colors.primary} />}
               textStyle={{ color: colors.primary }}
               onPress={() => setDocMenu(true)}
-            />
+            />}
           </Section>
         </ScrollView>
 

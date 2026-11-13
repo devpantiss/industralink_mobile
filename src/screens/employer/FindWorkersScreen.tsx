@@ -1,3 +1,4 @@
+import { VerificationBanner } from '../../components/domain/VerificationBanner';
 import React, { useState } from 'react';
 import {
   View,
@@ -87,6 +88,7 @@ export const FindWorkersScreen: React.FC = () => {
       <AppHeader />
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <VerificationBanner />
         {/* Title Block */}
         <View style={styles.titleBlock}>
           <Text style={[styles.title, { color: colors.ink }]}>{t('Find workers')}</Text>
