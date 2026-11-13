@@ -1,3 +1,4 @@
+import { errorText } from '../../lib/errors';
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -32,7 +33,7 @@ export const ForgotPasswordScreen: React.FC<Props> = ({ navigation }) => {
       const res = await authApi.forgotPassword(email.trim());
       setSent({ demoResetLink: res.demoResetLink });
     } catch (e: any) {
-      setError(e?.message || 'Could not send the email. Try again.');
+      setError(errorText(e, 'Could not send the email. Try again.'));
     } finally {
       setLoading(false);
     }

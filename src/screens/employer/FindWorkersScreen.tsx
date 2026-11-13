@@ -1,3 +1,4 @@
+import { errorText } from '../../lib/errors';
 import { VerificationBanner } from '../../components/domain/VerificationBanner';
 import React, { useState } from 'react';
 import {
@@ -64,7 +65,7 @@ export const FindWorkersScreen: React.FC = () => {
       showToast(`Invite sent to ${invitingWorker?.name ?? 'the worker'}`, 'success');
       setInvitingWorker(null);
     },
-    onError: () => showToast('Could not send the invite. Please try again.', 'error'),
+    onError: (e) => showToast(errorText(e, 'Could not send the invite. Please try again.'), 'error'),
   });
 
   const openInvite = (w: TalentProfile) => {

@@ -1,3 +1,4 @@
+import { errorText } from '../../lib/errors';
 import { DocumentViewer } from '../../components/domain/DocumentViewer';
 import React, { useState } from 'react';
 import {
@@ -89,7 +90,7 @@ export const WorkerProfileScreen: React.FC = () => {
       qc.invalidateQueries({ queryKey: queryKeys.worker.all });
       showToast(t('Document deleted'), 'success');
     },
-    onError: (e: Error) => showToast(t(e.message), 'error'),
+    onError: (e) => showToast(errorText(e), 'error'),
   });
 
   const defaultResumeMutation = useMutation({

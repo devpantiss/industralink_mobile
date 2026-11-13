@@ -1,3 +1,4 @@
+import { errorText } from '../../lib/errors';
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -33,7 +34,7 @@ export const SettingsScreen: React.FC = () => {
   const saveSettings = useMutation({
     mutationFn: (changes: Partial<UserSettings>) => accountApi.updateSettings(changes),
     onSuccess: (data) => qc.setQueryData(queryKeys.settings, data),
-    onError: () => showToast(t('Could not save. Check your connection and try again.'), 'error'),
+    onError: (e) => showToast(errorText(e, 'Could not save. Check your connection and try again.'), 'error'),
   });
   const settings = settingsQuery.data;
 
@@ -46,7 +47,7 @@ export const SettingsScreen: React.FC = () => {
   const savePlatform = useMutation({
     mutationFn: (changes: Partial<PlatformSettings>) => adminApi.updatePlatformSettings(changes),
     onSuccess: (data) => qc.setQueryData(queryKeys.admin.platform, data),
-    onError: () => showToast('Could not save. Try again.', 'error'),
+    onError: (e) => showToast(errorText(e, 'Could not save. Try again.'), 'error'),
   });
   const platform = platformQuery.data;
 
@@ -62,13 +63,13 @@ export const SettingsScreen: React.FC = () => {
       setPwError(undefined);
       showToast('Password changed.', 'success');
     },
-    onError: (e: Error) => setPwError(e.message),
+    onError: (e) => setPwError(errorText(e, 'Could not change the password.')),
   });
 
   const deleteMutation = useMutation({
     mutationFn: () => accountApi.deleteAccount(),
     onSuccess: () => logout(),
-    onError: () => showToast(t('Could not save. Check your connection and try again.'), 'error'),
+    onError: (e) => showToast(errorText(e, 'Could not save. Check your connection and try again.'), 'error'),
   });
   const confirmDelete = () =>
     Alert.alert(

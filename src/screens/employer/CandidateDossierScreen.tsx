@@ -1,3 +1,4 @@
+import { ErrorState } from '../../components/ui/ErrorState';
 import { DocumentViewer } from '../../components/domain/DocumentViewer';
 import React, { useState } from 'react';
 import {
@@ -65,12 +66,12 @@ export const CandidateDossierScreen: React.FC<Props> = ({ route, navigation }) =
   };
   const [note, setNote] = useState<string | undefined>();
 
-  const { data: candidates, isLoading } = useQuery({
+  const { data: candidates, isLoading, isError, refetch } = useQuery({
     queryKey: queryKeys.employer.allCandidates({}),
     queryFn: () => employerApi.getAllCandidates({}),
   });
 
-  const candidate = candidates?.find((c) => c.id === candidateId) || candidates?.[0];
+  const candidate = candidates?.find((c) => c.id === candidateId);
 
   // Opening a candidate tells the worker "Seen by employer" (once).
   const viewedFor = React.useRef<string | null>(null);
@@ -101,6 +102,22 @@ export const CandidateDossierScreen: React.FC<Props> = ({ route, navigation }) =
     },
     onError: (e: Error) => showToast(errorText(e, 'Could not save the note.'), 'error'),
   });
+
+  if (isError || (!isLoading && !candidate)) {
+    return (
+      <Screen edges={['top', 'bottom']}>
+        <View style={styles.center}>
+          <ErrorState
+            onRetry={() => void refetch()}
+            message={isError ? undefined : t('This application is not available. It may have been withdrawn or removed.')}
+          />
+          <TouchableOpacity onPress={() => navigation.goBack()} style={{ marginTop: 12, padding: 8 }}>
+            <Text style={{ color: colors.primary, fontWeight: '700' }}>{t('Go back')}</Text>
+          </TouchableOpacity>
+        </View>
+      </Screen>
+    );
+  }
 
   if (isLoading || !candidate) {
     return (

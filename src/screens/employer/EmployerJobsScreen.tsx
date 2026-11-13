@@ -1,3 +1,4 @@
+import { errorText } from '../../lib/errors';
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Alert } from 'react-native';
 import { Text } from '../../components/ui/Text';
@@ -37,7 +38,7 @@ export const EmployerJobsScreen: React.FC = () => {
       refreshJobs();
       showToast(v.status === 'closed' ? 'Job closed. Workers cannot apply now.' : 'Job reopened.', 'success');
     },
-    onError: () => showToast('Could not update the job. Try again.', 'error'),
+    onError: (e) => showToast(errorText(e, 'Could not update the job. Try again.'), 'error'),
   });
   const duplicate = useMutation({
     mutationFn: (j: Job) => {
@@ -56,7 +57,7 @@ export const EmployerJobsScreen: React.FC = () => {
       refreshJobs();
       showToast('Job deleted.', 'success');
     },
-    onError: () => showToast('Could not delete the job. Try again.', 'error'),
+    onError: (e) => showToast(errorText(e, 'Could not delete the job. Try again.'), 'error'),
   });
   const confirmDelete = (j: Job) =>
     Alert.alert(

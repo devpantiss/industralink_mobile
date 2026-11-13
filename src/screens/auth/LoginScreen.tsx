@@ -231,7 +231,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       showToast(`Logged in as demo ${demoRole.toUpperCase()}`, 'success');
     } catch (err: any) {
-      showToast(err.message || 'Demo login failed', 'error');
+      showToast(errorText(err, 'Demo login failed'), 'error');
     } finally {
       setDemoLoading(null);
     }

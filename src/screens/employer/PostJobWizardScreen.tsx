@@ -230,6 +230,14 @@ export const PostJobWizardScreen: React.FC = () => {
     }
   }
 
+  // A job that was deleted or is not ours: leave instead of showing an empty form.
+  React.useEffect(() => {
+    if (editing && existing.isSuccess && !existing.data) {
+      showToast(t('This job no longer exists.'), 'warning');
+      navigation.goBack();
+    }
+  }, [editing, existing.isSuccess, existing.data, navigation, showToast]);
+
   const status = existing.data?.status;
 
   const save = useMutation({

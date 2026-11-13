@@ -1,3 +1,4 @@
+import { errorText } from '../../lib/errors';
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -42,7 +43,7 @@ export const WorkerWelcomeScreen: React.FC = () => {
       completeOnboarding({ trade: changes.trade, city: changes.location?.city });
       showToast(t('Your profile is ready.'), 'success');
     },
-    onError: () => showToast(t('Could not save. Check your connection and try again.'), 'error'),
+    onError: (e) => showToast(errorText(e, 'Could not save. Check your connection and try again.'), 'error'),
   });
 
   const validate = (): string | undefined => {

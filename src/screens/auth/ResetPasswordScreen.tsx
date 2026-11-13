@@ -1,3 +1,4 @@
+import { errorText } from '../../lib/errors';
 import React, { useState } from 'react';
 import { StyleSheet, ScrollView } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -34,7 +35,7 @@ export const ResetPasswordScreen: React.FC<Props> = ({ navigation, route }) => {
       showToast('Password changed. Log in with your new password.', 'success');
       navigation.navigate('Login');
     } catch (e: any) {
-      setError(e?.message || 'Could not change the password. Ask for a new link.');
+      setError(errorText(e, 'Could not change the password. Ask for a new link.'));
     } finally {
       setLoading(false);
     }

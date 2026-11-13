@@ -1,3 +1,4 @@
+import { errorText } from '../../lib/errors';
 import React, { useEffect, useRef, useState } from 'react';
 import { View, StyleSheet, Pressable, Alert } from 'react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -79,7 +80,7 @@ const EditForm: React.FC<{ section: ProfileSection; profile: WorkerProfile; onCl
       showToast(t('Saved'), 'success');
       finish();
     },
-    onError: () => showToast(t('Could not save. Check your connection and try again.'), 'error'),
+    onError: (e) => showToast(errorText(e, 'Could not save. Check your connection and try again.'), 'error'),
   });
 
   const [open, setOpen] = useState(true);

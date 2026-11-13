@@ -1,3 +1,4 @@
+import { errorText } from '../../lib/errors';
 import React, { useEffect, useRef, useState } from 'react';
 import { View, StyleSheet, FlatList, Pressable } from 'react-native';
 import { useRoute } from '@react-navigation/native';
@@ -46,7 +47,7 @@ export const ChatScreen: React.FC = () => {
       qc.invalidateQueries({ queryKey: queryKeys.messages.thread(threadId) });
       qc.invalidateQueries({ queryKey: queryKeys.messages.threads });
     },
-    onError: () => showToast(t('Could not send. Check your connection and try again.'), 'error'),
+    onError: (e) => showToast(errorText(e, 'Could not send. Check your connection and try again.'), 'error'),
   });
 
   const messages = q.data?.messages ?? [];

@@ -1,3 +1,4 @@
+import { errorText } from '../../lib/errors';
 import React, { useMemo, useState } from 'react';
 import { View, StyleSheet, ScrollView, RefreshControl, Linking, Pressable } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -67,7 +68,7 @@ export const VerificationsQueueScreen: React.FC = () => {
       );
       setSelected(null);
     },
-    onError: () => showToast('Something went wrong. Please try again.', 'error'),
+    onError: (e) => showToast(errorText(e, 'Something went wrong. Please try again.'), 'error'),
   });
 
   const open = (v: VerificationItem) => {

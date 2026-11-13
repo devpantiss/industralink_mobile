@@ -46,7 +46,7 @@ export const CompanyProfileScreen: React.FC = () => {
       setDraft(undefined);
       showToast('Company profile saved', 'success');
     },
-    onError: () => showToast('Could not save. Please try again.', 'error'),
+    onError: (e) => showToast(errorText(e, 'Could not save. Please try again.'), 'error'),
   });
 
   const resubmit = useMutation({
@@ -69,7 +69,7 @@ export const CompanyProfileScreen: React.FC = () => {
       qc.invalidateQueries({ queryKey: queryKeys.employer.companyDocs });
       showToast('Document added', 'success');
     },
-    onError: () => showToast('Could not upload. Try again.', 'error'),
+    onError: (e) => showToast(errorText(e, 'Could not upload. Try again.'), 'error'),
   });
   const deleteDoc = useMutation({
     mutationFn: (id: string) => employerApi.deleteCompanyDocument(id),

@@ -1,3 +1,4 @@
+import { errorText } from '../../lib/errors';
 import React, { useMemo, useState } from 'react';
 import { View, StyleSheet, ScrollView, Pressable, RefreshControl, Share } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
@@ -63,7 +64,7 @@ export const JobApplicantsScreen: React.FC = () => {
         'success'
       );
     },
-    onError: () => showToast('Could not shortlist. Please try again.', 'error'),
+    onError: (e) => showToast(errorText(e, 'Could not shortlist. Please try again.'), 'error'),
   });
 
   const list = useMemo(() => cands.data ?? [], [cands.data]);

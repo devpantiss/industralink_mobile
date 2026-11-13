@@ -1,3 +1,4 @@
+import { errorText } from '../../lib/errors';
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, RefreshControl, Pressable } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -96,7 +97,7 @@ function JobReports({ status }: { status: string }) {
       qc.invalidateQueries({ queryKey: queryKeys.admin.all });
       qc.invalidateQueries({ queryKey: queryKeys.worker.all });
     },
-    onError: () => showToast('Something went wrong. Please try again.', 'error'),
+    onError: (e) => showToast(errorText(e, 'Something went wrong. Please try again.'), 'error'),
   });
 
   return (
@@ -236,7 +237,7 @@ function HelpRequests({ status }: { status: string }) {
       showToast('Marked as done. The person was told.', 'success');
       qc.invalidateQueries({ queryKey: queryKeys.admin.all });
     },
-    onError: () => showToast('Something went wrong. Please try again.', 'error'),
+    onError: (e) => showToast(errorText(e, 'Something went wrong. Please try again.'), 'error'),
   });
 
   return (

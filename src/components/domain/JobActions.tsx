@@ -246,7 +246,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({ visible, onClose, jobI
     },
     onError: (e: Error) => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-      showToast(e.message || t('Could not send the report. Try again.'), 'warning');
+      showToast(errorText(e, 'Could not send the report. Try again.'), 'warning');
     },
   });
   const handleSubmit = () => send.mutate();

@@ -1,3 +1,4 @@
+import { errorText } from '../../lib/errors';
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, RefreshControl, Pressable } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -47,7 +48,7 @@ export const AdminJobsScreen: React.FC = () => {
       qc.invalidateQueries({ queryKey: queryKeys.admin.all });
       qc.invalidateQueries({ queryKey: queryKeys.worker.all });
     },
-    onError: () => showToast('Could not remove the job. Please try again.', 'error'),
+    onError: (e) => showToast(errorText(e, 'Could not remove the job. Please try again.'), 'error'),
   });
 
   const openRemove = (j: AdminJobRow) => {
