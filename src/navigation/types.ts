@@ -18,9 +18,11 @@ export type WorkerTabParamList = {
 export type WorkerStackParamList = {
   WorkerTabs: NavigatorScreenParams<WorkerTabParamList>;
   JobDetail: { jobId: string };
+  Companies: undefined;
   CompanyDetail: { companyId: string };
   ApplicationDetail: { applicationId: string };
   ChatThread: { threadId: string; recipientName: string };
+  Inbox: undefined;
   Settings: undefined;
 };
 
@@ -45,6 +47,8 @@ export type EmployerStackParamList = {
   PostJobWizard: { jobId?: string } | undefined;
   CandidateDossier: { candidateId: string };
   JobApplicants: { jobId: string };
+  Inbox: undefined;
+  ChatThread: { threadId: string; recipientName: string };
 };
 
 export type AdminDrawerParamList = {

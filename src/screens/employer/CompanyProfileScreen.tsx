@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { View, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
+import * as DocumentPicker from 'expo-document-picker';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown, FadeOutDown } from 'react-native-reanimated';
-import { BadgeCheck, Clock, EyeOff } from 'lucide-react-native';
+import { BadgeCheck, Clock, EyeOff, FileText, Trash2, Plus } from 'lucide-react-native';
+import { Sheet } from '../../components/ui/Sheet';
 import { Text } from '../../components/ui/Text';
 import { Screen } from '../../components/layout/Screen';
 import { AppHeader } from '../../components/layout/AppHeader';
@@ -14,8 +16,9 @@ import { CompanyLogo } from '../../components/domain/CompanyLogo';
 import { employerApi } from '../../api/employerApi';
 import { queryKeys } from '../../api/keys';
 import { useUiStore } from '../../store/uiStore';
-import { HIRING_TYPE_LABEL, SECTOR_LABEL } from '../../lib/labels';
-import type { Company, HiringType, Sector } from '../../types';
+import { COMPANY_DOC_LABEL, HIRING_TYPE_LABEL, SECTOR_LABEL } from '../../lib/labels';
+import { formatDate } from '../../lib/format';
+import type { Company, CompanyDocType, HiringType, Sector } from '../../types';
 
 const SIZES = ['1–50', '50–200', '200–1000', '1000+'];
 
@@ -41,6 +44,38 @@ export const CompanyProfileScreen: React.FC = () => {
     },
     onError: () => showToast('Could not save. Please try again.', 'error'),
   });
+
+  // Verification documents (admin checks these before the company goes live)
+  const docsQuery = useQuery({ queryKey: queryKeys.employer.companyDocs, queryFn: () => employerApi.getCompanyDocuments() });
+  const [docMenu, setDocMenu] = useState(false);
+  const uploadDoc = useMutation({
+    mutationFn: (d: { name: string; type: CompanyDocType; fileUrl: string; sizeBytes?: number; mimeType?: string }) =>
+      employerApi.uploadCompanyDocument(d),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.employer.companyDocs });
+      showToast('Document added', 'success');
+    },
+    onError: () => showToast('Could not upload. Try again.', 'error'),
+  });
+  const deleteDoc = useMutation({
+    mutationFn: (id: string) => employerApi.deleteCompanyDocument(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.employer.companyDocs });
+      showToast('Document deleted', 'success');
+    },
+  });
+  const pickCompanyDoc = async (type: CompanyDocType) => {
+    setDocMenu(false);
+    try {
+      const res = await DocumentPicker.getDocumentAsync({ type: ['application/pdf', 'image/*'] });
+      const a = !res.canceled ? res.assets[0] : undefined;
+      if (!a) return;
+      if ((a.size ?? 0) > 5 * 1024 * 1024) return showToast('This file is too big. Choose a file under 5 MB.', 'warning');
+      uploadDoc.mutate({ name: a.name, type, fileUrl: a.uri, sizeBytes: a.size, mimeType: a.mimeType });
+    } catch {
+      showToast('Could not open that file. Try again.', 'error');
+    }
+  };
 
   if (q.isLoading || !c) {
     return (
@@ -228,7 +263,55 @@ export const CompanyProfileScreen: React.FC = () => {
               onChangeText={(p) => set({ hrPhone: p.replace(/\D/g, '') || undefined })}
             />
           </Section>
+
+          {/* Verification documents */}
+          <Section title="Verification documents">
+            <Text style={[styles.hint, { color: colors.inkMuted }]}>
+              Our team checks these before your company goes live. PDF or photo, up to 5 MB.
+            </Text>
+            {(docsQuery.data ?? []).map((d) => (
+              <View key={d.id} style={[styles.docRow, { borderColor: colors.border }]}>
+                <FileText size={20} color={colors.primary} />
+                <View style={styles.flex}>
+                  <Text style={[styles.docName, { color: colors.ink }]} numberOfLines={1}>{d.name}</Text>
+                  <Text style={[styles.hint, { color: colors.inkMuted }]}>
+                    {COMPANY_DOC_LABEL[d.type]} · {formatDate(d.uploadedAt)}
+                  </Text>
+                </View>
+                <Pressable
+                  onPress={() =>
+                    Alert.alert('Delete this document?', d.name, [
+                      { text: 'Cancel', style: 'cancel' },
+                      { text: 'Delete', style: 'destructive', onPress: () => deleteDoc.mutate(d.id) },
+                    ])
+                  }
+                  accessibilityLabel="Delete document"
+                  hitSlop={8}
+                  style={styles.docDelete}
+                >
+                  <Trash2 size={18} color={colors.inkMuted} />
+                </Pressable>
+              </View>
+            ))}
+            <Button
+              label="Add a document"
+              variant="outline"
+              loading={uploadDoc.isPending}
+              icon={<Plus size={16} color={colors.primary} />}
+              textStyle={{ color: colors.primary }}
+              onPress={() => setDocMenu(true)}
+            />
+          </Section>
         </ScrollView>
+
+        <Sheet visible={docMenu} onClose={() => setDocMenu(false)} title="Add a document" subtitle="Choose the document type">
+          {(Object.keys(COMPANY_DOC_LABEL) as CompanyDocType[]).map((k) => (
+            <Pressable key={k} onPress={() => pickCompanyDoc(k)} style={[styles.docRow, { borderColor: colors.border, minHeight: 56 }]}>
+              <FileText size={20} color={colors.primary} />
+              <Text style={[styles.docName, { color: colors.ink }]}>{COMPANY_DOC_LABEL[k]}</Text>
+            </Pressable>
+          ))}
+        </Sheet>
 
         {dirty && (
           <Animated.View
@@ -304,6 +387,9 @@ function ChipField<K extends string>({
 }
 
 const styles = StyleSheet.create({
+  docRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth },
+  docName: { fontSize: 14, fontWeight: '600', flex: 1 },
+  docDelete: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
   flex: { flex: 1 },
   pad: { padding: 16 },
   title: { fontSize: 24, fontWeight: '800', letterSpacing: -0.3 },

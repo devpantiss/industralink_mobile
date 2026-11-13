@@ -10,6 +10,7 @@ import type {
   Paginated,
   WorkerDocument,
   CompanyForWorker,
+  Company,
   DocType,
 } from '../types';
 
@@ -188,6 +189,15 @@ export const workerApi = {
       return mockDb.setDefaultResume(id);
     }
     await apiClient.post(`/worker/documents/${id}/default`);
+  },
+
+  async listCompanies(params?: { q?: string; sector?: string }): Promise<{ company: Company; openJobs: number }[]> {
+    if (USE_MOCKS) {
+      await delay(80);
+      return mockDb.listCompanies(params);
+    }
+    const res = await apiClient.get('/worker/companies', { params });
+    return res.data;
   },
 
   async getCompany(id: string): Promise<CompanyForWorker> {

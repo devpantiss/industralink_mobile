@@ -467,3 +467,13 @@ export type JobInput = Omit<
   Job,
   'id' | 'companyId' | 'companyName' | 'companyVerified' | 'companyLogoUrl' | 'postedAt' | 'applicantsCount' | 'newApplicantsCount'
 >;
+
+/** Rules an admin can switch for the whole platform (same fields as the web dashboard). */
+export interface PlatformSettings {
+  /** New companies go live without admin approval (not recommended). */
+  autoApproveCompanies: boolean;
+  /** Workers and HR can message each other after shortlisting. */
+  messagingEnabled: boolean;
+  /** Employers can search all workers who allow it. */
+  talentSearchEnabled: boolean;
+}

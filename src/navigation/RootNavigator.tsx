@@ -40,8 +40,10 @@ const linking: LinkingOptions<RootStackParamList> = {
           },
           JobDetail: 'job/:jobId',
           ApplicationDetail: 'application/:applicationId',
+          Companies: 'companies',
           CompanyDetail: 'company/:companyId',
           ChatThread: 'chat/:threadId',
+          Inbox: 'inbox',
           Settings: 'settings',
         },
       },
@@ -66,6 +68,7 @@ const linking: LinkingOptions<RootStackParamList> = {
           PostJobWizard: 'employer/post-job/:jobId?',
           CandidateDossier: 'employer/candidate/:candidateId',
           JobApplicants: 'employer/job/:jobId',
+          Inbox: 'employer/inbox',
         },
       },
       Admin: {

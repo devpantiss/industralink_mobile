@@ -5,8 +5,9 @@ import { Text } from '../../components/ui/Text';
 import { Moon, Sun, Globe, LogOut, Check, Smartphone, Lock, Trash2 } from 'lucide-react-native';
 import { Input } from '../../components/ui/Input';
 import { accountApi } from '../../api/accountApi';
+import { adminApi } from '../../api/adminApi';
 import { queryKeys } from '../../api/keys';
-import type { UserSettings } from '../../types';
+import type { PlatformSettings, UserSettings } from '../../types';
 import { SegmentedTabs } from '../../components/ui/SegmentedTabs';
 import * as Haptics from 'expo-haptics';
 import { Screen } from '../../components/layout/Screen';
@@ -33,6 +34,19 @@ export const SettingsScreen: React.FC = () => {
     onError: () => showToast(t('Could not save. Check your connection and try again.'), 'error'),
   });
   const settings = settingsQuery.data;
+
+  // Platform rules (admin only)
+  const platformQuery = useQuery({
+    queryKey: queryKeys.admin.platform,
+    queryFn: () => adminApi.getPlatformSettings(),
+    enabled: role === 'admin',
+  });
+  const savePlatform = useMutation({
+    mutationFn: (changes: Partial<PlatformSettings>) => adminApi.updatePlatformSettings(changes),
+    onSuccess: (data) => qc.setQueryData(queryKeys.admin.platform, data),
+    onError: () => showToast('Could not save. Try again.', 'error'),
+  });
+  const platform = platformQuery.data;
 
   // Password (company and admin accounts)
   const [curPw, setCurPw] = useState('');
@@ -185,6 +199,31 @@ export const SettingsScreen: React.FC = () => {
               hint={t('Verified companies can see your trade, experience and city, and invite you to apply. Your phone number stays hidden until you apply.')}
               value={settings.visibleToEmployers}
               onChange={(v) => saveSettings.mutate({ visibleToEmployers: v })}
+            />
+          </Card>
+        )}
+
+        {/* Platform rules (admin) */}
+        {role === 'admin' && platform && (
+          <Card style={styles.card}>
+            <Text style={[typography.h3, styles.sectionTitle, { color: colors.ink }]}>Platform rules</Text>
+            <SettingSwitch
+              label="Approve companies automatically"
+              hint="New companies go live without your approval. Not recommended."
+              value={platform.autoApproveCompanies}
+              onChange={(v) => savePlatform.mutate({ autoApproveCompanies: v })}
+            />
+            <SettingSwitch
+              label="Messaging between workers and HR"
+              hint="Both sides can message after a worker is shortlisted."
+              value={platform.messagingEnabled}
+              onChange={(v) => savePlatform.mutate({ messagingEnabled: v })}
+            />
+            <SettingSwitch
+              label="Let employers search workers"
+              hint="Only workers who allow it can be found."
+              value={platform.talentSearchEnabled}
+              onChange={(v) => savePlatform.mutate({ talentSearchEnabled: v })}
             />
           </Card>
         )}

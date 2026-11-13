@@ -1,6 +1,6 @@
 import { apiClient, USE_MOCKS, delay } from './client';
 import { mockDb } from '../mocks/db';
-import { Job, Candidate, ApplicationStage, EmployerSummary, TalentProfile, Company, EmployerAnalytics } from '../types';
+import { Job, Candidate, ApplicationStage, EmployerSummary, TalentProfile, Company, EmployerAnalytics, CompanyDocument, CompanyDocType } from '../types';
 
 export const employerApi = {
   async getSummary(): Promise<EmployerSummary> {
@@ -117,6 +117,38 @@ export const employerApi = {
     }
     const res = await apiClient.patch('/employer/company', changes);
     return res.data;
+  },
+
+  async getCompanyDocuments(): Promise<CompanyDocument[]> {
+    if (USE_MOCKS) {
+      await delay(60);
+      return mockDb.getCompanyDocuments();
+    }
+    const res = await apiClient.get('/employer/company/documents');
+    return res.data;
+  },
+
+  async uploadCompanyDocument(doc: {
+    name: string;
+    type: CompanyDocType;
+    fileUrl: string;
+    sizeBytes?: number;
+    mimeType?: string;
+  }): Promise<CompanyDocument> {
+    if (USE_MOCKS) {
+      await delay(150);
+      return mockDb.uploadCompanyDocument(doc);
+    }
+    const res = await apiClient.post('/employer/company/documents', doc);
+    return res.data;
+  },
+
+  async deleteCompanyDocument(id: string): Promise<void> {
+    if (USE_MOCKS) {
+      await delay(80);
+      return mockDb.deleteCompanyDocument(id);
+    }
+    await apiClient.delete(`/employer/company/documents/${id}`);
   },
 
   async getAnalytics(): Promise<EmployerAnalytics> {

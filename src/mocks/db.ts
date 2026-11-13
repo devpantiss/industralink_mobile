@@ -25,6 +25,12 @@ import {
   SupportTicket,
   AuditEntry,
   AccountStatus,
+  CompanyDocument,
+  CompanyDocType,
+  PlatformSettings,
+  AppNotification,
+  Message,
+  MessageThread,
 } from '../types';
 import {
   SEED_JOBS,
@@ -617,6 +623,106 @@ class MockDatabase {
     return { company, jobs };
   }
 
+  async listCompanies(params?: { q?: string; sector?: string }): Promise<{ company: Company; openJobs: number }[]> {
+    const q = params?.q?.trim().toLowerCase();
+    return this.companies
+      .filter((c) => c.verification === 'approved' && c.status !== 'blocked')
+      .filter((c) => !params?.sector || c.sector === params.sector)
+      .filter((c) => !q || c.name.toLowerCase().includes(q) || c.location.city.toLowerCase().includes(q))
+      .map((company) => ({
+        company,
+        openJobs: this.jobs.filter((j) => j.companyId === company.id && j.status === 'active').length,
+      }))
+      .sort((a, b) => b.openJobs - a.openJobs);
+  }
+
+  // ---- Inbox: notifications and messages ----
+  private notifications: AppNotification[] = [
+    { id: 'n_w1', userId: 'worker', title: 'Interview scheduled', body: 'Gate interview at Kalinganagar Plant tomorrow, 10:30 AM. Bring your ITI certificate.', at: '2026-11-12T08:30:00Z', read: false },
+    { id: 'n_w2', userId: 'worker', title: 'You were shortlisted', body: 'Your application for Welder was shortlisted.', at: '2026-11-11T14:10:00Z', read: false },
+    { id: 'n_w3', userId: 'worker', title: 'New jobs near you', body: '5 new welding jobs were posted in Kalinganagar.', at: '2026-11-10T07:00:00Z', read: true },
+    { id: 'n_e1', userId: 'employer', title: 'New applicants', body: '3 new applicants are waiting for your review.', at: '2026-11-12T09:00:00Z', read: false },
+    { id: 'n_e2', userId: 'employer', title: 'Interview reply', body: 'A worker confirmed they will attend the gate interview.', at: '2026-11-11T16:40:00Z', read: false },
+    { id: 'n_e3', userId: 'employer', title: 'Company approved', body: 'Your company is verified. Workers can now see your jobs.', at: '2026-10-21T11:00:00Z', read: true },
+  ];
+
+  private messages: Message[] = [];
+  private lastRead: Record<string, string> = {};
+  private messagesSeeded = false;
+
+  private async eligibleThreads(role: 'worker' | 'employer'): Promise<MessageThread[]> {
+    const ok = (stage: string) => ['shortlisted', 'interview', 'offer', 'hired'].includes(stage);
+    const last = (id: string) => this.messages.filter((m) => m.applicationId === id).sort((a, b) => +new Date(a.at) - +new Date(b.at)).pop();
+    const unread = (id: string) => {
+      const seen = this.lastRead[`${role}:${id}`] ?? '';
+      return this.messages.filter((m) => m.applicationId === id && m.fromRole !== role && m.at > seen).length;
+    };
+    const base =
+      role === 'worker'
+        ? this.applications
+            .filter((a) => ok(a.stage))
+            .map((a) => {
+              const job = this.jobs.find((j) => j.id === a.jobId);
+              return { id: a.id, stage: a.stage, jobTitle: job?.title ?? 'Job', companyName: job?.companyName ?? 'Company', workerName: this.workerProfile.name, otherName: `${job?.companyName ?? 'Company'} HR` };
+            })
+        : (await this.getCandidates())
+            .filter((c) => ok(c.stage))
+            .map((c) => ({ id: c.id, stage: c.stage, jobTitle: c.jobTitle, companyName: this.myCompany.name, workerName: c.worker.name, otherName: c.worker.name }));
+    if (!this.messagesSeeded && base[0]) {
+      this.messagesSeeded = true;
+      const id = this.applications.find((a) => ok(a.stage))?.id ?? base[0].id;
+      this.messages.push(
+        { id: 'm_seed1', applicationId: id, fromUserId: 'usr_employer_1', fromRole: 'employer', text: 'Hello. Your profile was shortlisted. Can you visit the plant gate tomorrow?', at: '2026-11-12T10:15:00Z' },
+        { id: 'm_seed2', applicationId: id, fromUserId: 'usr_worker_1', fromRole: 'worker', text: 'Yes, I can come at 10:30 AM. Should I bring my original ITI certificate?', at: '2026-11-12T10:18:00Z' },
+        { id: 'm_seed3', applicationId: id, fromUserId: 'usr_employer_1', fromRole: 'employer', text: 'Yes. Please bring your Aadhaar copy, ITI certificate and safety shoes.', at: '2026-11-12T10:20:00Z' },
+      );
+    }
+    return base
+      .map((b) => {
+        const l = last(b.id);
+        return { applicationId: b.id, jobTitle: b.jobTitle, companyName: b.companyName, workerName: b.workerName, otherName: b.otherName, stage: b.stage, lastMessage: l?.text, lastAt: l?.at, unread: unread(b.id), canSend: true } as MessageThread;
+      })
+      .sort((a, b) => (b.lastAt ?? '').localeCompare(a.lastAt ?? ''));
+  }
+
+  async getThreads(role: 'worker' | 'employer'): Promise<MessageThread[]> {
+    return this.eligibleThreads(role);
+  }
+
+  async getThread(role: 'worker' | 'employer', applicationId: string): Promise<{ thread: MessageThread; messages: Message[] }> {
+    const thread = (await this.eligibleThreads(role)).find((t) => t.applicationId === applicationId);
+    if (!thread) throw new Error('This conversation is not available yet.');
+    this.lastRead[`${role}:${applicationId}`] = new Date().toISOString();
+    const messages = this.messages.filter((m) => m.applicationId === applicationId).sort((a, b) => +new Date(a.at) - +new Date(b.at));
+    return { thread: { ...thread, unread: 0 }, messages };
+  }
+
+  async sendMessage(role: 'worker' | 'employer', applicationId: string, text: string): Promise<Message> {
+    const m: Message = {
+      id: `m_${Date.now()}`,
+      applicationId,
+      fromUserId: role === 'worker' ? 'usr_worker_1' : 'usr_employer_1',
+      fromRole: role,
+      text: text.trim(),
+      at: new Date().toISOString(),
+    };
+    this.messages.push(m);
+    this.lastRead[`${role}:${applicationId}`] = m.at;
+    return m;
+  }
+
+  async getNotifications(role: 'worker' | 'employer'): Promise<AppNotification[]> {
+    return this.notifications.filter((n) => n.userId === role).sort((a, b) => b.at.localeCompare(a.at));
+  }
+
+  async markNotificationRead(id: string): Promise<void> {
+    this.notifications = this.notifications.map((n) => (n.id === id ? { ...n, read: true } : n));
+  }
+
+  async markAllNotificationsRead(role: 'worker' | 'employer'): Promise<void> {
+    this.notifications = this.notifications.map((n) => (n.userId === role ? { ...n, read: true } : n));
+  }
+
   // Employer Operations
   async getEmployerSummary(): Promise<EmployerSummary> {
     const all = await this.getCandidates();
@@ -716,6 +822,56 @@ class MockDatabase {
       .filter((c) => (!jobId ? true : c.jobId === jobId))
       .map((c) => ({ ...c, jobTitle: this.jobs.find((j) => j.id === c.jobId)?.title || 'Industrial Worker' }))
       .sort((a, b) => +new Date(b.updatedAt) - +new Date(a.updatedAt));
+  }
+
+  private companyDocuments: CompanyDocument[] = [
+    {
+      id: 'cdoc_1',
+      companyId: 'comp_1',
+      name: 'GST_Certificate.pdf',
+      type: 'gst',
+      sizeBytes: 1024 * 320,
+      mimeType: 'application/pdf',
+      uploadedAt: '2026-10-20T09:00:00Z',
+    },
+  ];
+
+  async getCompanyDocuments(): Promise<CompanyDocument[]> {
+    return this.companyDocuments;
+  }
+
+  async uploadCompanyDocument(doc: { name: string; type: CompanyDocType; fileUrl: string; sizeBytes?: number; mimeType?: string }): Promise<CompanyDocument> {
+    const d: CompanyDocument = {
+      id: `cdoc_${Date.now()}`,
+      companyId: 'comp_1',
+      name: doc.name,
+      type: doc.type,
+      sizeBytes: doc.sizeBytes ?? 1024 * 300,
+      mimeType: doc.mimeType ?? 'application/pdf',
+      uploadedAt: new Date().toISOString(),
+      url: doc.fileUrl,
+    };
+    this.companyDocuments = [...this.companyDocuments, d];
+    return d;
+  }
+
+  async deleteCompanyDocument(id: string): Promise<void> {
+    this.companyDocuments = this.companyDocuments.filter((d) => d.id !== id);
+  }
+
+  private platformSettings: PlatformSettings = {
+    autoApproveCompanies: false,
+    messagingEnabled: true,
+    talentSearchEnabled: true,
+  };
+
+  async getPlatformSettings(): Promise<PlatformSettings> {
+    return this.platformSettings;
+  }
+
+  async updatePlatformSettings(changes: Partial<PlatformSettings>): Promise<PlatformSettings> {
+    this.platformSettings = { ...this.platformSettings, ...changes };
+    return this.platformSettings;
   }
 
   async getMyCompany(): Promise<Company> {

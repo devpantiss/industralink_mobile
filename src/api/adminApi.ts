@@ -9,6 +9,7 @@ import {
   SupportTicket,
   AuditEntry,
   AccountStatus,
+  PlatformSettings,
 } from '../types';
 
 export const adminApi = {
@@ -127,5 +128,23 @@ export const adminApi = {
       return mockDb.getAudit();
     }
     return (await apiClient.get('/admin/audit')).data;
+  },
+
+  async getPlatformSettings(): Promise<PlatformSettings> {
+    if (USE_MOCKS) {
+      await delay(60);
+      return mockDb.getPlatformSettings();
+    }
+    const res = await apiClient.get('/admin/settings');
+    return res.data;
+  },
+
+  async updatePlatformSettings(changes: Partial<PlatformSettings>): Promise<PlatformSettings> {
+    if (USE_MOCKS) {
+      await delay(80);
+      return mockDb.updatePlatformSettings(changes);
+    }
+    const res = await apiClient.patch('/admin/settings', changes);
+    return res.data;
   },
 };

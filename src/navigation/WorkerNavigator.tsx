@@ -10,7 +10,9 @@ import { SavedJobsScreen } from '../screens/worker/SavedJobsScreen';
 import { WorkerProfileScreen } from '../screens/worker/WorkerProfileScreen';
 import { JobDetailScreen } from '../screens/worker/JobDetailScreen';
 import { ApplicationDetailScreen } from '../screens/worker/ApplicationDetailScreen';
+import { CompaniesScreen } from '../screens/worker/CompaniesScreen';
 import { CompanyDetailScreen } from '../screens/worker/CompanyDetailScreen';
+import { InboxScreen } from '../screens/shared/InboxScreen';
 import { ChatScreen } from '../screens/shared/ChatScreen';
 import { SettingsScreen } from '../screens/shared/SettingsScreen';
 import { TabBar } from '../components/layout/TabBar';
@@ -75,8 +77,10 @@ export const WorkerNavigator: React.FC = () => {
       <Stack.Screen name="WorkerTabs" component={WorkerTabs} />
       <Stack.Screen name="JobDetail" component={JobDetailScreen} />
       <Stack.Screen name="ApplicationDetail" component={ApplicationDetailScreen} />
+      <Stack.Screen name="Companies" component={CompaniesScreen} />
       <Stack.Screen name="CompanyDetail" component={CompanyDetailScreen} />
       <Stack.Screen name="ChatThread" component={ChatScreen} />
+      <Stack.Screen name="Inbox" component={InboxScreen} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
     </Stack.Navigator>
   );

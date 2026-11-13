@@ -3,6 +3,7 @@ import {
   View,
   StyleSheet,
   ScrollView,
+  FlatList,
   TouchableOpacity,
   RefreshControl,
   ActivityIndicator,
@@ -17,11 +18,14 @@ import {
   SlidersHorizontal,
   BadgeCheck,
   ShieldCheck,
+  Building2,
+  ChevronRight,
   ChevronDown,
   Check,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import type { WorkerStackParamList } from '../../navigation/types';
+import { ErrorState } from '../../components/ui/ErrorState';
 import { ListSkeleton } from '../../components/ui/Skeleton';
 import { Screen } from '../../components/layout/Screen';
 import { AppHeader } from '../../components/layout/AppHeader';
@@ -144,19 +148,36 @@ export const FindJobsScreen: React.FC = () => {
     <Screen edges={['top']}>
       <AppHeader />
 
-      <ScrollView
+      <FlatList
+        data={jobsList}
+        keyExtractor={(j) => j.id}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        onEndReachedThreshold={0.6}
+        onEndReached={() => {
+          if (jobsQuery.hasNextPage && !jobsQuery.isFetchingNextPage) void jobsQuery.fetchNextPage();
+        }}
         refreshControl={
           <RefreshControl
-            refreshing={jobsQuery.isRefetching}
+            refreshing={jobsQuery.isRefetching && !jobsQuery.isFetchingNextPage}
             onRefresh={() => {
               void jobsQuery.refetch();
             }}
             tintColor={colors.primary}
           />
         }
-      >
+        renderItem={({ item: j }) => (
+          <JobRow
+            job={j}
+            style={styles.row}
+            onPress={() => navigation.navigate('JobDetail', { jobId: j.id })}
+            onToggleSave={(job) => saveMutation.mutate(job)}
+            saving={saveMutation.isPending && saveMutation.variables?.id === j.id}
+          />
+        )}
+        ListHeaderComponent={
+          <>
         <Hero
           style={styles.hero}
           title={t('Find work near you')}
@@ -214,6 +235,16 @@ export const FindJobsScreen: React.FC = () => {
             )}
           </View>
         </View>
+
+        <TouchableOpacity
+          onPress={() => navigation.navigate('Companies')}
+          style={[styles.companiesLink, { borderColor: colors.border, backgroundColor: colors.surface }]}
+          accessibilityRole="button"
+        >
+          <Building2 size={16} color={colors.primary} />
+          <Text style={[styles.companiesLinkText, { color: colors.ink }]}>{t('Browse companies')}</Text>
+          <ChevronRight size={16} color={colors.inkMuted} />
+        </TouchableOpacity>
 
         {/* Quick Trade Pills Horizontal Strip */}
         <ScrollView
@@ -299,10 +330,14 @@ export const FindJobsScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* Results List */}
-        {jobsQuery.isLoading ? (
-          <ListSkeleton style={{ paddingHorizontal: 16 }} />
-        ) : jobsList.length === 0 ? (
+          </>
+        }
+        ListEmptyComponent={
+          jobsQuery.isLoading ? (
+            <ListSkeleton style={{ paddingHorizontal: 16 }} />
+          ) : jobsQuery.isError ? (
+            <ErrorState onRetry={() => void jobsQuery.refetch()} />
+          ) : (
           <View style={[styles.emptyBox, { backgroundColor: colors.surfaceMuted }]}>
             <Search size={36} color={colors.inkMuted} />
             <Text style={[styles.emptyTitle, { color: colors.ink }]}>
@@ -318,19 +353,10 @@ export const FindJobsScreen: React.FC = () => {
               <Text style={styles.clearAllBtnText}>{t('Clear filters')}</Text>
             </TouchableOpacity>
           </View>
-        ) : (
+          )
+        }
+        ListFooterComponent={
           <>
-            {jobsList.map((j) => (
-              <JobRow
-                key={j.id}
-                job={j}
-                style={styles.row}
-                onPress={() => navigation.navigate('JobDetail', { jobId: j.id })}
-                onToggleSave={(job) => saveMutation.mutate(job)}
-                saving={saveMutation.isPending && saveMutation.variables?.id === j.id}
-              />
-            ))}
-
             {jobsQuery.hasNextPage && (
               <TouchableOpacity
                 style={[styles.loadMoreBtn, { borderColor: colors.border, backgroundColor: colors.surfaceMuted }]}
@@ -345,8 +371,8 @@ export const FindJobsScreen: React.FC = () => {
               </TouchableOpacity>
             )}
           </>
-        )}
-      </ScrollView>
+        }
+      />
 
       {/* Filters */}
       <Sheet
@@ -561,6 +587,8 @@ const styles = StyleSheet.create({
     paddingBottom: 48,
   },
   flex1: { flex: 1 },
+  companiesLink: { flexDirection: 'row', alignItems: 'center', gap: 8, minHeight: 44, marginHorizontal: 16, marginTop: 12, paddingHorizontal: 14, borderRadius: 12, borderWidth: 1 },
+  companiesLinkText: { flex: 1, fontSize: 14, fontWeight: '600' },
   row: { marginHorizontal: 16 },
   sheetFooterRow: { flexDirection: 'row', gap: 10 },
   clearBtn: { minHeight: 48, paddingHorizontal: 18, borderRadius: 12, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },

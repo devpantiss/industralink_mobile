@@ -210,9 +210,18 @@ export const WorkerProfileScreen: React.FC = () => {
                 />
               </View>
               {summary.profileHint && (
-                <Text style={[styles.strengthHint, { color: colors.inkMuted }]}>
-                  {t(summary.profileHint)}
-                </Text>
+                <TouchableOpacity
+                  onPress={() => {
+                    // Documents missing -> the documents tab; otherwise open the work details to fill in.
+                    if (summary.missing.some((m) => m.link.includes('documents'))) setTab('documents');
+                    else setEditing('work');
+                  }}
+                  hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                  <Text style={[styles.strengthHint, { color: colors.primary, fontWeight: '600' }]}>
+                    {t(summary.profileHint)}
+                  </Text>
+                </TouchableOpacity>
               )}
             </View>
           )}

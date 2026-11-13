@@ -1,6 +1,9 @@
 import React from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
-import { ArrowLeft, Moon, Sun, Menu, Settings } from 'lucide-react-native';
+import { ArrowLeft, Moon, Sun, Menu, Settings, Bell } from 'lucide-react-native';
+import { useQuery } from '@tanstack/react-query';
+import { inboxApi, type InboxRole } from '../../api/inboxApi';
+import { queryKeys } from '../../api/keys';
 import { useNavigation, DrawerActions } from '@react-navigation/native';
 import { Text } from '../ui/Text';
 import { LogoMark } from '../ui/LogoMark';
@@ -27,6 +30,21 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ title, showBack = false, r
   // Employer and admin live inside a drawer; workers use bottom tabs and reach Settings from here.
   const hasDrawer = role === 'employer' || role === 'admin';
   const canGoBack = showBack;
+  // Workers and companies have an inbox; the red number counts unread updates and messages.
+  const hasInbox = isAuthenticated && (role === 'worker' || role === 'employer');
+  const inboxRole = role as InboxRole;
+  const unreadNotes = useQuery({
+    queryKey: [...queryKeys.notifications, inboxRole],
+    queryFn: () => inboxApi.notifications(inboxRole),
+    enabled: hasInbox,
+  });
+  const unreadThreads = useQuery({
+    queryKey: [...queryKeys.messages.threads, inboxRole],
+    queryFn: () => inboxApi.threads(inboxRole),
+    enabled: hasInbox,
+  });
+  const unread =
+    (unreadNotes.data ?? []).filter((n) => !n.read).length + (unreadThreads.data ?? []).reduce((sum, th) => sum + th.unread, 0);
 
   return (
     <View style={[styles.bar, { backgroundColor: colors.canvas }]}>
@@ -64,6 +82,18 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ title, showBack = false, r
       </View>
 
       <View style={styles.right}>
+        {hasInbox && !canGoBack && (
+          <View>
+            <RoundButton label={unread ? `Inbox, ${unread} unread` : 'Inbox'} onPress={() => (navigation as any).navigate('Inbox')}>
+              <Bell size={18} color={colors.ink} />
+            </RoundButton>
+            {unread > 0 && (
+              <View style={[styles.badge, { backgroundColor: colors.dangerFg, borderColor: colors.canvas }]}>
+                <Text style={styles.badgeText}>{unread > 9 ? '9+' : unread}</Text>
+              </View>
+            )}
+          </View>
+        )}
         <RoundButton label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'} onPress={toggleTheme}>
           {theme === 'light' ? <Moon size={18} color={colors.ink} /> : <Sun size={18} color={colors.accent} />}
         </RoundButton>
@@ -113,6 +143,8 @@ const styles = StyleSheet.create({
   brand: { flexDirection: 'row', alignItems: 'center', gap: 9 },
   wordmark: { fontSize: 19, fontWeight: '800', letterSpacing: -0.4 },
   title: { fontSize: 18, fontWeight: '700', flexShrink: 1 },
+  badge: { position: 'absolute', top: -3, right: -3, minWidth: 18, height: 18, borderRadius: 9, paddingHorizontal: 4, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
+  badgeText: { color: '#FFFFFF', fontSize: 11, fontWeight: '800', lineHeight: 13 },
   round: {
     width: 44,
     height: 44,

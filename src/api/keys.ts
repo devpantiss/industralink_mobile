@@ -15,6 +15,7 @@ export const queryKeys = {
     job: (id: string) => ['worker', 'job', id] as const,
     saved: ['worker', 'saved'] as const,
     company: (id: string) => ['worker', 'company', id] as const,
+    companies: (params?: Record<string, any>) => ['worker', 'companies', params] as const,
   },
   employer: {
     all: ['employer'] as const,
@@ -26,9 +27,11 @@ export const queryKeys = {
     talent: (params?: Record<string, any>) => ['employer', 'talent', params] as const,
     analytics: ['employer', 'analytics'] as const,
     company: ['employer', 'company'] as const,
+    companyDocs: ['employer', 'company', 'documents'] as const,
   },
   admin: {
     all: ['admin'] as const,
+    platform: ['admin', 'platform'] as const,
     summary: ['admin', 'summary'] as const,
     verifications: ['admin', 'verifications'] as const,
     users: (params?: Record<string, any>) => ['admin', 'users', params] as const,
@@ -42,6 +45,7 @@ export const queryKeys = {
     thread: (id: string) => ['messages', 'thread', id] as const,
   },
   settings: ['settings'] as const,
+  notifications: ['notifications'] as const,
 
   // Backwards compatibility shortcuts
   jobs: (filters?: Record<string, any>) => ['worker', 'jobs', filters] as const,
