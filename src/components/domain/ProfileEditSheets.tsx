@@ -20,8 +20,10 @@ import {
   QUALIFICATIONS,
   LICENCES,
   LANGUAGES,
+  INDIA_STATES,
 } from '../../lib/labels';
 import { t } from '../../lib/i18n';
+import { splitDob, joinDob, ageOf, MIN_AGE } from '../../lib/dob';
 import type { WorkerProfile, WorkHistoryItem, Trade, ExperienceBand, Shift, Availability } from '../../types';
 import { shadows } from '../../theme/shadows';
 
@@ -125,8 +127,11 @@ const EditForm: React.FC<{ section: ProfileSection; profile: WorkerProfile; onCl
       if (d.email && !/^\S+@\S+\.\S+$/.test(d.email.trim())) e.email = t('Enter a valid email, or leave it empty.');
       const iso = joinDob(dob);
       if (iso === 'invalid') e.dob = t('Enter a real date, like 15 / 08 / 1998.');
-      else if (iso && ageOf(iso) < 16) e.dob = t('You must be at least 16 years old.');
+      else if (iso && ageOf(iso) < MIN_AGE) e.dob = t('You must be at least 18 years old.');
+      if (d.pincode && !/^\d{6}$/.test(d.pincode)) e.pincode = t('Enter a 6-digit pincode, or leave it empty.');
       changes = {
+        pincode: d.pincode || undefined,
+        address: d.address?.trim() || undefined,
         name: d.name.trim(),
         email: d.email?.trim() || undefined,
         dob: iso && iso !== 'invalid' ? iso : undefined,
@@ -297,10 +302,27 @@ const EditForm: React.FC<{ section: ProfileSection; profile: WorkerProfile; onCl
               value={d.location?.city ?? ''}
               onChangeText={(v) => set({ location: { city: v, state: d.location?.state ?? '' } })}
             />
+            <Group label={t('State')}>
+              <ChipRow
+                options={INDIA_STATES.map((k) => ({ key: k, label: k }))}
+                selected={d.location?.state ? [d.location.state] : []}
+                onToggle={(k) => set({ location: { city: d.location?.city ?? '', state: k } })}
+              />
+            </Group>
             <Input
-              label={t('State')}
-              value={d.location?.state ?? ''}
-              onChangeText={(v) => set({ location: { city: d.location?.city ?? '', state: v } })}
+              label={t('Pincode')}
+              value={d.pincode ?? ''}
+              onChangeText={(v) => set({ pincode: v.replace(/\D/g, '').slice(0, 6) })}
+              keyboardType="number-pad"
+              maxLength={6}
+              error={errors.pincode}
+            />
+            <Input
+              label={t('Address')}
+              value={d.address ?? ''}
+              onChangeText={(v) => set({ address: v.slice(0, 200) })}
+              multiline
+              containerStyle={styles.about}
             />
             <Input
               label={t('About me')}
@@ -519,31 +541,6 @@ const HistoryEditor: React.FC<{ items: WorkHistoryItem[]; onChange: (v: WorkHist
 
 function toggle(list: string[], key: string) {
   return list.includes(key) ? list.filter((x) => x !== key) : [...list, key];
-}
-
-function splitDob(iso?: string) {
-  const m = iso?.match(/^(\d{4})-(\d{2})-(\d{2})/);
-  return m ? { y: m[1]!, m: m[2]!, d: m[3]! } : { y: '', m: '', d: '' };
-}
-
-/** '' when empty, 'invalid' when not a real date, else YYYY-MM-DD. */
-function joinDob({ d, m, y }: { d: string; m: string; y: string }): string {
-  if (!d && !m && !y) return '';
-  const day = Number(d);
-  const month = Number(m);
-  const year = Number(y);
-  if (!day || !month || y.length !== 4) return 'invalid';
-  const dt = new Date(year, month - 1, day);
-  if (dt.getFullYear() !== year || dt.getMonth() !== month - 1 || dt.getDate() !== day) return 'invalid';
-  return `${y}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-}
-
-function ageOf(iso: string) {
-  const b = new Date(iso);
-  const now = new Date();
-  let age = now.getFullYear() - b.getFullYear();
-  if (now.getMonth() < b.getMonth() || (now.getMonth() === b.getMonth() && now.getDate() < b.getDate())) age -= 1;
-  return age;
 }
 
 const styles = StyleSheet.create({

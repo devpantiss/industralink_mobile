@@ -130,3 +130,9 @@ export const HIRING_TYPE_LABEL: Record<HiringType, string> = {
   agency: 'Contractor / placement agency',
 };
 
+
+export const INDIA_STATES = [
+  'Andhra Pradesh', 'Assam', 'Bihar', 'Chhattisgarh', 'Delhi', 'Goa', 'Gujarat', 'Haryana', 'Jharkhand', 'Karnataka',
+  'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Odisha', 'Punjab', 'Rajasthan', 'Tamil Nadu', 'Telangana', 'Uttar Pradesh',
+  'Uttarakhand', 'West Bengal', 'Other',
+];

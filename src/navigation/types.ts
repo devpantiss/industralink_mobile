@@ -5,6 +5,7 @@ export type AuthStackParamList = {
   Signup: undefined;
   ForgotPassword: undefined;
   ResetPassword: { token?: string } | undefined;
+  Legal: { kind: 'terms' | 'privacy' | 'nofees' };
 };
 
 export type WorkerTabParamList = {
@@ -25,6 +26,7 @@ export type WorkerStackParamList = {
   Inbox: undefined;
   Help: undefined;
   Settings: undefined;
+  Legal: { kind: 'terms' | 'privacy' | 'nofees' };
 };
 
 export type EmployerTabParamList = {
@@ -50,6 +52,7 @@ export type EmployerStackParamList = {
   JobApplicants: { jobId: string };
   Inbox: undefined;
   Help: undefined;
+  Legal: { kind: 'terms' | 'privacy' | 'nofees' };
   ChatThread: { threadId: string; recipientName: string };
 };
 

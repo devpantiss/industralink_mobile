@@ -289,6 +289,16 @@ export const SettingsScreen: React.FC = () => {
           </Card>
         )}
 
+        <View style={styles.legalRow}>
+          {(['terms', 'privacy', 'nofees'] as const).map((k) => (
+            <TouchableOpacity key={k} onPress={() => navigation.navigate('Legal', { kind: k })} hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}>
+              <Text style={[typography.small, { color: colors.inkSecondary, fontWeight: '600' }]}>
+                {t(k === 'terms' ? 'Terms' : k === 'privacy' ? 'Privacy' : 'No fees')}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
         <Button
           label={t('Log out')}
           variant="outline"
@@ -334,6 +344,7 @@ const SettingSwitch: React.FC<{ label: string; hint?: string; value: boolean; on
 };
 
 const styles = StyleSheet.create({
+  legalRow: { flexDirection: 'row', justifyContent: 'center', gap: 20, marginBottom: 12 },
   switchRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingVertical: spacing.sm, minHeight: 52 },
   switchText: { flex: 1 },
   helpRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },

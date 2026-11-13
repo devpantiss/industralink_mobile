@@ -1,3 +1,4 @@
+import { isValidPhone, errorText } from '../../lib/errors';
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
@@ -129,9 +130,9 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
   };
 
   const handlePhoneSubmit = async () => {
-    if (!phone || phone.length < 10) {
+    if (!isValidPhone(phone)) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-      showToast(t('Enter a valid 10-digit mobile number.'), 'warning');
+      showToast(t('Enter a 10-digit mobile number that starts with 6, 7, 8 or 9.'), 'warning');
       return;
     }
     setLoading(true);
@@ -149,7 +150,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
       setCountdown(30);
       triggerFormTransition();
     } catch (err: any) {
-      showToast(err.message || 'Failed to send OTP. Try again.', 'error');
+      showToast(errorText(err, 'Failed to send the code. Try again.'), 'error');
     } finally {
       setLoading(false);
     }
@@ -184,7 +185,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
       showToast(t('Welcome back!'), 'success');
     } catch (err: any) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      showToast(err.message || 'Invalid code. Enter 123456.', 'error');
+      showToast(errorText(err, 'That code is not right.'), 'error');
     } finally {
       setLoading(false);
     }
@@ -198,7 +199,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
       setCountdown(30);
       showToast(t('New code sent to +91 {phone}', { phone }), 'info');
     } catch {
-      showToast('Failed to resend code', 'error');
+      showToast(t('Could not resend the code. Try again.'), 'error');
     }
   };
 
@@ -216,7 +217,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
       showToast('Welcome back, Employer!', 'success');
     } catch (err: any) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      showToast(err.message || 'Login failed. Check credentials.', 'error');
+      showToast(errorText(err, 'Login failed. Check your email and password.'), 'error');
     } finally {
       setLoading(false);
     }

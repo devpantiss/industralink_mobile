@@ -1,3 +1,4 @@
+import { DocumentViewer } from '../../components/domain/DocumentViewer';
 import React, { useState } from 'react';
 import {
   View,
@@ -32,16 +33,18 @@ import {
 } from '../../lib/labels';
 import { formatDate, formatNumber, formatPhone } from '../../lib/format';
 import { t } from '../../lib/i18n';
-import type { DocType } from '../../types';
+import type { DocType, WorkerDocument } from '../../types';
 import { shadows } from '../../theme/shadows';
 
 type Tab = 'profile' | 'documents';
+
 
 export const WorkerProfileScreen: React.FC = () => {
   const { colors, showToast } = useUiStore();
   const { logout } = useAuthStore();
   const qc = useQueryClient();
   const [tab, setTab] = useState<Tab>('profile');
+  const [viewDoc, setViewDoc] = useState<WorkerDocument | null>(null);
   const [editing, setEditing] = useState<ProfileSection | null>(null);
   const [menu, setMenu] = useState<'photo' | 'doc' | null>(null);
 
@@ -408,8 +411,12 @@ export const WorkerProfileScreen: React.FC = () => {
             {/* Documents List */}
             <View style={{ gap: 10 }}>
               {docs?.map((d) => (
-                <View
+                <TouchableOpacity
                   key={d.id}
+                  activeOpacity={0.8}
+                  onPress={() => setViewDoc(d)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`${t('Open')} ${d.name}`}
                   style={[styles.docCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
                 >
                   <View style={[styles.docIconCircle, { backgroundColor: colors.primarySoft }]}>
@@ -449,7 +456,7 @@ export const WorkerProfileScreen: React.FC = () => {
                   >
                     <Trash2 size={18} color={colors.inkMuted} />
                   </TouchableOpacity>
-                </View>
+                </TouchableOpacity>
               ))}
             </View>
           </View>
@@ -474,6 +481,11 @@ export const WorkerProfileScreen: React.FC = () => {
         </TouchableOpacity>
       </ScrollView>
 
+      <DocumentViewer
+        doc={viewDoc ? { ...viewDoc, typeLabel: t(DOC_TYPE_LABEL[viewDoc.type]) } : null}
+        audience="worker"
+        onClose={() => setViewDoc(null)}
+      />
       <ProfileEditSheets section={editing} profile={profile} onClose={() => setEditing(null)} />
 
       <Sheet visible={menu === 'photo'} onClose={() => setMenu(null)} title={t('Change Profile Photo')}>

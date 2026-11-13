@@ -1,3 +1,4 @@
+import { LegalScreen } from '../screens/shared/LegalScreen';
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -83,6 +84,7 @@ export const WorkerNavigator: React.FC = () => {
       <Stack.Screen name="ChatThread" component={ChatScreen} />
       <Stack.Screen name="Inbox" component={InboxScreen} />
       <Stack.Screen name="Help" component={HelpScreen} />
+      <Stack.Screen name="Legal" component={LegalScreen} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
     </Stack.Navigator>
   );

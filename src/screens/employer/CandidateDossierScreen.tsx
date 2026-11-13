@@ -1,3 +1,4 @@
+import { DocumentViewer } from '../../components/domain/DocumentViewer';
 import React, { useState } from 'react';
 import {
   View,
@@ -39,7 +40,7 @@ import {
 import { formatBytes, formatPhone, timeAgo } from '../../lib/format';
 import { openContact } from '../../lib/contact';
 import { t } from '../../lib/i18n';
-import type { ApplicationStage } from '../../types';
+import type { ApplicationStage, WorkerDocument } from '../../types';
 import { shadows } from '../../theme/shadows';
 
 type Props = NativeStackScreenProps<EmployerStackParamList, 'CandidateDossier'>;
@@ -50,6 +51,7 @@ export const CandidateDossierScreen: React.FC<Props> = ({ route, navigation }) =
   const qc = useQueryClient();
 
   const [activeTab, setActiveTab] = useState<'profile' | 'documents'>('profile');
+  const [viewDoc, setViewDoc] = useState<WorkerDocument | null>(null);
 
   // Modals for stage progression
   const [interviewModal, setInterviewModal] = useState(false);
@@ -342,8 +344,11 @@ export const CandidateDossierScreen: React.FC<Props> = ({ route, navigation }) =
               </View>
             ) : (
               candidate.documents.map((d) => (
-                <View
+                <TouchableOpacity
                   key={d.id}
+                  activeOpacity={0.8}
+                  onPress={() => setViewDoc(d)}
+                  accessibilityRole="button"
                   style={[styles.docItem, { backgroundColor: colors.surface, borderColor: colors.border }]}
                 >
                   {d.type === 'resume' ? (
@@ -359,12 +364,18 @@ export const CandidateDossierScreen: React.FC<Props> = ({ route, navigation }) =
                       {d.name} · {formatBytes(d.sizeBytes)} · {timeAgo(d.uploadedAt)}
                     </Text>
                   </View>
-                </View>
+                </TouchableOpacity>
               ))
             )}
           </View>
         )}
       </ScrollView>
+
+      <DocumentViewer
+        doc={viewDoc ? { ...viewDoc, typeLabel: DOC_TYPE_LABEL[viewDoc.type] } : null}
+        audience="hr"
+        onClose={() => setViewDoc(null)}
+      />
 
       {/* Schedule Interview Modal */}
       <Sheet

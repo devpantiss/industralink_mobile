@@ -1,3 +1,4 @@
+import { isValidPhone, errorText } from '../../lib/errors';
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
@@ -134,7 +135,7 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
       showToast(t('Please enter your full name.'), 'warning');
       return;
     }
-    if (!workerPhone || workerPhone.length < 10) {
+    if (!isValidPhone(workerPhone)) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
       showToast(t('Enter a valid 10-digit mobile number.'), 'warning');
       return;
@@ -154,7 +155,7 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
       setCountdown(30);
       triggerFormTransition();
     } catch (err: any) {
-      showToast(err.message || 'Failed to send OTP code.', 'error');
+      showToast(errorText(err, 'Failed to send the code. Try again.'), 'error');
     } finally {
       setLoading(false);
     }
@@ -176,7 +177,7 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
       showToast(t('Account created successfully!'), 'success');
     } catch (err: any) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      showToast(err.message || 'Invalid code. Enter 123456.', 'error');
+      showToast(errorText(err, 'That code is not right.'), 'error');
     } finally {
       setLoading(false);
     }
@@ -250,7 +251,7 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
       showToast('Employer account created!', 'success');
     } catch (err: any) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      showToast(err.message || 'Registration failed. Try again.', 'error');
+      showToast(errorText(err, 'Registration failed. Try again.'), 'error');
     } finally {
       setLoading(false);
     }
@@ -567,6 +568,14 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
                         </View>
                         <Text style={[styles.fieldHint, { color: colors.inkMuted }]}>
                           {t("We'll send a 6-digit code by SMS. No password needed.")}
+                        </Text>
+                        <Text style={[styles.fieldHint, { color: colors.inkMuted, marginTop: 6 }]}>
+                          {t('By continuing you agree to our')}{' '}
+                          <Text style={{ color: colors.primary, fontWeight: '600' }} onPress={() => navigation.navigate('Legal', { kind: 'terms' })}>{t('Terms')}</Text>
+                          {' · '}
+                          <Text style={{ color: colors.primary, fontWeight: '600' }} onPress={() => navigation.navigate('Legal', { kind: 'privacy' })}>{t('Privacy')}</Text>
+                          {' · '}
+                          <Text style={{ color: colors.primary, fontWeight: '600' }} onPress={() => navigation.navigate('Legal', { kind: 'nofees' })}>{t('No fees')}</Text>
                         </Text>
                       </View>
 

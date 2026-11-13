@@ -1,3 +1,4 @@
+import { LegalScreen } from '../screens/shared/LegalScreen';
 import React from 'react';
 import {
   View,
@@ -205,6 +206,7 @@ export const EmployerNavigator: React.FC = () => (
     <Stack.Screen name="JobApplicants" component={JobApplicantsScreen} />
     <Stack.Screen name="Inbox" component={InboxScreen} />
     <Stack.Screen name="Help" component={HelpScreen} />
+    <Stack.Screen name="Legal" component={LegalScreen} />
     <Stack.Screen name="ChatThread" component={ChatScreen} />
     <Stack.Screen
       name="PostJobWizard"

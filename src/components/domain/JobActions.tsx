@@ -11,6 +11,8 @@ import { Sheet } from '../ui/Sheet';
 import { t } from '../../lib/i18n';
 import type { ReportReason } from '../../types';
 import { formatPhone } from '../../lib/format';
+import { errorText } from '../../lib/errors';
+import { useNavigation } from '@react-navigation/native';
 
 interface ApplyModalProps {
   visible: boolean;
@@ -31,6 +33,8 @@ export const ApplyModal: React.FC<ApplyModalProps> = ({
   const qc = useQueryClient();
   const [choice, setChoice] = useState<'profile' | string>('profile');
   const [doneId, setDoneId] = useState<string>();
+  const [incomplete, setIncomplete] = useState<string>();
+  const navigation = useNavigation<any>();
 
   const { data: profile } = useQuery({
     queryKey: queryKeys.worker.profile,
@@ -58,14 +62,16 @@ export const ApplyModal: React.FC<ApplyModalProps> = ({
       qc.invalidateQueries({ queryKey: queryKeys.worker.all });
     },
     // Closed job, already applied, incomplete profile...: say why in plain words.
-    onError: (e: Error) => {
+    onError: (e: Error & { code?: string }) => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-      showToast(e.message || t('Could not apply. Try again.'), 'warning');
+      if (e.code === 'PROFILE_INCOMPLETE') return setIncomplete(e.message);
+      showToast(errorText(e, 'Could not apply. Try again.'), 'warning');
     },
   });
 
   const handleClose = () => {
     setDoneId(undefined);
+    setIncomplete(undefined);
     onClose();
   };
 
@@ -174,6 +180,21 @@ export const ApplyModal: React.FC<ApplyModalProps> = ({
                   {profile?.phone ? formatPhone(profile.phone) : '...'} <Text style={{ color: colors.successFg }}>✓ {t('verified')}</Text>
                 </Text>
               </View>
+
+              {incomplete ? (
+                <View style={[styles.phoneCallout, { backgroundColor: colors.warningBg, marginTop: 12 }]}>
+                  <Text style={{ color: colors.warningFg, fontSize: 14, lineHeight: 20 }}>{incomplete}</Text>
+                  <TouchableOpacity
+                    onPress={() => {
+                      handleClose();
+                      navigation.navigate('WorkerTabs', { screen: 'WorkerProfile' });
+                    }}
+                    style={{ marginTop: 8 }}
+                  >
+                    <Text style={{ color: colors.primary, fontWeight: '700', fontSize: 15 }}>{t('Complete my profile')}</Text>
+                  </TouchableOpacity>
+                </View>
+              ) : null}
 
               <TouchableOpacity
                 style={[styles.primaryBtn, { backgroundColor: colors.primary, marginTop: 20 }]}
