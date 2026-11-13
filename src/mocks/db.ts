@@ -638,11 +638,11 @@ class MockDatabase {
 
   // ---- Inbox: notifications and messages ----
   private notifications: AppNotification[] = [
-    { id: 'n_w1', userId: 'worker', title: 'Interview scheduled', body: 'Gate interview at Kalinganagar Plant tomorrow, 10:30 AM. Bring your ITI certificate.', at: '2026-11-12T08:30:00Z', read: false },
-    { id: 'n_w2', userId: 'worker', title: 'You were shortlisted', body: 'Your application for Welder was shortlisted.', at: '2026-11-11T14:10:00Z', read: false },
-    { id: 'n_w3', userId: 'worker', title: 'New jobs near you', body: '5 new welding jobs were posted in Kalinganagar.', at: '2026-11-10T07:00:00Z', read: true },
-    { id: 'n_e1', userId: 'employer', title: 'New applicants', body: '3 new applicants are waiting for your review.', at: '2026-11-12T09:00:00Z', read: false },
-    { id: 'n_e2', userId: 'employer', title: 'Interview reply', body: 'A worker confirmed they will attend the gate interview.', at: '2026-11-11T16:40:00Z', read: false },
+    { id: 'n_w1', link: 'application:app_1', userId: 'worker', title: 'Interview scheduled', body: 'Gate interview at Kalinganagar Plant tomorrow, 10:30 AM. Bring your ITI certificate.', at: '2026-11-12T08:30:00Z', read: false },
+    { id: 'n_w2', link: 'application:app_1', userId: 'worker', title: 'You were shortlisted', body: 'Your application for Welder was shortlisted.', at: '2026-11-11T14:10:00Z', read: false },
+    { id: 'n_w3', link: 'jobs', userId: 'worker', title: 'New jobs near you', body: '5 new welding jobs were posted in Kalinganagar.', at: '2026-11-10T07:00:00Z', read: true },
+    { id: 'n_e1', link: 'candidates', userId: 'employer', title: 'New applicants', body: '3 new applicants are waiting for your review.', at: '2026-11-12T09:00:00Z', read: false },
+    { id: 'n_e2', link: 'candidates', userId: 'employer', title: 'Interview reply', body: 'A worker confirmed they will attend the gate interview.', at: '2026-11-11T16:40:00Z', read: false },
     { id: 'n_e3', userId: 'employer', title: 'Company approved', body: 'Your company is verified. Workers can now see your jobs.', at: '2026-10-21T11:00:00Z', read: true },
   ];
 

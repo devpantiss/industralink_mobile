@@ -39,6 +39,14 @@ export const InboxScreen: React.FC = () => {
   const unreadNotes = (notes.data ?? []).filter((n) => !n.read).length;
   const unreadMsgs = (threads.data ?? []).reduce((sum, th) => sum + th.unread, 0);
 
+  const openNotification = (n: AppNotification) => {
+    if (!n.read) markRead.mutate(n.id);
+    const l = n.link ?? '';
+    if (l.startsWith('application:')) navigation.navigate('ApplicationDetail', { applicationId: l.slice(12) });
+    else if (l === 'jobs') navigation.navigate('WorkerTabs', { screen: 'FindJobs' });
+    else if (l === 'candidates') navigation.navigate('EmployerDrawer', { screen: 'EmployerMain', params: { screen: 'Candidates' } });
+  };
+
   const openThread = (th: MessageThread) =>
     navigation.navigate('ChatThread', { threadId: th.applicationId, recipientName: th.otherName });
 
@@ -70,7 +78,7 @@ export const InboxScreen: React.FC = () => {
           }
           renderItem={({ item: n }) => (
             <Pressable
-              onPress={() => !n.read && markRead.mutate(n.id)}
+              onPress={() => openNotification(n)}
               style={[styles.card, { backgroundColor: n.read ? colors.surface : colors.primarySoft, borderColor: colors.border }]}
               accessibilityRole="button"
             >

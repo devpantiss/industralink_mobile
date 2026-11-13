@@ -11,6 +11,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Phone,
+  MessageCircle,
   CheckCircle2,
   Award,
   FileText,
@@ -135,6 +136,17 @@ export const CandidateDossierScreen: React.FC<Props> = ({ route, navigation }) =
             <Phone size={16} color="#FFF" />
             <Text style={styles.callBtnText}>{formatPhone(w.phone)} · Call Candidate</Text>
           </TouchableOpacity>
+
+          {/* Messages open once the worker is shortlisted */}
+          {['shortlisted', 'interview', 'offer', 'hired'].includes(candidate.stage) && (
+            <TouchableOpacity
+              onPress={() => navigation.navigate('ChatThread', { threadId: candidate.id, recipientName: w.name })}
+              style={[styles.msgBtn, { borderColor: colors.primary, backgroundColor: colors.primarySoft }]}
+            >
+              <MessageCircle size={16} color={colors.primary} />
+              <Text style={[styles.msgBtnText, { color: colors.primary }]}>Message {w.name.split(' ')[0]}</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Applied For & Stage Badge */}
@@ -543,6 +555,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
   },
+  msgBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: 44, borderRadius: 12, borderWidth: 1, marginTop: 8 },
+  msgBtnText: { fontSize: 14, fontWeight: '700' },
   callBtnText: {
     color: '#FFF',
     fontSize: 13.5,

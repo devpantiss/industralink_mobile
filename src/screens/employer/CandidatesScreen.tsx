@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import {
   View,
   StyleSheet,
-  ScrollView,
+  FlatList,
   TouchableOpacity,
   RefreshControl,
 } from 'react-native';
@@ -10,6 +10,7 @@ import { Text, TextInput } from '../../components/ui/Text';
 import { useNavigation } from '@react-navigation/native';
 import { useQuery } from '@tanstack/react-query';
 import { Search, UserSearch } from 'lucide-react-native';
+import { ErrorState } from '../../components/ui/ErrorState';
 import { ListSkeleton } from '../../components/ui/Skeleton';
 import { Screen } from '../../components/layout/Screen';
 import { AppHeader } from '../../components/layout/AppHeader';
@@ -28,7 +29,7 @@ export const CandidatesScreen: React.FC = () => {
   const [q, setQ] = useState('');
   const [stageFilter, setStageFilter] = useState<ApplicationStage | ''>('');
 
-  const { data: candidates, isLoading, isRefetching, refetch } = useQuery({
+  const { data: candidates, isLoading, isError, isRefetching, refetch } = useQuery({
     queryKey: queryKeys.employer.allCandidates({ stage: stageFilter || undefined }),
     queryFn: () => employerApi.getAllCandidates({ stage: stageFilter || undefined }),
   });
@@ -88,9 +89,12 @@ export const CandidatesScreen: React.FC = () => {
         <FilterChips<'' | ApplicationStage> options={stages} value={stageFilter} onChange={setStageFilter} style={styles.stageChipsRow} />
       </View>
 
-      <ScrollView
+      <FlatList
+        data={filtered}
+        keyExtractor={(c) => c.id}
         contentContainerStyle={styles.listContent}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
         refreshControl={
           <RefreshControl
             refreshing={isRefetching}
@@ -100,29 +104,30 @@ export const CandidatesScreen: React.FC = () => {
             tintColor={colors.primary}
           />
         }
-      >
-        {isLoading ? (
-          <ListSkeleton />
-        ) : filtered.length === 0 ? (
-          <View style={[styles.emptyBox, { backgroundColor: colors.surfaceMuted }]}>
-            <UserSearch size={36} color={colors.inkMuted} />
-            <Text style={[styles.emptyTitle, { color: colors.ink }]}>
-              {t('No candidates found')}
-            </Text>
-            <Text style={[styles.emptySubtitle, { color: colors.inkSecondary }]}>
-              {t('Try a different search, or post a job to get applicants.')}
-            </Text>
-          </View>
-        ) : (
-          filtered.map((c) => (
-            <CandidateRow
-              key={c.id}
-              candidate={c}
-              onPress={() => navigation.navigate('CandidateDossier', { candidateId: c.id })}
-            />
-          ))
+        renderItem={({ item: c }) => (
+          <CandidateRow
+            candidate={c}
+            onPress={() => navigation.navigate('CandidateDossier', { candidateId: c.id })}
+          />
         )}
-      </ScrollView>
+        ListEmptyComponent={
+          isLoading ? (
+            <ListSkeleton />
+          ) : isError ? (
+            <ErrorState onRetry={() => void refetch()} />
+          ) : (
+            <View style={[styles.emptyBox, { backgroundColor: colors.surfaceMuted }]}>
+              <UserSearch size={36} color={colors.inkMuted} />
+              <Text style={[styles.emptyTitle, { color: colors.ink }]}>
+                {t('No candidates found')}
+              </Text>
+              <Text style={[styles.emptySubtitle, { color: colors.inkSecondary }]}>
+                {t('Try a different search, or post a job to get applicants.')}
+              </Text>
+            </View>
+          )
+        }
+      />
     </Screen>
   );
 };
