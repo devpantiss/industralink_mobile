@@ -1,3 +1,4 @@
+import { InboxScreen } from '../screens/shared/InboxScreen';
 import React from 'react';
 import {
   View,
@@ -128,6 +129,11 @@ export const AdminNavigator: React.FC = () => {
           drawerLabel: 'Activity log',
           drawerIcon: ({ color, size }) => <ScrollText size={size - 2} color={color} />,
         }}
+      />
+      <Drawer.Screen
+        name="Inbox"
+        component={InboxScreen}
+        options={{ drawerItemStyle: { display: 'none' } }}
       />
       <Drawer.Screen
         name="Settings"

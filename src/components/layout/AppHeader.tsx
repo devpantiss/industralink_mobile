@@ -31,7 +31,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ title, showBack = false, r
   const hasDrawer = role === 'employer' || role === 'admin';
   const canGoBack = showBack;
   // Workers and companies have an inbox; the red number counts unread updates and messages.
-  const hasInbox = isAuthenticated && (role === 'worker' || role === 'employer');
+  const hasInbox = isAuthenticated && (role === 'worker' || role === 'employer' || role === 'admin');
   const inboxRole = role as InboxRole;
   const unreadNotes = useQuery({
     queryKey: [...queryKeys.notifications, inboxRole],
@@ -41,7 +41,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ title, showBack = false, r
   const unreadThreads = useQuery({
     queryKey: [...queryKeys.messages.threads, inboxRole],
     queryFn: () => inboxApi.threads(inboxRole),
-    enabled: hasInbox,
+    enabled: hasInbox && role !== 'admin',
   });
   const unread =
     (unreadNotes.data ?? []).filter((n) => !n.read).length + (unreadThreads.data ?? []).reduce((sum, th) => sum + th.unread, 0);

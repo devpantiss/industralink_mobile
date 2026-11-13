@@ -66,12 +66,20 @@ export const adminApi = {
     return (await apiClient.get('/admin/users', { params })).data;
   },
 
-  async setUserStatus(id: string, status: AccountStatus): Promise<AdminUserRow> {
+  async setUserStatus(id: string, status: AccountStatus, reason?: string): Promise<AdminUserRow> {
     if (USE_MOCKS) {
       await delay(150);
-      return mockDb.setUserStatus(id, status);
+      return mockDb.setUserStatus(id, status, reason);
     }
-    return (await apiClient.patch(`/admin/users/${id}`, { status })).data;
+    return (await apiClient.patch(`/admin/users/${id}`, { status, reason })).data;
+  },
+
+  async getUserImpact(id: string): Promise<{ activeJobs: number; applicants: number }> {
+    if (USE_MOCKS) {
+      await delay(60);
+      return mockDb.getUserImpact(id);
+    }
+    return (await apiClient.get(`/admin/users/${id}/impact`)).data;
   },
 
   async getJobs(params?: { q?: string; status?: string }): Promise<AdminJobRow[]> {

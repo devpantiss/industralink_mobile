@@ -312,6 +312,8 @@ export interface AdminUserRow {
   status: AccountStatus;
   verification?: VerificationStatus;
   joinedAt: string;
+  /** Why the account was suspended (shown to the person when they try to log in). */
+  suspendReason?: string;
 }
 
 export interface CompanyForWorker {

@@ -11,6 +11,9 @@ import { Avatar } from '../../components/ui/Avatar';
 import { ListSkeleton } from '../../components/ui/Skeleton';
 import { FilterChips } from '../../components/ui/FilterChips';
 import { Dialog } from '../../components/ui/Dialog';
+import { Sheet } from '../../components/ui/Sheet';
+import { ReasonPicker } from './AdminJobsScreen';
+import { errorText } from '../../lib/errors';
 import { Button } from '../../components/ui/Button';
 import { adminApi } from '../../api/adminApi';
 import { queryKeys } from '../../api/keys';
@@ -20,6 +23,7 @@ import type { AdminUserRow } from '../../types';
 import { shadows } from '../../theme/shadows';
 
 type RoleKey = 'all' | 'worker' | 'employer';
+const SUSPEND_REASONS = ['Asked workers for money', 'Fake or false details', 'Abusive behaviour', 'Repeated policy breaks', 'Other'];
 const VERIFY_LABEL = { approved: 'Approved', pending: 'Waiting for approval', rejected: 'Not approved' } as const;
 
 /** Worker and company accounts; suspend anyone abusing the platform (web: Users). */
@@ -30,19 +34,32 @@ export const UsersManagementScreen: React.FC = () => {
   const [role, setRole] = useState<RoleKey>('all');
   const [q, setQ] = useState('');
   const [target, setTarget] = useState<AdminUserRow | null>(null);
+  const [reason, setReason] = useState(SUSPEND_REASONS[0]!);
+  const [detail, setDetail] = useState('');
 
   const params = { role: role === 'all' ? undefined : role, q: q.trim() || undefined };
   const list = useQuery({ queryKey: queryKeys.admin.users(params), queryFn: () => adminApi.getUsers(params) });
 
   const toggle = useMutation({
-    mutationFn: (u: AdminUserRow) => adminApi.setUserStatus(u.id, u.status === 'suspended' ? 'active' : 'suspended'),
+    mutationFn: (u: AdminUserRow) =>
+      adminApi.setUserStatus(
+        u.id,
+        u.status === 'suspended' ? 'active' : 'suspended',
+        u.status === 'suspended' ? undefined : reason === 'Other' ? detail.trim() : `${reason}${detail.trim() ? `: ${detail.trim()}` : ''}`
+      ),
     onSuccess: (u) => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
       showToast(u.status === 'suspended' ? `${u.name} suspended` : `${u.name} can use IndustriaLink again`, 'success');
       setTarget(null);
       qc.invalidateQueries({ queryKey: queryKeys.admin.all });
     },
-    onError: () => showToast('Something went wrong. Please try again.', 'error'),
+    onError: (e) => showToast(errorText(e), 'error'),
+  });
+
+  const impact = useQuery({
+    queryKey: ['admin', 'impact', target?.id],
+    queryFn: () => adminApi.getUserImpact(target!.id),
+    enabled: !!target && target.role === 'employer' && target.status !== 'suspended',
   });
 
   const suspending = target?.status !== 'suspended';
@@ -135,7 +152,11 @@ export const UsersManagementScreen: React.FC = () => {
                     )}
                   </View>
                   <Pressable
-                    onPress={() => setTarget(u)}
+                    onPress={() => {
+                      setReason(SUSPEND_REASONS[0]!);
+                      setDetail('');
+                      setTarget(u);
+                    }}
                     accessibilityRole="button"
                     style={({ pressed }) => [
                       styles.action,
@@ -157,29 +178,59 @@ export const UsersManagementScreen: React.FC = () => {
       </ScrollView>
 
       <Dialog
-        visible={!!target}
+        visible={!!target && !suspending}
         onClose={() => setTarget(null)}
-        title={target ? `${suspending ? 'Suspend' : 'Reactivate'} ${target.name}?` : ''}
-        message={
-          suspending
-            ? target?.role === 'employer'
-              ? 'They are logged out and all their jobs are hidden from workers until you reactivate them.'
-              : 'They are logged out and cannot apply to jobs until you reactivate them.'
-            : 'They can log in and use IndustriaLink again.'
-        }
+        title={target ? `Reactivate ${target.name}?` : ''}
+        message="They can log in and use IndustriaLink again."
         actions={
           <>
             <Button label="Cancel" variant="secondary" size="sm" onPress={() => setTarget(null)} />
-            <Button
-              label={suspending ? 'Suspend' : 'Reactivate'}
-              variant={suspending ? 'danger' : 'primary'}
-              size="sm"
-              loading={toggle.isPending}
-              onPress={() => target && toggle.mutate(target)}
-            />
+            <Button label="Reactivate" size="sm" loading={toggle.isPending} onPress={() => target && toggle.mutate(target)} />
           </>
         }
       />
+
+      <Sheet
+        visible={!!target && suspending}
+        onClose={() => setTarget(null)}
+        title={target ? `Suspend ${target.name}?` : ''}
+        subtitle={
+          target?.role === 'employer'
+            ? impact.data
+              ? `${impact.data.activeJobs} live job${impact.data.activeJobs === 1 ? '' : 's'} with ${impact.data.applicants} applicant${impact.data.applicants === 1 ? '' : 's'} will be hidden, and they are logged out.`
+              : 'Their jobs will be hidden and they are logged out.'
+            : 'They are logged out and cannot apply to jobs.'
+        }
+        footer={
+          <View style={styles.sheetFoot}>
+            <Button label="Cancel" variant="ghost" onPress={() => setTarget(null)} />
+            <Button
+              label="Suspend"
+              variant="danger"
+              loading={toggle.isPending}
+              disabled={reason === 'Other' && !detail.trim()}
+              onPress={() => target && toggle.mutate(target)}
+              style={styles.flex}
+            />
+          </View>
+        }
+      >
+        <ReasonPicker reasons={SUSPEND_REASONS} value={reason} onChange={setReason} />
+        <Text style={[styles.detailLabel, { color: colors.inkSecondary }]}>
+          {reason === 'Other' ? 'Details (required)' : 'Details (optional)'}
+        </Text>
+        <TextInput
+          value={detail}
+          onChangeText={setDetail}
+          multiline
+          placeholder="What happened?"
+          placeholderTextColor={colors.inkMuted}
+          style={[styles.detailInput, { borderColor: colors.border, color: colors.ink, backgroundColor: colors.surface }]}
+        />
+        <Text style={[styles.detailLabel, { color: colors.inkMuted, marginTop: 8 }]}>
+          They see this reason when they try to log in.
+        </Text>
+      </Sheet>
     </Screen>
   );
 };
@@ -192,6 +243,9 @@ const Pill: React.FC<{ text: string; bg: string; fg: string }> = ({ text, bg, fg
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
+  sheetFoot: { flexDirection: 'row', gap: 12 },
+  detailLabel: { fontSize: 13, fontWeight: '600', marginBottom: 6 },
+  detailInput: { minHeight: 72, borderRadius: 12, borderWidth: 1, padding: 12, fontSize: 15, textAlignVertical: 'top' },
   content: { padding: 16, paddingBottom: 48 },
   title: { fontSize: 22, fontWeight: '700', letterSpacing: -0.3 },
   subtitle: { fontSize: 13, marginTop: 2, marginBottom: 14, lineHeight: 18 },

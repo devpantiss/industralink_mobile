@@ -117,7 +117,7 @@ function JobReports({ status }: { status: string }) {
             text="Workers report jobs from the job page."
           />
         ) : (
-          list.data.map((r) => {
+          groupOpen(list.data, status === 'open').map(({ r, all }) => {
             const serious = r.reason === 'asks_money' || r.reason === 'unsafe';
             return (
               <Animated.View
@@ -131,8 +131,11 @@ function JobReports({ status }: { status: string }) {
                     bg={serious ? colors.dangerBg : colors.warningBg}
                     fg={serious ? colors.dangerFg : colors.warningFg}
                   />
-                  {r.reportsForJob > 1 && (
-                    <Pill text={`${r.reportsForJob} reports on this job`} bg={colors.dangerBg} fg={colors.dangerFg} />
+                  {all.slice(1).filter((x, i, a) => a.findIndex((y) => y.reason === x.reason) === i && x.reason !== r.reason).map((x) => (
+                    <Pill key={x.id} text={REPORT_REASON_LABEL[x.reason]} bg={colors.warningBg} fg={colors.warningFg} />
+                  ))}
+                  {all.length > 1 && (
+                    <Pill text={`${all.length} workers reported this job`} bg={colors.dangerBg} fg={colors.dangerFg} />
                   )}
                 </View>
                 <Text style={[styles.cardTitle, { color: colors.ink }]}>
@@ -142,11 +145,11 @@ function JobReports({ status }: { status: string }) {
                 <Text style={[styles.meta, { color: colors.inkMuted }]}>
                   {timeAgo(r.at)} · by {r.reporterName}
                 </Text>
-                {r.details ? (
-                  <Text style={[styles.quote, { backgroundColor: colors.surfaceMuted, color: colors.inkSecondary }]}>
-                    “{r.details}”
+                {all.filter((x) => x.details).slice(0, 3).map((x) => (
+                  <Text key={x.id} style={[styles.quote, { backgroundColor: colors.surfaceMuted, color: colors.inkSecondary }]}>
+                    “{x.details}”
                   </Text>
-                ) : null}
+                ))}
                 {r.status !== 'open' ? (
                   <Text style={[styles.meta, { color: colors.inkMuted }]}>
                     {r.status === 'dismissed' ? 'Dismissed' : 'Job removed'} by {r.resolvedBy}
@@ -349,3 +352,11 @@ const styles = StyleSheet.create({
   label: { fontSize: 13, fontWeight: '600', marginBottom: 6 },
   textarea: { minHeight: 88, borderWidth: 1, borderRadius: 12, padding: 12, fontSize: 14, textAlignVertical: 'top' },
 });
+
+/** Open reports are shown once per job, newest first, with every report on that job attached. */
+function groupOpen<T extends { jobId: string }>(rows: T[], group: boolean): { r: T; all: T[] }[] {
+  if (!group) return rows.map((r) => ({ r, all: [r] }));
+  const seen = new Map<string, T[]>();
+  for (const r of rows) seen.set(r.jobId, [...(seen.get(r.jobId) ?? []), r]);
+  return [...seen.values()].map((all) => ({ r: all[0]!, all }));
+}

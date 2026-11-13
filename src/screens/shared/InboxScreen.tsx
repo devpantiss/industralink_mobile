@@ -47,6 +47,8 @@ export const InboxScreen: React.FC = () => {
     else if (l === 'jobs') navigation.navigate('WorkerTabs', { screen: 'FindJobs' });
     else if (l.startsWith('thread:')) navigation.navigate('ChatThread', { threadId: l.slice(7), recipientName: '' });
     else if (l === 'company') navigation.navigate('EmployerDrawer', { screen: 'Company' });
+    else if (l === 'verifications') navigation.navigate('VerificationsQueue');
+    else if (l === 'reports') navigation.navigate('Reports');
     else if (l === 'candidates') navigation.navigate('EmployerDrawer', { screen: 'EmployerMain', params: { screen: 'Candidates' } });
   };
 
@@ -56,7 +58,7 @@ export const InboxScreen: React.FC = () => {
   return (
     <Screen edges={['top', 'bottom']}>
       <AppHeader title={t('Inbox')} showBack />
-      <SegmentedTabs
+      {role === 'admin' ? null : <SegmentedTabs
         style={styles.tabs}
         value={tab}
         onChange={setTab}
@@ -64,7 +66,7 @@ export const InboxScreen: React.FC = () => {
           { key: 'updates', label: t('Updates'), count: unreadNotes },
           { key: 'messages', label: t('Messages'), count: unreadMsgs },
         ]}
-      />
+      />}
 
       {tab === 'updates' ? (
         <FlatList<AppNotification>

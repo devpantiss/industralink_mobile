@@ -613,6 +613,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
                 <View style={styles.formSection}>
                   {/* Work Email */}
                   <Text style={[styles.inputLabel, { color: colors.ink }]}>Work email</Text>
+                  <Text style={{ color: colors.inkMuted, fontSize: 13, marginBottom: 8 }}>{t('Company and admin accounts sign in here.')}</Text>
                   <View
                     style={[
                       styles.cleanInputContainer,

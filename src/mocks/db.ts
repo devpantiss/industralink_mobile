@@ -473,7 +473,7 @@ class MockDatabase {
       if (!name?.trim()) this.fail('No account found for this number. Create one to continue.', 'NOT_FOUND');
       p = this.createWorker(name.trim(), d);
     }
-    if (this.isSuspended(p.userId)) this.fail('Your account is suspended. Please contact help.', 'BLOCKED');
+    if (this.isSuspended(p.userId)) this.fail(`Your account is suspended${this.suspendReasonOf(p.userId)}. Please contact help.`, 'BLOCKED');
     this.workerId = p.userId;
     return { token: 'mock-jwt-token-worker', user: this.workerUser(p) };
   }
@@ -494,7 +494,7 @@ class MockDatabase {
     }
     const acc = this.employerAccounts.find((a) => a.email === e);
     if (!acc || acc.password !== password) this.fail('The email or password is not right.', 'INVALID_CREDENTIALS');
-    if (this.isSuspended(acc.companyId)) this.fail('Your account is suspended. Please contact help.', 'BLOCKED');
+    if (this.isSuspended(acc.companyId)) this.fail(`Your account is suspended${this.suspendReasonOf(acc.companyId)}. Please contact help.`, 'BLOCKED');
     this.companyId = acc.companyId;
     return { token: 'mock-jwt-token-employer', user: this.employerUser(acc) };
   }
@@ -1376,11 +1376,18 @@ class MockDatabase {
     );
   }
 
-  async setUserStatus(id: string, status: AccountStatus): Promise<AdminUserRow> {
+  private suspendReasonOf(id: string): string {
+    const r = this.adminUsers.find((u) => u.id === id)?.suspendReason;
+    return r ? ` (${r})` : '';
+  }
+  async setUserStatus(id: string, status: AccountStatus, reason?: string): Promise<AdminUserRow> {
     const u = this.adminUsers.find((x) => x.id === id);
     if (!u) this.fail('User not found', 'NOT_FOUND');
+    if ((u.role as string) === 'admin') this.fail('You cannot suspend an admin account.', 'NOT_ALLOWED');
+    if (status === 'suspended' && (reason?.trim().length ?? 0) < 3) this.fail('Write the reason for the suspension.', 'VALIDATION');
     u.status = status;
-    this.log(status === 'suspended' ? 'Suspended' : 'Reactivated', u.name);
+    u.suspendReason = status === 'suspended' ? reason!.trim() : undefined;
+    this.log(status === 'suspended' ? `Suspended (${reason!.trim()})` : 'Reactivated', u.name);
     return u;
   }
 
@@ -1450,10 +1457,15 @@ class MockDatabase {
     const r = this.reports.find((x) => x.id === id);
     if (!r) throw new Error('Report not found');
     if (action === 'remove_job') return this.removeJob(r.jobId, note || r.reason);
-    r.status = 'dismissed';
-    r.resolvedAt = new Date().toISOString();
-    r.resolvedBy = 'Admin';
-    this.log('Dismissed report on', r.jobTitle);
+    // One decision covers every open report on the same job.
+    this.reports
+      .filter((x) => x.jobId === r.jobId && x.status === 'open')
+      .forEach((x) => {
+        x.status = 'dismissed';
+        x.resolvedAt = new Date().toISOString();
+        x.resolvedBy = 'Admin';
+      });
+    this.log('Dismissed reports on', r.jobTitle);
   }
 
   async createTicket(t: Omit<SupportTicket, 'id' | 'at' | 'status'>): Promise<SupportTicket> {
