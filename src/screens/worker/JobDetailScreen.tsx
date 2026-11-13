@@ -1,13 +1,5 @@
 import React, { useState } from 'react';
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Linking,
-  Share,
-  ActivityIndicator,
-} from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Linking, Share, ActivityIndicator } from 'react-native';
 import { Text } from '../../components/ui/Text';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -23,8 +15,6 @@ import {
   ShieldCheck,
   Flag,
   CheckCircle2,
-  Users,
-  Globe,
   ArrowRight,
   ChevronLeft,
   MessageCircle,
@@ -42,7 +32,7 @@ import { ApplyModal, ReportModal } from '../../components/domain/JobActions';
 import { workerApi } from '../../api/workerApi';
 import { queryKeys } from '../../api/keys';
 import { useUiStore } from '../../store/uiStore';
-import { EXPERIENCE_LABEL, HIRING_TYPE_LABEL, PAY_TYPE_LABEL, SECTOR_LABEL, SHIFT_LABEL } from '../../lib/labels';
+import { EXPERIENCE_LABEL, PAY_TYPE_LABEL, SECTOR_LABEL, SHIFT_LABEL } from '../../lib/labels';
 import { formatDate, timeAgo } from '../../lib/format';
 import { t } from '../../lib/i18n';
 import type { JobForWorker } from '../../types';
@@ -505,6 +495,7 @@ export const JobDetailScreen: React.FC = () => {
 
             <TouchableOpacity
               onPress={handleShare}
+            accessibilityLabel={t('Share on WhatsApp')}
               style={[styles.shareBtn, { borderColor: colors.border, backgroundColor: colors.surface }]}
             >
               <MessageCircle size={20} color="#1FA855" />
@@ -598,8 +589,8 @@ const styles = StyleSheet.create({
     height: StyleSheet.hairlineWidth,
   },
   navBackBtn: {
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
@@ -615,8 +606,8 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   navActionBtn: {
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
@@ -681,7 +672,7 @@ const styles = StyleSheet.create({
   },
   tabBtn: {
     flex: 1,
-    height: 40,
+    height: 44,
     borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',

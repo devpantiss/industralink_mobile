@@ -47,7 +47,7 @@ export const UsersManagementScreen: React.FC = () => {
   const suspending = target?.status !== 'suspended';
 
   return (
-    <Screen edges={['top']}>
+    <Screen edges={['top', 'bottom']}>
       <AppHeader />
       <ScrollView
         contentContainerStyle={styles.content}

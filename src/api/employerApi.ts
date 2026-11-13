@@ -30,6 +30,23 @@ export const employerApi = {
     return res.data;
   },
 
+  async updateJob(id: string, changes: any): Promise<Job> {
+    if (USE_MOCKS) {
+      await delay(200);
+      return mockDb.updateJob(id, changes);
+    }
+    const res = await apiClient.patch(`/employer/jobs/${id}`, changes);
+    return res.data;
+  },
+
+  async deleteJob(id: string): Promise<void> {
+    if (USE_MOCKS) {
+      await delay(150);
+      return mockDb.deleteJob(id);
+    }
+    await apiClient.delete(`/employer/jobs/${id}`);
+  },
+
   async getCandidates(jobId?: string): Promise<Candidate[]> {
     if (USE_MOCKS) {
       await delay();

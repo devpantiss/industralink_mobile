@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, RefreshControl, Pressable, Linking } from 'react-native';
+import { View, StyleSheet, ScrollView, RefreshControl, Pressable } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { Flag, LifeBuoy, Phone } from 'lucide-react-native';
@@ -14,7 +14,8 @@ import { Button } from '../../components/ui/Button';
 import { adminApi } from '../../api/adminApi';
 import { queryKeys } from '../../api/keys';
 import { useUiStore } from '../../store/uiStore';
-import { formatPhone, telUrl, timeAgo } from '../../lib/format';
+import { formatPhone, timeAgo } from '../../lib/format';
+import { openContact } from '../../lib/contact';
 import type { AdminReportRow, ReportReason } from '../../types';
 
 export const REPORT_REASON_LABEL: Record<ReportReason, string> = {
@@ -50,7 +51,7 @@ export const ReportsScreen: React.FC = () => {
         ];
 
   return (
-    <Screen edges={['top']}>
+    <Screen edges={['top', 'bottom']}>
       <AppHeader />
       <View style={styles.top}>
         <Text style={[styles.title, { color: colors.ink }]}>Reports & help</Text>
@@ -273,7 +274,7 @@ function HelpRequests({ status }: { status: string }) {
               <Text style={[styles.body, { color: colors.inkSecondary }]}>{t.message}</Text>
               <View style={[styles.actions, styles.cardActions, { borderTopColor: colors.border }]}>
                 <Pressable
-                  onPress={() => Linking.openURL(telUrl(t.contact)).catch(() => {})}
+                  onPress={() => openContact('call', t.contact)}
                   accessibilityRole="button"
                   accessibilityLabel={`Call ${t.name}`}
                   style={[styles.call, styles.flex, { borderColor: colors.border }]}

@@ -7,12 +7,11 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { Text, TextInput } from '../../components/ui/Text';
-import { useNavigation } from '@react-navigation/native';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Check, ChevronLeft, ArrowRight, ShieldCheck, Sparkles } from 'lucide-react-native';
+import { useNavigation, useRoute } from '@react-navigation/native';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Check, ChevronLeft, ArrowRight, Sparkles } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { Screen } from '../../components/layout/Screen';
-import { AppHeader } from '../../components/layout/AppHeader';
 import { JobCard } from '../../components/domain/JobCard';
 import { employerApi } from '../../api/employerApi';
 import { queryKeys } from '../../api/keys';
@@ -22,14 +21,12 @@ import {
   BENEFIT_LABEL,
   EXPERIENCE_LABEL,
   JOB_TYPE_LABEL,
-  LICENCES,
-  PAY_TYPE_LABEL,
   QUALIFICATIONS,
   SHIFT_LABEL,
   TRADE_LABEL,
 } from '../../lib/labels';
 import { t } from '../../lib/i18n';
-import type { Benefit, ExperienceBand, JobInput, JobType, PayPeriod, PayType, Shift, Trade } from '../../types';
+import type { Benefit, ExperienceBand, JobInput, JobType, Shift, Trade } from '../../types';
 
 const TEMPLATES: Partial<Record<Trade, Partial<JobInput>>> = {
   welder: {
@@ -83,6 +80,8 @@ const STEPS = ['Basics', 'Pay & requirements', 'Review'];
 
 export const PostJobWizardScreen: React.FC = () => {
   const navigation = useNavigation();
+  const jobId = (useRoute().params as { jobId?: string } | undefined)?.jobId;
+  const editing = !!jobId;
   const { colors, showToast } = useUiStore();
   const { user } = useAuthStore();
   const qc = useQueryClient();
@@ -119,6 +118,26 @@ export const PostJobWizardScreen: React.FC = () => {
   const [walkInContact, setWalkInContact] = useState('Mr. Sharma (HR)');
   const [noFeeConfirmed, setNoFeeConfirmed] = useState(false);
 
+  // Editing: load the saved job once and fill the form with it.
+  const existing = useQuery({
+    queryKey: queryKeys.employer.job(jobId ?? ''),
+    queryFn: () => employerApi.getJob(jobId!),
+    enabled: editing,
+  });
+  const [prefilled, setPrefilled] = useState(false);
+  // Fill the form once the saved job arrives (state set during render, guarded so it runs once).
+  if (existing.data && !prefilled) {
+    const j = existing.data;
+    setPrefilled(true);
+    setF((prev) => ({ ...prev, ...(j as unknown as JobInput) }));
+    if (j.walkIn) {
+      setWalkInDate(j.walkIn.date);
+      setWalkInAddress(j.walkIn.address);
+      setWalkInContact(j.walkIn.contactPerson ?? '');
+    }
+    setNoFeeConfirmed(true); // they already confirmed this when they first posted it
+  }
+
   const applyTemplate = (tKey: Trade) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const tmpl = TEMPLATES[tKey];
@@ -133,9 +152,11 @@ export const PostJobWizardScreen: React.FC = () => {
 
   const createMutation = useMutation({
     mutationFn: (status: 'active' | 'draft') => {
+      // Saving an active or closed job keeps its status; only drafts change when published.
+      const keep = editing && existing.data && existing.data.status !== 'draft' ? existing.data.status : status;
       const payload: JobInput = {
         ...f,
-        status,
+        status: keep,
         walkIn:
           f.jobType === 'walk_in'
             ? {
@@ -145,14 +166,14 @@ export const PostJobWizardScreen: React.FC = () => {
               }
             : undefined,
       };
-      return employerApi.createJob(payload);
+      return editing ? employerApi.updateJob(jobId!, payload) : employerApi.createJob(payload);
     },
     onSuccess: (_data, status) => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       qc.invalidateQueries({ queryKey: queryKeys.employer.all });
       qc.invalidateQueries({ queryKey: queryKeys.jobs() });
       showToast(
-        status === 'active' ? t('Job published! Workers can see it now.') : t('Saved as draft'),
+        editing ? t('Changes saved') : status === 'active' ? t('Job published! Workers can see it now.') : t('Saved as draft'),
         'success'
       );
       navigation.goBack();
@@ -193,16 +214,17 @@ export const PostJobWizardScreen: React.FC = () => {
   };
 
   return (
-    <Screen edges={['top']}>
+    <Screen edges={['top', 'bottom']}>
       {/* Top Bar */}
       <View style={[styles.topBar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <TouchableOpacity
           onPress={() => (step > 0 ? setStep(step - 1) : navigation.goBack())}
+          accessibilityLabel="Back"
           style={styles.backBtn}
         >
           <ChevronLeft size={24} color={colors.ink} />
         </TouchableOpacity>
-        <Text style={[styles.topBarTitle, { color: colors.ink }]}>{t('Post a job')}</Text>
+        <Text style={[styles.topBarTitle, { color: colors.ink }]}>{editing ? t('Edit job') : t('Post a job')}</Text>
       </View>
 
       {/* Stepper Header */}
@@ -604,10 +626,10 @@ export const PostJobWizardScreen: React.FC = () => {
               {t('How workers will see this job')}
             </Text>
 
-            <JobCard
-              job={previewJob}
-              onPress={() => {}}
-            />
+            {/* Preview only: not tappable. */}
+            <View pointerEvents="none">
+              <JobCard job={previewJob} onPress={() => {}} />
+            </View>
 
             {/* Zero fee anti-exploitation guarantee */}
             <TouchableOpacity
@@ -643,6 +665,7 @@ export const PostJobWizardScreen: React.FC = () => {
             </TouchableOpacity>
 
             <View style={styles.submitActionsRow}>
+              {(!editing || existing.data?.status === 'draft') && (
               <TouchableOpacity
                 onPress={() => createMutation.mutate('draft')}
                 disabled={createMutation.isPending}
@@ -650,6 +673,7 @@ export const PostJobWizardScreen: React.FC = () => {
               >
                 <Text style={[styles.draftBtnText, { color: colors.ink }]}>{t('Save draft')}</Text>
               </TouchableOpacity>
+              )}
 
               <TouchableOpacity
                 onPress={() => createMutation.mutate('active')}
@@ -664,7 +688,7 @@ export const PostJobWizardScreen: React.FC = () => {
                 {createMutation.isPending ? (
                   <ActivityIndicator color="#FFF" />
                 ) : (
-                  <Text style={styles.publishBtnText}>{t('Publish Job')}</Text>
+                  <Text style={styles.publishBtnText}>{editing && existing.data?.status !== 'draft' ? t('Save changes') : t('Publish Job')}</Text>
                 )}
               </TouchableOpacity>
             </View>

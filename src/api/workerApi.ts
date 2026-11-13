@@ -174,6 +174,22 @@ export const workerApi = {
     return res.data;
   },
 
+  async deleteDocument(id: string): Promise<void> {
+    if (USE_MOCKS) {
+      await delay(80);
+      return mockDb.deleteDocument(id);
+    }
+    await apiClient.delete(`/worker/documents/${id}`);
+  },
+
+  async setDefaultResume(id: string): Promise<void> {
+    if (USE_MOCKS) {
+      await delay(80);
+      return mockDb.setDefaultResume(id);
+    }
+    await apiClient.post(`/worker/documents/${id}/default`);
+  },
+
   async getCompany(id: string): Promise<CompanyForWorker> {
     if (USE_MOCKS) {
       await delay(60);

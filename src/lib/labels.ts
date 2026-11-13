@@ -12,7 +12,6 @@ import type {
   Shift,
   Trade,
 } from '../types';
-import { t } from './i18n';
 
 export const TRADE_LABEL: Record<Trade, string> = {
   welder: 'Welder',

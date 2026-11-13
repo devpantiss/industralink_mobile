@@ -97,7 +97,7 @@ export const JobApplicantsScreen: React.FC = () => {
   const openProfile = (c: Candidate) => navigation.navigate('CandidateDossier', { candidateId: c.id });
 
   return (
-    <Screen edges={['top']}>
+    <Screen edges={['top', 'bottom']}>
       <View style={[styles.bar, { borderBottomColor: colors.border }]}>
         <Pressable
           onPress={() => navigation.goBack()}

@@ -3,7 +3,6 @@ import {
   View,
   StyleSheet,
   ScrollView,
-  Linking,
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
@@ -35,7 +34,8 @@ import {
   STAGE_LABEL,
   TRADE_LABEL,
 } from '../../lib/labels';
-import { formatBytes, formatPhone, telUrl, timeAgo } from '../../lib/format';
+import { formatBytes, formatPhone, timeAgo } from '../../lib/format';
+import { openContact } from '../../lib/contact';
 import { t } from '../../lib/i18n';
 import type { ApplicationStage } from '../../types';
 
@@ -82,7 +82,7 @@ export const CandidateDossierScreen: React.FC<Props> = ({ route, navigation }) =
 
   if (isLoading || !candidate) {
     return (
-      <Screen edges={['top']}>
+      <Screen edges={['top', 'bottom']}>
         <View style={styles.center}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
@@ -93,13 +93,11 @@ export const CandidateDossierScreen: React.FC<Props> = ({ route, navigation }) =
   const w = candidate.worker;
 
   const handleCall = () => {
-    Linking.openURL(telUrl(w.phone)).catch(() => {
-      showToast('Cannot make phone call on this device', 'error');
-    });
+    openContact('call', w.phone);
   };
 
   return (
-    <Screen edges={['top']}>
+    <Screen edges={['top', 'bottom']}>
       {/* Top Header Bar */}
       <View style={[styles.topBar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <TouchableOpacity
@@ -497,8 +495,8 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   backBtn: {
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
@@ -592,7 +590,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     paddingHorizontal: 14,
-    height: 40,
+    height: 44,
     borderRadius: 20,
   },
   stageActionBtnText: {
@@ -605,7 +603,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     paddingHorizontal: 14,
-    height: 40,
+    height: 44,
     borderRadius: 20,
     borderWidth: 1,
   },
@@ -620,7 +618,7 @@ const styles = StyleSheet.create({
   },
   tabBtn: {
     flex: 1,
-    height: 38,
+    height: 44,
     borderRadius: 19,
     justifyContent: 'center',
     alignItems: 'center',

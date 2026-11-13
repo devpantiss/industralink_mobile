@@ -51,14 +51,14 @@ export const typography: Record<string, TextStyle> = {
   },
   caption: {
     fontFamily,
-    fontSize: 12,
-    lineHeight: 16,
+    fontSize: 12.5,
+    lineHeight: 17,
     fontWeight: '500',
   },
   tiny: {
     fontFamily,
-    fontSize: 10,
-    lineHeight: 14,
+    fontSize: 11.5,
+    lineHeight: 15,
     fontWeight: '600',
   },
 };

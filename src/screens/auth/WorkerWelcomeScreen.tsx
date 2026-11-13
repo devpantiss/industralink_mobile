@@ -6,9 +6,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { Text } from '../../components/ui/Text';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { HardHat, Check, ArrowRight } from 'lucide-react-native';
-import { AuthStackParamList } from '../../navigation/types';
+import { Check, ArrowRight } from 'lucide-react-native';
 import { Screen } from '../../components/layout/Screen';
 import { AppHeader } from '../../components/layout/AppHeader';
 import { Card } from '../../components/ui/Card';
@@ -20,15 +18,13 @@ import { Trade } from '../../types';
 import { spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
 
-type Props = NativeStackScreenProps<AuthStackParamList, 'WorkerWelcome'>;
-
-export const WorkerWelcomeScreen: React.FC<Props> = () => {
+export const WorkerWelcomeScreen: React.FC = () => {
   const { colors, showToast } = useUiStore();
-  const { updateUser, switchRole } = useAuthStore();
+  const { user, completeOnboarding } = useAuthStore();
 
   const [trade, setTrade] = useState<Trade>('welder');
   const [experience, setExperience] = useState('3_5');
-  const [city, setCity] = useState('Jamshedpur');
+  const [city, setCity] = useState(user?.city ?? '');
 
   const trades: { key: Trade; label: string }[] = [
     { key: 'welder', label: 'Welder (MIG/TIG/Arc)' },
@@ -47,17 +43,12 @@ export const WorkerWelcomeScreen: React.FC<Props> = () => {
   ];
 
   const handleFinish = () => {
-    updateUser({
-      trade,
-      city,
-      onboarded: true,
-    });
+    completeOnboarding({ trade, city: city.trim() || undefined });
     showToast('Profile setup complete! Welcome to your dashboard.', 'success');
-    switchRole('worker');
   };
 
   return (
-    <Screen edges={['top']}>
+    <Screen edges={['top', 'bottom']}>
       <AppHeader title="Worker Onboarding" />
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.top}>

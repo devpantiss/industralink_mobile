@@ -39,11 +39,11 @@ export const FindWorkersScreen: React.FC = () => {
 
   const [q, setQ] = useState('');
   const [trade, setTrade] = useState<Trade | ''>('');
-  const [city, setCity] = useState('');
+  const city = '';
   const [invitingWorker, setInvitingWorker] = useState<TalentProfile | null>(null);
   const [selectedJobId, setSelectedJobId] = useState<string>('');
 
-  const { data: workers, isLoading, refetch } = useQuery({
+  const { data: workers, isLoading } = useQuery({
     queryKey: queryKeys.employer.talent({ trade: trade || undefined, city: city || undefined }),
     queryFn: () => employerApi.searchTalent({ trade: trade || undefined, city: city || undefined }),
   });
@@ -397,7 +397,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   payUnit: {
-    fontSize: 10.5,
+    fontSize: 11.5,
   },
   badgesRow: {
     flexDirection: 'row',
@@ -431,7 +431,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     paddingHorizontal: 14,
-    height: 36,
+    height: 44,
     borderRadius: 18,
   },
   inviteBtnText: {

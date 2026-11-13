@@ -55,7 +55,7 @@ export const CompanyDetailScreen: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Screen edges={['top']}>
+      <Screen edges={['top', 'bottom']}>
         <View style={styles.centerContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
@@ -65,7 +65,7 @@ export const CompanyDetailScreen: React.FC = () => {
 
   if (isError || !data) {
     return (
-      <Screen edges={['top']}>
+      <Screen edges={['top', 'bottom']}>
         <View style={styles.centerContainer}>
           <Text style={[styles.errorText, { color: colors.ink }]}>{t('Company not found')}</Text>
           <TouchableOpacity onPress={() => refetch()} style={[styles.retryBtn, { backgroundColor: colors.primary }]}>
@@ -79,7 +79,7 @@ export const CompanyDetailScreen: React.FC = () => {
   const { company: c, jobs } = data;
 
   return (
-    <Screen edges={['top']}>
+    <Screen edges={['top', 'bottom']}>
       <View style={[styles.topBar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <TouchableOpacity
           onPress={() => navigation.goBack()}
@@ -230,8 +230,8 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   backBtn: {
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',

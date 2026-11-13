@@ -46,6 +46,16 @@ export function formatDateTime(iso: string) {
   }
 }
 
+/** True if the date is within the last `ms` milliseconds (for "New" labels and filters). */
+export function isWithin(iso: string, ms: number): boolean {
+  return Date.now() - new Date(iso).getTime() < ms;
+}
+
+/** True if the date is later than `ms` milliseconds ago (e.g. an interview not yet over). */
+export function isAfterAgo(iso: string, ms: number): boolean {
+  return new Date(iso).getTime() > Date.now() - ms;
+}
+
 export function timeAgo(iso: string): string {
   try {
     const diffSec = (new Date(iso).getTime() - Date.now()) / 1000;
@@ -56,13 +66,12 @@ export function timeAgo(iso: string): string {
     const hours = Math.round(abs / 3600);
     const days = Math.round(abs / 86400);
 
-    if (days >= 1) {
-      return diffSec < 0 ? `${days}d ago` : `in ${days}d`;
-    }
-    if (hours >= 1) {
-      return diffSec < 0 ? `${hours}h ago` : `in ${hours}h`;
-    }
-    return diffSec < 0 ? `${minutes}m ago` : `in ${minutes}m`;
+    const [n, unit] = days >= 1 ? [days, 'd'] : hours >= 1 ? [hours, 'h'] : [minutes, 'm'];
+    if (getLang() === 'en') return diffSec < 0 ? `${n}${unit} ago` : `in ${n}${unit}`;
+    // Hindi / Odia: full words (short forms like "3d" don't translate).
+    if (unit === 'd' && n === 1) return t(diffSec < 0 ? 'yesterday' : 'tomorrow');
+    const word = unit === 'd' ? 'days' : unit === 'h' ? 'hours' : 'minutes';
+    return t(diffSec < 0 ? `{n} ${word} ago` : `in {n} ${word}`, { n });
   } catch {
     return 'recently';
   }

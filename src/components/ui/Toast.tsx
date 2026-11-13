@@ -73,6 +73,7 @@ export const ToastContainer: React.FC = () => {
             </Text>
             <TouchableOpacity
               onPress={() => dismissToast(toast.id)}
+              accessibilityLabel="Dismiss"
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
               <X size={16} color={colors.inkMuted} />

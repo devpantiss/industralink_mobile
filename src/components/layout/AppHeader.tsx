@@ -1,16 +1,11 @@
 import React from 'react';
-import {
-  View,
-  StyleSheet,
-  TouchableOpacity,
-} from 'react-native';
-import { Text } from '../../components/ui/Text';
+import { View, StyleSheet, Pressable } from 'react-native';
 import { ArrowLeft, Moon, Sun, Menu, Settings } from 'lucide-react-native';
 import { useNavigation, DrawerActions } from '@react-navigation/native';
+import { Text } from '../ui/Text';
+import { LogoMark } from '../ui/LogoMark';
 import { useUiStore } from '../../store/uiStore';
 import { useAuthStore } from '../../store/authStore';
-import { spacing } from '../../theme/spacing';
-import { typography } from '../../theme/typography';
 
 interface AppHeaderProps {
   title?: string;
@@ -18,63 +13,50 @@ interface AppHeaderProps {
   rightAction?: React.ReactNode;
 }
 
-export const AppHeader: React.FC<AppHeaderProps> = ({
-  title,
-  showBack = false,
-  rightAction,
-}) => {
+/**
+ * Top bar for tab and drawer screens. Sits on the page background (no white strip or
+ * hard line) with the brand mark, and outlined round buttons.
+ */
+export const AppHeader: React.FC<AppHeaderProps> = ({ title, showBack = false, rightAction }) => {
   const navigation = useNavigation();
-  const { colors, theme, toggleTheme } = useUiStore();
+  const colors = useUiStore((s) => s.colors);
+  const theme = useUiStore((s) => s.theme);
+  const toggleTheme = useUiStore((s) => s.toggleTheme);
   const role = useAuthStore((st) => st.role);
+  const isAuthenticated = useAuthStore((st) => st.isAuthenticated);
   // Employer and admin live inside a drawer; workers use bottom tabs and reach Settings from here.
   const hasDrawer = role === 'employer' || role === 'admin';
-  const canGoBack = showBack && navigation.canGoBack();
+  const canGoBack = showBack;
 
   return (
-    <View
-      style={[
-        styles.container,
-        {
-          backgroundColor: colors.surface,
-          borderBottomColor: colors.border,
-        },
-      ]}
-    >
+    <View style={[styles.bar, { backgroundColor: colors.canvas }]}>
       <View style={styles.left}>
-        {!canGoBack && hasDrawer && (
-          <TouchableOpacity
-            onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
-            style={styles.iconBtn}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            accessibilityLabel="Open menu"
+        {canGoBack ? (
+          <RoundButton
+            label="Back"
+            // Opened from a link (or after a language change) there may be nothing behind: go to Home.
+            onPress={() => {
+              if (navigation.canGoBack()) return navigation.goBack();
+              const home = !isAuthenticated ? 'Login' : role === 'worker' ? 'WorkerTabs' : role === 'employer' ? 'EmployerDrawer' : 'AdminHome';
+              (navigation as any).navigate(home);
+            }}
           >
-            <Menu size={22} color={colors.ink} />
-          </TouchableOpacity>
-        )}
-        {canGoBack && (
-          <TouchableOpacity
-            onPress={() => navigation.goBack()}
-            style={styles.iconBtn}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-          >
-            <ArrowLeft size={22} color={colors.ink} />
-          </TouchableOpacity>
-        )}
+            <ArrowLeft size={20} color={colors.ink} />
+          </RoundButton>
+        ) : hasDrawer ? (
+          <RoundButton label="Open menu" onPress={() => navigation.dispatch(DrawerActions.openDrawer())}>
+            <Menu size={20} color={colors.ink} />
+          </RoundButton>
+        ) : null}
+
         {title ? (
-          <Text
-            style={[
-              typography.h2,
-              styles.title,
-              { color: colors.ink },
-            ]}
-            numberOfLines={1}
-          >
+          <Text style={[styles.title, { color: colors.ink }]} numberOfLines={1} accessibilityRole="header">
             {title}
           </Text>
         ) : (
-          <View style={styles.brandRow}>
-            <View style={[styles.brandDot, { backgroundColor: colors.accent }]} />
-            <Text style={[typography.h2, { color: colors.ink, fontWeight: '700' }]}>
+          <View style={styles.brand} accessible accessibilityLabel="IndustriaLink">
+            <LogoMark size={30} />
+            <Text style={[styles.wordmark, { color: colors.ink }]}>
               IndustriaLink
             </Text>
           </View>
@@ -82,77 +64,61 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
       </View>
 
       <View style={styles.right}>
-        {/* Theme Toggle Button */}
-        <TouchableOpacity
-          onPress={toggleTheme}
-          accessibilityLabel="Switch light or dark mode"
-          style={[styles.themeBtn, { backgroundColor: colors.surfaceMuted }]}
-          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-        >
-          {theme === 'light' ? (
-            <Moon size={18} color={colors.ink} />
-          ) : (
-            <Sun size={18} color={colors.accent} />
-          )}
-        </TouchableOpacity>
-
+        <RoundButton label={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'} onPress={toggleTheme}>
+          {theme === 'light' ? <Moon size={18} color={colors.ink} /> : <Sun size={18} color={colors.accent} />}
+        </RoundButton>
         {role === 'worker' && !canGoBack && (
-          <TouchableOpacity
-            onPress={() => (navigation as any).navigate('Settings')}
-            style={[styles.themeBtn, { backgroundColor: colors.surfaceMuted, marginLeft: 8 }]}
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-            accessibilityLabel="Settings"
-          >
+          <RoundButton label="Settings" onPress={() => (navigation as any).navigate('Settings')}>
             <Settings size={18} color={colors.ink} />
-          </TouchableOpacity>
+          </RoundButton>
         )}
-
         {rightAction}
       </View>
     </View>
   );
 };
 
+const RoundButton: React.FC<{ label: string; onPress: () => void; children: React.ReactNode }> = ({
+  label,
+  onPress,
+  children,
+}) => {
+  const colors = useUiStore((s) => s.colors);
+  return (
+    <Pressable
+      onPress={onPress}
+      hitSlop={6}
+      accessibilityRole="button"
+      accessibilityLabel={label}
+      style={({ pressed }) => [
+        styles.round,
+        { backgroundColor: pressed ? colors.surfaceStrong : colors.surface, borderColor: colors.border },
+      ]}
+    >
+      {children}
+    </Pressable>
+  );
+};
+
 const styles = StyleSheet.create({
-  container: {
-    height: 56,
+  bar: {
+    height: 60,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: spacing.lg,
-    borderBottomWidth: 1,
+    paddingHorizontal: 16,
   },
-  left: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  right: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  iconBtn: {
-    marginRight: spacing.md,
-  },
-  title: {
-    fontWeight: '700',
-  },
-  brandRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  brandDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 6,
-  },
-  themeBtn: {
-    width: 40,
-    height: 40,
+  left: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
+  right: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  brand: { flexDirection: 'row', alignItems: 'center', gap: 9 },
+  wordmark: { fontSize: 19, fontWeight: '800', letterSpacing: -0.4 },
+  title: { fontSize: 18, fontWeight: '700', flexShrink: 1 },
+  round: {
+    width: 44,
+    height: 44,
     borderRadius: 20,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },
 });
-

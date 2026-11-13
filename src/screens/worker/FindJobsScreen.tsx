@@ -4,7 +4,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Modal,
   RefreshControl,
   ActivityIndicator,
 } from 'react-native';
@@ -15,13 +14,10 @@ import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from '@tansta
 import {
   Search,
   MapPin,
-  Mic,
   SlidersHorizontal,
   BadgeCheck,
   ShieldCheck,
   ChevronDown,
-  X,
-  RotateCcw,
   Check,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
@@ -36,7 +32,6 @@ import { workerApi } from '../../api/workerApi';
 import { queryKeys } from '../../api/keys';
 import { useUiStore } from '../../store/uiStore';
 import { TRADE_LABEL, SECTOR_LABEL, SHIFT_LABEL } from '../../lib/labels';
-import { formatNumber } from '../../lib/format';
 import { t } from '../../lib/i18n';
 import type { JobForWorker, JobSearchParams, Sector, Shift, Trade } from '../../types';
 
@@ -53,7 +48,6 @@ const QUICK_TRADES: Trade[] = [
   'security',
 ];
 
-const PAY_MAX = 40000;
 
 export const FindJobsScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
@@ -75,7 +69,6 @@ export const FindJobsScreen: React.FC = () => {
   // UI state
   const [filterModalOpen, setFilterModalOpen] = useState(false);
   const [sortModalOpen, setSortModalOpen] = useState(false);
-  const [isVoiceListening, setIsVoiceListening] = useState(false);
 
   // Profile query (for "Near me" city hint)
   const profileQuery = useQuery({
@@ -132,19 +125,6 @@ export const FindJobsScreen: React.FC = () => {
       qc.invalidateQueries({ queryKey: queryKeys.worker.all });
     },
   });
-
-  const handleVoiceSearch = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    if (!isVoiceListening) {
-      setIsVoiceListening(true);
-      setTimeout(() => {
-        setQ('Driver');
-        setIsVoiceListening(false);
-      }, 1500);
-    } else {
-      setIsVoiceListening(false);
-    }
-  };
 
   const handleClearAll = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -210,15 +190,6 @@ export const FindJobsScreen: React.FC = () => {
               placeholderTextColor={colors.inkMuted}
               style={[styles.searchInput, { color: colors.ink }]}
             />
-            <TouchableOpacity
-              onPress={handleVoiceSearch}
-              style={[
-                styles.micBtn,
-                { backgroundColor: isVoiceListening ? colors.dangerFg : 'transparent' },
-              ]}
-            >
-              <Mic size={17} color={isVoiceListening ? '#FFFFFF' : colors.inkSecondary} />
-            </TouchableOpacity>
           </View>
 
           <View style={[styles.divider, { backgroundColor: colors.border }]} />
@@ -667,13 +638,6 @@ const styles = StyleSheet.create({
     height: StyleSheet.hairlineWidth,
     marginHorizontal: 12,
   },
-  micBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   nearMeBtn: {
     paddingHorizontal: 10,
     paddingVertical: 5,
@@ -690,7 +654,7 @@ const styles = StyleSheet.create({
     paddingBottom: 6,
   },
   tradePill: {
-    height: 36,
+    height: 44,
     paddingHorizontal: 14,
     borderRadius: 999,
     borderWidth: 1,

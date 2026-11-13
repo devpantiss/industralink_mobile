@@ -12,7 +12,7 @@ import type { JobForWorker } from '../../types';
 import { CompanyLogo } from './CompanyLogo';
 import { payLong } from './JobBits';
 import { JOB_TYPE_LABEL, SHIFT_LABEL } from '../../lib/labels';
-import { timeAgo } from '../../lib/format';
+import { isWithin, timeAgo } from '../../lib/format';
 import { t } from '../../lib/i18n';
 import { PressableScale } from '../ui/PressableScale';
 import { useUiStore } from '../../store/uiStore';
@@ -36,7 +36,7 @@ export const JobRow: React.FC<JobRowProps> = ({
   const { colors } = useUiStore();
   const closed = job.status !== 'active';
   const pay = payLong(job);
-  const isFresh = Date.now() - new Date(job.postedAt).getTime() < 86_400_000;
+  const isFresh = isWithin(job.postedAt, 86_400_000);
 
   const handleSaveToggle = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);

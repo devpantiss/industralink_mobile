@@ -26,7 +26,7 @@ export const AdminHomeScreen: React.FC = () => {
   const maxWeek = Math.max(1, ...(s?.signupsPerWeek.map((w) => Math.max(w.workers, w.companies)) ?? [1]));
 
   return (
-    <Screen edges={['top']}>
+    <Screen edges={['top', 'bottom']}>
       <AppHeader />
       <ScrollView
         contentContainerStyle={styles.content}
@@ -198,6 +198,6 @@ const styles = StyleSheet.create({
   bars: { flexDirection: 'row', alignItems: 'flex-end', gap: 4 },
   barWrap: { alignItems: 'center', gap: 3 },
   bar: { width: 18, borderTopLeftRadius: 4, borderTopRightRadius: 4 },
-  barNum: { fontSize: 10.5, fontWeight: '700' },
+  barNum: { fontSize: 11.5, fontWeight: '700' },
   week: { fontSize: 11 },
 });

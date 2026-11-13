@@ -15,17 +15,17 @@ interface Props extends Omit<PressableProps, 'style'> {
 /** Tappable surface that presses in slightly while held. For cards and tiles. */
 export const PressableScale: React.FC<Props> = ({ style, scaleTo = 0.98, onPressIn, onPressOut, children, ...rest }) => {
   const s = useSharedValue(1);
-  const anim = useAnimatedStyle(() => ({ transform: [{ scale: s.value }] }));
+  const anim = useAnimatedStyle(() => ({ transform: [{ scale: s.get() }] }));
   return (
     <APressable
       accessibilityRole="button"
       {...rest}
       onPressIn={(e) => {
-        s.value = withTiming(scaleTo, { duration: 120, easing: EASE });
+        s.set(withTiming(scaleTo, { duration: 120, easing: EASE }));
         onPressIn?.(e);
       }}
       onPressOut={(e) => {
-        s.value = withTiming(1, { duration: 180, easing: EASE });
+        s.set(withTiming(1, { duration: 180, easing: EASE }));
         onPressOut?.(e);
       }}
       style={[style, anim]}

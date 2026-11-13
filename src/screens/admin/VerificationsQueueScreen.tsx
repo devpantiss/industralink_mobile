@@ -80,7 +80,7 @@ export const VerificationsQueueScreen: React.FC = () => {
   const details = s ? Object.entries(s.details).filter(([k]) => k !== 'Rejection reason') : [];
 
   return (
-    <Screen edges={['top']}>
+    <Screen edges={['top', 'bottom']}>
       <AppHeader />
       <ScrollView
         contentContainerStyle={styles.content}

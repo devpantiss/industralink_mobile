@@ -1,14 +1,12 @@
-import React from 'react';
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  Switch,
-} from 'react-native';
+import React, { useState } from 'react';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert } from 'react-native';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Text } from '../../components/ui/Text';
-import { useTranslation } from 'react-i18next';
-import { Moon, Sun, Globe, Bell, Shield, LogOut, Check, Smartphone } from 'lucide-react-native';
+import { Moon, Sun, Globe, LogOut, Check, Smartphone, Lock, Trash2 } from 'lucide-react-native';
+import { Input } from '../../components/ui/Input';
+import { accountApi } from '../../api/accountApi';
+import { queryKeys } from '../../api/keys';
+import type { UserSettings } from '../../types';
 import { SegmentedTabs } from '../../components/ui/SegmentedTabs';
 import * as Haptics from 'expo-haptics';
 import { Screen } from '../../components/layout/Screen';
@@ -17,15 +15,54 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { useUiStore } from '../../store/uiStore';
 import { useAuthStore } from '../../store/authStore';
-import i18n from '../../lib/i18n';
 import { spacing } from '../../theme/spacing';
+import { t } from '../../lib/i18n';
+import { USE_MOCKS } from '../../api/client';
 import { typography } from '../../theme/typography';
 
 export const SettingsScreen: React.FC = () => {
   const { colors, themePref, setThemePref, language, setLanguage, showToast } = useUiStore();
   const { user, role, switchRole, logout } = useAuthStore();
-  const { t } = useTranslation();
   const currentLang = language;
+  const qc = useQueryClient();
+
+  const settingsQuery = useQuery({ queryKey: queryKeys.settings, queryFn: () => accountApi.getSettings() });
+  const saveSettings = useMutation({
+    mutationFn: (changes: Partial<UserSettings>) => accountApi.updateSettings(changes),
+    onSuccess: (data) => qc.setQueryData(queryKeys.settings, data),
+    onError: () => showToast(t('Could not save. Check your connection and try again.'), 'error'),
+  });
+  const settings = settingsQuery.data;
+
+  // Password (company and admin accounts)
+  const [curPw, setCurPw] = useState('');
+  const [newPw, setNewPw] = useState('');
+  const [pwError, setPwError] = useState<string>();
+  const changePw = useMutation({
+    mutationFn: () => accountApi.changePassword(curPw, newPw),
+    onSuccess: () => {
+      setCurPw('');
+      setNewPw('');
+      setPwError(undefined);
+      showToast('Password changed.', 'success');
+    },
+    onError: (e: Error) => setPwError(e.message),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => accountApi.deleteAccount(),
+    onSuccess: () => logout(),
+    onError: () => showToast(t('Could not save. Check your connection and try again.'), 'error'),
+  });
+  const confirmDelete = () =>
+    Alert.alert(
+      t('Delete my account?'),
+      t('Your profile, applications and documents will be removed. This cannot be undone.'),
+      [
+        { text: t('Cancel'), style: 'cancel' },
+        { text: t('Delete account'), style: 'destructive', onPress: () => deleteMutation.mutate() },
+      ],
+    );
 
   const languages = [
     { code: 'en', label: 'English', native: 'English' },
@@ -36,62 +73,55 @@ export const SettingsScreen: React.FC = () => {
   const handleLanguageChange = (code: string, label: string) => {
     Haptics.selectionAsync();
     setLanguage(code as 'en' | 'hi' | 'or');
-    showToast(`App language set to ${label}`, 'success');
+    showToast(`${t('Language')}: ${label}`, 'success');
   };
 
   return (
-    <Screen edges={['top']}>
-      <AppHeader title="App Settings" showBack />
+    <Screen edges={['top', 'bottom']}>
+      <AppHeader title={t('Settings')} showBack={role === 'worker'} />
       <ScrollView contentContainerStyle={styles.scroll}>
-        {/* Account Info */}
+        {/* Account */}
         <Card style={styles.card}>
-          <Text style={[typography.h3, styles.sectionTitle, { color: colors.ink }]}>
-            Active Account
-          </Text>
-          <Text style={[typography.h2, { color: colors.ink, fontWeight: '700' }]}>
-            {user?.name}
-          </Text>
+          <Text style={[typography.h2, { color: colors.ink, fontWeight: '700' }]}>{user?.name}</Text>
           <Text style={[typography.caption, { color: colors.inkSecondary }]}>
-            Current Role: {role.toUpperCase()} • {user?.phone}
+            {t(role === 'worker' ? 'Worker' : role === 'employer' ? 'Employer' : 'Admin')} · {user?.phone}
           </Text>
 
-          <View style={styles.roleSwitchRow}>
-            {(['worker', 'employer', 'admin'] as const).map((r) => (
-              <TouchableOpacity
-                key={r}
-                onPress={() => {
-                  Haptics.selectionAsync();
-                  switchRole(r);
-                  showToast(`Switched active role to ${r.toUpperCase()}`, 'info');
-                }}
-                style={[
-                  styles.rolePill,
-                  {
-                    backgroundColor: role === r ? colors.primary : colors.surfaceMuted,
-                  },
-                ]}
-              >
-                <Text
-                  style={[
-                    typography.caption,
-                    {
-                      color: role === r ? '#FFFFFF' : colors.ink,
-                      fontWeight: '700',
-                      textTransform: 'capitalize',
-                    },
-                  ]}
-                >
-                  {r}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+          {/* Demo data only: lets a presenter jump between the three sides of the app. */}
+          {USE_MOCKS && (
+            <>
+              <Text style={[typography.caption, styles.demoLabel, { color: colors.inkMuted }]}>Demo only: switch role</Text>
+              <View style={styles.roleSwitchRow}>
+                {(['worker', 'employer', 'admin'] as const).map((r) => (
+                  <TouchableOpacity
+                    key={r}
+                    accessibilityRole="button"
+                    accessibilityState={{ selected: role === r }}
+                    onPress={() => {
+                      Haptics.selectionAsync().catch(() => {});
+                      switchRole(r);
+                    }}
+                    style={[styles.rolePill, { backgroundColor: role === r ? colors.primary : colors.surfaceMuted }]}
+                  >
+                    <Text
+                      style={[
+                        typography.caption,
+                        { color: role === r ? '#FFFFFF' : colors.ink, fontWeight: '700', textTransform: 'capitalize' },
+                      ]}
+                    >
+                      {r}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </>
+          )}
         </Card>
 
         {/* Vernacular Language Selector */}
         <Card style={styles.card}>
           <Text style={[typography.h3, styles.sectionTitle, { color: colors.ink }]}>
-            Regional Language (भाषा / ଭାଷା)
+            {t('Language')} (भाषा / ଭାଷା)
           </Text>
           {languages.map((lang, idx) => {
             const isSelected = currentLang === lang.code;
@@ -121,39 +151,138 @@ export const SettingsScreen: React.FC = () => {
           })}
         </Card>
 
+
+        {/* Alerts */}
+        {role !== 'admin' && settings && (
+          <Card style={styles.card}>
+            <Text style={[typography.h3, styles.sectionTitle, { color: colors.ink }]}>{t('Alerts')}</Text>
+            <SettingSwitch
+              label={role === 'worker' ? t('New jobs that match me') : 'New applicants on my jobs'}
+              value={settings.jobAlerts}
+              onChange={(v) => saveSettings.mutate({ jobAlerts: v })}
+            />
+            <SettingSwitch
+              label={t('SMS')}
+              hint={role === 'worker' ? t('Interview and offer updates by SMS.') : undefined}
+              value={settings.smsAlerts}
+              onChange={(v) => saveSettings.mutate({ smsAlerts: v })}
+            />
+            <SettingSwitch
+              label="WhatsApp"
+              hint={role === 'worker' ? t('Job alerts and updates on WhatsApp.') : undefined}
+              value={settings.whatsappAlerts}
+              onChange={(v) => saveSettings.mutate({ whatsappAlerts: v })}
+            />
+          </Card>
+        )}
+
+        {/* Privacy (workers) */}
+        {role === 'worker' && settings && (
+          <Card style={styles.card}>
+            <Text style={[typography.h3, styles.sectionTitle, { color: colors.ink }]}>{t('Privacy')}</Text>
+            <SettingSwitch
+              label={t('Let companies find my profile')}
+              hint={t('Verified companies can see your trade, experience and city, and invite you to apply. Your phone number stays hidden until you apply.')}
+              value={settings.visibleToEmployers}
+              onChange={(v) => saveSettings.mutate({ visibleToEmployers: v })}
+            />
+          </Card>
+        )}
+
         {/* Display & Dark Theme */}
         <Card style={styles.card}>
           <Text style={[typography.h3, styles.sectionTitle, { color: colors.ink }]}>
-            Display & Appearance
+            {t('Appearance')}
           </Text>
           <Text style={[typography.caption, { color: colors.inkSecondary, marginBottom: spacing.sm }]}>
-            Light is the default. System follows your phone.
+            {t('Light is the default. System follows your phone.')}
           </Text>
           <SegmentedTabs
             value={themePref}
             onChange={setThemePref}
             items={[
-              { key: 'light', label: 'Light', icon: (c) => <Sun size={16} color={c} /> },
-              { key: 'dark', label: 'Dark', icon: (c) => <Moon size={16} color={c} /> },
-              { key: 'system', label: 'System', icon: (c) => <Smartphone size={16} color={c} /> },
+              { key: 'light', label: t('Light'), icon: (c) => <Sun size={16} color={c} /> },
+              { key: 'dark', label: t('Dark'), icon: (c) => <Moon size={16} color={c} /> },
+              { key: 'system', label: t('System'), icon: (c) => <Smartphone size={16} color={c} /> },
             ]}
           />
         </Card>
 
+
+        {/* Password (company and admin accounts; workers sign in with an SMS code) */}
+        {role !== 'worker' && (
+          <Card style={styles.card}>
+            <Text style={[typography.h3, styles.sectionTitle, { color: colors.ink }]}>Change password</Text>
+            <Input
+              label="Current password"
+              value={curPw}
+              onChangeText={setCurPw}
+              secureTextEntry
+              autoCapitalize="none"
+              leftIcon={<Lock size={17} color={colors.inkMuted} />}
+            />
+            <Input
+              label="New password"
+              value={newPw}
+              onChangeText={setNewPw}
+              secureTextEntry
+              autoCapitalize="none"
+              autoComplete="new-password"
+              error={pwError}
+              leftIcon={<Lock size={17} color={colors.inkMuted} />}
+            />
+            <Button label="Change password" variant="outline" onPress={() => changePw.mutate()} loading={changePw.isPending} />
+          </Card>
+        )}
+
         <Button
-          label="Log Out of IndustriaLink"
+          label={t('Log out')}
           variant="outline"
           icon={<LogOut size={18} color={colors.dangerFg} />}
           onPress={logout}
           style={styles.logoutBtn}
           textStyle={{ color: colors.dangerFg }}
         />
+
+        {role !== 'admin' && (
+          <TouchableOpacity onPress={confirmDelete} style={styles.deleteRow} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <Trash2 size={16} color={colors.inkMuted} />
+            <Text style={[typography.small, { color: colors.inkMuted, fontWeight: '600' }]}>{t('Delete my account')}</Text>
+          </TouchableOpacity>
+        )}
       </ScrollView>
     </Screen>
   );
 };
 
+const SettingSwitch: React.FC<{ label: string; hint?: string; value: boolean; onChange: (v: boolean) => void }> = ({
+  label,
+  hint,
+  value,
+  onChange,
+}) => {
+  const { colors } = useUiStore();
+  return (
+    <View style={styles.switchRow}>
+      <View style={styles.switchText}>
+        <Text style={[typography.body, { color: colors.ink, fontWeight: '600' }]}>{label}</Text>
+        {hint ? <Text style={[typography.caption, { color: colors.inkSecondary, marginTop: 2 }]}>{hint}</Text> : null}
+      </View>
+      <Switch
+        value={value}
+        onValueChange={onChange}
+        accessibilityLabel={label}
+        trackColor={{ true: colors.primary, false: colors.borderStrong }}
+        thumbColor="#FFFFFF"
+      />
+    </View>
+  );
+};
+
 const styles = StyleSheet.create({
+  switchRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingVertical: spacing.sm, minHeight: 52 },
+  switchText: { flex: 1 },
+  deleteRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: spacing.md, marginBottom: spacing['3xl'] },
   scroll: {
     padding: spacing.lg,
   },
@@ -165,10 +294,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     marginBottom: spacing.sm,
   },
+  demoLabel: { marginTop: spacing.md, fontWeight: '600' },
   roleSwitchRow: {
     flexDirection: 'row',
     gap: spacing.sm,
-    marginTop: spacing.md,
+    marginTop: spacing.xs,
   },
   rolePill: {
     flex: 1,

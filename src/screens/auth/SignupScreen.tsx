@@ -4,15 +4,11 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  ImageBackground,
+  Image,
   Modal,
-  Platform,
-  KeyboardAvoidingView,
   ActivityIndicator,
   useWindowDimensions,
   Animated,
-  LayoutAnimation,
-  UIManager,
 } from 'react-native';
 import { Text, TextInput } from '../../components/ui/Text';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -49,6 +45,7 @@ import { LogoMark } from '../../components/ui/LogoMark';
 import { HazardStrip } from '../../components/ui/HazardStrip';
 import { useUiStore } from '../../store/uiStore';
 import { useAuthStore } from '../../store/authStore';
+import { USE_MOCKS } from '../../api/client';
 import { t } from '../../lib/i18n';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Signup'>;
@@ -56,31 +53,26 @@ type Audience = 'worker' | 'employer';
 
 const heroImage = require('../../../assets/login.jpg');
 
-// Enable LayoutAnimation for Android
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
-
 export const SignupScreen: React.FC<Props> = ({ navigation }) => {
   const { height: screenHeight } = useWindowDimensions();
   const { colors, theme, toggleTheme, language, setLanguage, showToast } = useUiStore();
-  const { sendOtp, verifyOtp, updateUser, switchRole } = useAuthStore();
+  const { sendOtp, verifyOtp, signupEmployer } = useAuthStore();
 
   const [role, setRole] = useState<Audience>('worker');
   const [step, setStep] = useState<'details' | 'otp'>('details');
 
   // Worker form state
   const [workerName, setWorkerName] = useState('');
-  const [workerPhone, setWorkerPhone] = useState('9876543210');
-  const [code, setCode] = useState(['1', '2', '3', '4', '5', '6']);
+  const [workerPhone, setWorkerPhone] = useState(USE_MOCKS ? '9876543210' : '');
+  const [code, setCode] = useState(USE_MOCKS ? ['1', '2', '3', '4', '5', '6'] : ['', '', '', '', '', '']);
   const [workerNameFocused, setWorkerNameFocused] = useState(false);
   const [workerPhoneFocused, setWorkerPhoneFocused] = useState(false);
 
   // Employer form state
   const [employerName, setEmployerName] = useState('');
-  const [companyName, setCompanyName] = useState('National Heavy Engineering');
-  const [email, setEmail] = useState('recruiter@nationaleng.demo');
-  const [password, setPassword] = useState('password123');
+  const [companyName, setCompanyName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [empNameFocused, setEmpNameFocused] = useState(false);
   const [companyFocused, setCompanyFocused] = useState(false);
@@ -91,12 +83,12 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
   const [langModalVisible, setLangModalVisible] = useState(false);
   const [countdown, setCountdown] = useState(30);
 
-  const codeInputs = useRef<Array<any>>([]);
+  const codeInputs = useRef<any[]>([]);
 
   // Animation values
-  const roleSlideAnim = useRef(new Animated.Value(0)).current;
-  const formFadeAnim = useRef(new Animated.Value(1)).current;
-  const formSlideY = useRef(new Animated.Value(0)).current;
+  const [roleSlideAnim] = useState(() => new Animated.Value(0));
+  const [formFadeAnim] = useState(() => new Animated.Value(1));
+  const [formSlideY] = useState(() => new Animated.Value(0));
 
   // Hero proportion matching login screen (~39%)
   const heroHeight = Math.max(300, Math.round(screenHeight * 0.39));
@@ -110,6 +102,7 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
   }, [step, countdown]);
 
   const triggerFormTransition = () => {
+    formFadeAnim.stopAnimation();
     formFadeAnim.setValue(0);
     formSlideY.setValue(8);
     Animated.parallel([
@@ -129,13 +122,6 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
   const handleRoleChange = (selected: Audience) => {
     if (selected === role) return;
     Haptics.selectionAsync();
-
-    LayoutAnimation.configureNext({
-      duration: 260,
-      create: { type: LayoutAnimation.Types.easeInEaseOut, property: LayoutAnimation.Properties.opacity },
-      update: { type: LayoutAnimation.Types.easeInEaseOut },
-      delete: { type: LayoutAnimation.Types.easeInEaseOut, property: LayoutAnimation.Properties.opacity },
-    });
 
     setRole(selected);
     setStep('details');
@@ -167,9 +153,12 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       const res = await sendOtp(workerPhone);
+      if (res.isNewUser === false) {
+        showToast(t('You already have an account. Log in instead.'), 'info');
+        navigation.navigate('Login');
+        return;
+      }
       showToast(res.message, 'info');
-
-      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
       setStep('otp');
       setCountdown(30);
       triggerFormTransition();
@@ -185,8 +174,8 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
     setLoading(true);
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      await verifyOtp(workerPhone, codeString);
-      updateUser({
+      // The new account is signed in already marked as not onboarded; the app shows the setup screen next.
+      await verifyOtp(workerPhone, codeString, {
         name: workerName.trim(),
         phone: `+91 ${workerPhone}`,
         role: 'worker',
@@ -194,7 +183,6 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
       });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       showToast(t('Account created successfully!'), 'success');
-      navigation.replace('WorkerWelcome');
     } catch (err: any) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       showToast(err.message || 'Invalid code. Enter 123456.', 'error');
@@ -261,17 +249,14 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
     setLoading(true);
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      switchRole('employer');
-      updateUser({
+      await signupEmployer({
         name: employerName.trim(),
         companyName: companyName.trim(),
         email: email.trim(),
-        role: 'employer',
-        onboarded: false,
+        password,
       });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       showToast('Employer account created!', 'success');
-      navigation.replace('EmployerWelcome');
     } catch (err: any) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       showToast(err.message || 'Registration failed. Try again.', 'error');
@@ -299,10 +284,7 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <Screen edges={['top']} style={{ backgroundColor: '#0B1120' }}>
       <StatusBar style="light" />
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
+      <View style={{ flex: 1 }}>
         <ScrollView
           bounces={false}
           showsVerticalScrollIndicator={false}
@@ -312,11 +294,8 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
         >
           {/* ================= HERO CONTAINER (Dark Background Behind Radius) ================= */}
           <View style={[styles.heroOuterWrapper, { backgroundColor: '#0B1120' }]}>
-            <ImageBackground
-              source={heroImage}
-              style={[styles.heroBackground, { height: heroHeight }]}
-              imageStyle={styles.heroImageStyle}
-            >
+            <View style={[styles.heroBackground, { height: heroHeight }]}>
+              <Image source={heroImage} resizeMode="cover" style={StyleSheet.absoluteFill} />
               {/* Rich cinematic gradient overlay */}
               <View style={styles.heroOverlay} />
 
@@ -371,7 +350,7 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
                   <>
                     <View style={styles.heroTaglineRow}>
                       <Text style={styles.heroTaglineText}>
-                        India's trusted platform for industrial jobs
+                        India’s trusted platform for industrial jobs
                       </Text>
                     </View>
 
@@ -488,7 +467,7 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
 
               {/* Industrial Hazard Safety Stripes */}
               <HazardStrip height={5} />
-            </ImageBackground>
+            </View>
 
             {/* Seamless 36px dark apron directly behind card top corners */}
             <View style={styles.heroDarkApron} />
@@ -590,7 +569,7 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
                       { color: role === 'employer' ? colors.ink : colors.inkSecondary },
                     ]}
                   >
-                    I'm hiring
+                    I’m hiring
                   </Text>
                   <Text style={[styles.segmentSub, { color: colors.inkMuted }]}>
                     Companies & HR
@@ -645,6 +624,7 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
                           {workerName.length > 0 && (
                             <TouchableOpacity
                               onPress={() => setWorkerName('')}
+                              accessibilityLabel={t('Clear')}
                               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                             >
                               <X size={16} color={colors.inkMuted} />
@@ -699,6 +679,7 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
                           {workerPhone.length > 0 && (
                             <TouchableOpacity
                               onPress={() => setWorkerPhone('')}
+                              accessibilityLabel={t('Clear')}
                               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                             >
                               <X size={16} color={colors.inkMuted} />
@@ -970,6 +951,7 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
                       />
                       <TouchableOpacity
                         onPress={() => setShowPassword(!showPassword)}
+                        accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
                         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                       >
                         {showPassword ? (
@@ -1037,7 +1019,7 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
             </TouchableOpacity>
           </View>
         </ScrollView>
-      </KeyboardAvoidingView>
+      </View>
 
       {/* Language Selector Modal */}
       <Modal
@@ -1292,7 +1274,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   shortlistPillText: {
-    fontSize: 10.5,
+    fontSize: 11.5,
     fontWeight: '700',
     color: '#0E9F6E',
   },
@@ -1364,7 +1346,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   segmentSub: {
-    fontSize: 10.5,
+    fontSize: 11.5,
     fontWeight: '500',
     marginTop: 1,
   },

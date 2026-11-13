@@ -2,11 +2,9 @@ import { NavigatorScreenParams } from '@react-navigation/native';
 
 export type AuthStackParamList = {
   Login: undefined;
-  OtpVerify: { phone: string };
   Signup: undefined;
-  RolePicker: undefined;
-  WorkerWelcome: undefined;
-  EmployerWelcome: undefined;
+  ForgotPassword: undefined;
+  ResetPassword: { token?: string } | undefined;
 };
 
 export type WorkerTabParamList = {
@@ -43,7 +41,8 @@ export type EmployerDrawerParamList = {
 /** Full-screen employer screens pushed above the drawer, so Back returns to where you came from. */
 export type EmployerStackParamList = {
   EmployerDrawer: NavigatorScreenParams<EmployerDrawerParamList>;
-  PostJobWizard: undefined;
+  /** With a `jobId` the wizard edits that job instead of creating a new one. */
+  PostJobWizard: { jobId?: string } | undefined;
   CandidateDossier: { candidateId: string };
   JobApplicants: { jobId: string };
 };
@@ -60,6 +59,8 @@ export type AdminDrawerParamList = {
 
 export type RootStackParamList = {
   Auth: NavigatorScreenParams<AuthStackParamList>;
+  /** Shown once after sign-up, until the new account finishes its short setup. */
+  Onboarding: undefined;
   Worker: NavigatorScreenParams<WorkerStackParamList>;
   Employer: NavigatorScreenParams<EmployerStackParamList>;
   Admin: NavigatorScreenParams<AdminDrawerParamList>;

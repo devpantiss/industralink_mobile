@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
+  Keyboard,
   View,
   StyleSheet,
   ViewStyle,
@@ -16,7 +17,27 @@ interface ScreenProps {
   style?: ViewStyle;
   contentContainerStyle?: ViewStyle;
   withPadding?: boolean;
+  /**
+   * Which safe-area edges to pad. Tab screens use the default ['top'] (the tab bar pads the bottom).
+   * Screens with no tab bar (stack, drawer) add 'bottom' so content clears the home indicator.
+   */
   edges?: ('top' | 'bottom' | 'left' | 'right')[];
+  /** Set false when the screen handles the keyboard itself. */
+  keyboardAvoiding?: boolean;
+}
+
+/** True while the on-screen keyboard is open (the bottom inset is not needed then). */
+function useKeyboardVisible() {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const show = Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow', () => setVisible(true));
+    const hide = Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide', () => setVisible(false));
+    return () => {
+      show.remove();
+      hide.remove();
+    };
+  }, []);
+  return visible;
 }
 
 export const Screen: React.FC<ScreenProps> = ({
@@ -25,13 +46,15 @@ export const Screen: React.FC<ScreenProps> = ({
   contentContainerStyle,
   withPadding = false,
   edges = ['top', 'bottom'],
+  keyboardAvoiding = true,
 }) => {
   const insets = useSafeAreaInsets();
   const { colors, theme } = useUiStore();
+  const keyboardVisible = useKeyboardVisible();
 
   const containerPadding: ViewStyle = {
     paddingTop: edges.includes('top') ? insets.top : 0,
-    paddingBottom: edges.includes('bottom') ? insets.bottom : 0,
+    paddingBottom: edges.includes('bottom') && !keyboardVisible ? insets.bottom : 0,
     paddingLeft: edges.includes('left') ? insets.left : 0,
     paddingRight: edges.includes('right') ? insets.right : 0,
   };
@@ -40,7 +63,7 @@ export const Screen: React.FC<ScreenProps> = ({
     <View style={[styles.root, { backgroundColor: colors.canvas }, style]}>
       <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={keyboardAvoiding && Platform.OS === 'ios' ? 'padding' : undefined}
         style={styles.keyboardView}
       >
         <View

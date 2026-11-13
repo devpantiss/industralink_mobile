@@ -5,7 +5,6 @@ import {
   ScrollView,
   TouchableOpacity,
   Linking,
-  Modal,
   ActivityIndicator,
 } from 'react-native';
 import { Text, TextInput } from '../../components/ui/Text';
@@ -16,14 +15,12 @@ import {
   CalendarClock,
   CheckCircle2,
   ChevronLeft,
-  Gift,
   Lock,
   MapPin,
   MessageCircle,
   MessageSquare,
   PartyPopper,
   Phone,
-  XCircle,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import type { WorkerStackParamList } from '../../navigation/types';
@@ -33,8 +30,9 @@ import { CompanyLogo } from '../../components/domain/CompanyLogo';
 import { workerApi } from '../../api/workerApi';
 import { queryKeys } from '../../api/keys';
 import { useUiStore } from '../../store/uiStore';
-import { formatDate, formatDateTime, formatNumber, formatPay, telUrl, whatsappUrl } from '../../lib/format';
+import { formatDate, formatDateTime, formatNumber, formatPay } from '../../lib/format';
 import { PAY_TYPE_LABEL, STAGE_LABEL_WORKER } from '../../lib/labels';
+import { openContact } from '../../lib/contact';
 import { t } from '../../lib/i18n';
 import type { Offer } from '../../types';
 
@@ -94,7 +92,7 @@ export const ApplicationDetailScreen: React.FC = () => {
 
   if (isLoading) {
     return (
-      <Screen edges={['top']}>
+      <Screen edges={['top', 'bottom']}>
         <View style={styles.centerContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
         </View>
@@ -104,7 +102,7 @@ export const ApplicationDetailScreen: React.FC = () => {
 
   if (isError || !a) {
     return (
-      <Screen edges={['top']}>
+      <Screen edges={['top', 'bottom']}>
         <View style={styles.centerContainer}>
           <Text style={[styles.errorText, { color: colors.ink }]}>{t('Application not found')}</Text>
           <TouchableOpacity onPress={() => refetch()} style={[styles.retryBtn, { backgroundColor: colors.primary }]}>
@@ -120,7 +118,7 @@ export const ApplicationDetailScreen: React.FC = () => {
   const canMessage = ['shortlisted', 'interview', 'offer', 'hired'].includes(a.stage);
 
   return (
-    <Screen edges={['top']}>
+    <Screen edges={['top', 'bottom']}>
       {/* Top Header */}
       <View style={[styles.topBar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <TouchableOpacity
@@ -358,7 +356,7 @@ export const ApplicationDetailScreen: React.FC = () => {
               </Text>
               <View style={styles.contactButtonsRow}>
                 <TouchableOpacity
-                  onPress={() => Linking.openURL(telUrl(a.contact!.phone))}
+                  onPress={() => openContact('call', a.contact!.phone)}
                   style={[styles.dialBtn, { backgroundColor: colors.primary }]}
                 >
                   <Phone size={15} color="#FFF" />
@@ -366,7 +364,7 @@ export const ApplicationDetailScreen: React.FC = () => {
                 </TouchableOpacity>
 
                 <TouchableOpacity
-                  onPress={() => Linking.openURL(whatsappUrl(a.contact!.phone))}
+                  onPress={() => openContact('whatsapp', a.contact!.phone)}
                   style={[styles.dialBtn, { backgroundColor: '#1FA855' }]}
                 >
                   <MessageCircle size={15} color="#FFF" />
@@ -524,8 +522,8 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   backBtn: {
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
     borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
@@ -722,7 +720,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     paddingHorizontal: 16,
-    height: 40,
+    height: 44,
     borderRadius: 20,
   },
   rsvpBtnPrimaryText: {
@@ -732,7 +730,7 @@ const styles = StyleSheet.create({
   },
   rsvpBtnSecondary: {
     paddingHorizontal: 16,
-    height: 40,
+    height: 44,
     borderRadius: 20,
     borderWidth: 1,
     justifyContent: 'center',
@@ -753,7 +751,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   sendNoteBtn: {
-    height: 38,
+    height: 44,
     borderRadius: 19,
     justifyContent: 'center',
     alignItems: 'center',
@@ -768,7 +766,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   mapBtn: {
-    height: 42,
+    height: 44,
     borderRadius: 21,
     borderWidth: 1,
     justifyContent: 'center',
@@ -821,7 +819,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     paddingHorizontal: 16,
-    height: 42,
+    height: 44,
     borderRadius: 21,
   },
   dialBtnText: {

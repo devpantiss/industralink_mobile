@@ -13,45 +13,32 @@ import { ApplicationDetailScreen } from '../screens/worker/ApplicationDetailScre
 import { CompanyDetailScreen } from '../screens/worker/CompanyDetailScreen';
 import { ChatScreen } from '../screens/shared/ChatScreen';
 import { SettingsScreen } from '../screens/shared/SettingsScreen';
-import { useUiStore } from '../store/uiStore';
+import { TabBar } from '../components/layout/TabBar';
 
 const Tab = createBottomTabNavigator<WorkerTabParamList>();
 const Stack = createNativeStackNavigator<WorkerStackParamList>();
 
 const WorkerTabs: React.FC = () => {
-  const { colors } = useUiStore();
 
   return (
     <Tab.Navigator
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.inkMuted,
-        tabBarStyle: {
-          backgroundColor: colors.surface,
-          borderTopColor: colors.border,
-          paddingTop: 6,
-        },
-        tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: '600',
-        },
-      }}
+      tabBar={(props) => <TabBar {...props} />}
+      screenOptions={{ headerShown: false }}
     >
       <Tab.Screen
         name="WorkerHome"
         component={WorkerHomeScreen}
         options={{
           tabBarLabel: 'Home',
-          tabBarIcon: ({ color, size }) => <Home size={size - 2} color={color} />,
+          tabBarIcon: ({ color, focused }) => <Home size={22} color={color} strokeWidth={focused ? 2.2 : 1.8} />,
         }}
       />
       <Tab.Screen
         name="FindJobs"
         component={FindJobsScreen}
         options={{
-          tabBarLabel: 'Find Jobs',
-          tabBarIcon: ({ color, size }) => <Search size={size - 2} color={color} />,
+          tabBarLabel: 'Jobs',
+          tabBarIcon: ({ color, focused }) => <Search size={22} color={color} strokeWidth={focused ? 2.2 : 1.8} />,
         }}
       />
       <Tab.Screen
@@ -59,7 +46,7 @@ const WorkerTabs: React.FC = () => {
         component={ApplicationsScreen}
         options={{
           tabBarLabel: 'Applied',
-          tabBarIcon: ({ color, size }) => <FileCheck2 size={size - 2} color={color} />,
+          tabBarIcon: ({ color, focused }) => <FileCheck2 size={22} color={color} strokeWidth={focused ? 2.2 : 1.8} />,
         }}
       />
       <Tab.Screen
@@ -67,7 +54,7 @@ const WorkerTabs: React.FC = () => {
         component={SavedJobsScreen}
         options={{
           tabBarLabel: 'Saved',
-          tabBarIcon: ({ color, size }) => <Bookmark size={size - 2} color={color} />,
+          tabBarIcon: ({ color, focused }) => <Bookmark size={22} color={color} strokeWidth={focused ? 2.2 : 1.8} />,
         }}
       />
       <Tab.Screen
@@ -75,7 +62,7 @@ const WorkerTabs: React.FC = () => {
         component={WorkerProfileScreen}
         options={{
           tabBarLabel: 'Profile',
-          tabBarIcon: ({ color, size }) => <User size={size - 2} color={color} />,
+          tabBarIcon: ({ color, focused }) => <User size={22} color={color} strokeWidth={focused ? 2.2 : 1.8} />,
         }}
       />
     </Tab.Navigator>

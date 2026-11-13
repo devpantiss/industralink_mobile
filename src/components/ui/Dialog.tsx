@@ -22,21 +22,25 @@ export const Dialog: React.FC<DialogProps> = ({ visible, onClose, title, message
   const [mounted, setMounted] = useState(visible);
   const p = useSharedValue(0);
 
+  // Mount as soon as it opens (render-time update, React's pattern for state derived from props).
+  if (visible && !mounted) setMounted(true);
+
   useEffect(() => {
     if (visible) {
-      setMounted(true);
-      p.value = withTiming(1, { duration: 200, easing: EASE });
-    } else if (mounted) {
-      p.value = withTiming(0, { duration: 150, easing: EASE }, (d) => {
-        if (d) runOnJS(setMounted)(false);
-      });
+      p.set(withTiming(1, { duration: 200, easing: EASE }));
+    } else {
+      p.set(
+        withTiming(0, { duration: 150, easing: EASE }, (d) => {
+          if (d) runOnJS(setMounted)(false);
+        })
+      );
     }
-  }, [visible]);
+  }, [visible, p]);
 
-  const backdrop = useAnimatedStyle(() => ({ opacity: p.value }));
+  const backdrop = useAnimatedStyle(() => ({ opacity: p.get() }));
   const box = useAnimatedStyle(() => ({
-    opacity: p.value,
-    transform: [{ translateY: (1 - p.value) * 8 }],
+    opacity: p.get(),
+    transform: [{ translateY: (1 - p.get()) * 8 }],
   }));
 
   if (!mounted) return null;

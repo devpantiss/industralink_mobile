@@ -1,17 +1,10 @@
 import React, { useState } from 'react';
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  RefreshControl,
-  ActivityIndicator,
-} from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Alert } from 'react-native';
 import { Text } from '../../components/ui/Text';
 import { useNavigation } from '@react-navigation/native';
-import { useQuery } from '@tanstack/react-query';
-import { Plus, Users, ChevronRight, Briefcase } from 'lucide-react-native';
-import * as Haptics from 'expo-haptics';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Plus, Briefcase, MoreVertical, Pencil, Copy, PauseCircle, PlayCircle, Trash2 } from 'lucide-react-native';
+import { Sheet } from '../../components/ui/Sheet';
 import { ListSkeleton } from '../../components/ui/Skeleton';
 import { SegmentedTabs } from '../../components/ui/SegmentedTabs';
 import { Screen } from '../../components/layout/Screen';
@@ -29,6 +22,52 @@ export const EmployerJobsScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { colors } = useUiStore();
   const [tab, setTab] = useState<'active' | 'draft' | 'closed'>('active');
+  const [menuJob, setMenuJob] = useState<Job | null>(null);
+  const qc = useQueryClient();
+  const showToast = useUiStore((s) => s.showToast);
+
+  const refreshJobs = () => {
+    qc.invalidateQueries({ queryKey: queryKeys.employer.all });
+    qc.invalidateQueries({ queryKey: queryKeys.jobs() });
+  };
+  const setStatus = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: 'active' | 'closed' }) => employerApi.updateJob(id, { status }),
+    onSuccess: (_d, v) => {
+      refreshJobs();
+      showToast(v.status === 'closed' ? 'Job closed. Workers cannot apply now.' : 'Job reopened.', 'success');
+    },
+    onError: () => showToast('Could not update the job. Try again.', 'error'),
+  });
+  const duplicate = useMutation({
+    mutationFn: (j: Job) => {
+      const { id: _id, postedAt: _p, applicantsCount: _a, newApplicantsCount: _n, ...rest } = j;
+      return employerApi.createJob({ ...rest, title: `${j.title} (copy)`, status: 'draft' });
+    },
+    onSuccess: () => {
+      refreshJobs();
+      setTab('draft');
+      showToast('Copied to Draft. Open it to edit and publish.', 'success');
+    },
+  });
+  const remove = useMutation({
+    mutationFn: (id: string) => employerApi.deleteJob(id),
+    onSuccess: () => {
+      refreshJobs();
+      showToast('Job deleted.', 'success');
+    },
+    onError: () => showToast('Could not delete the job. Try again.', 'error'),
+  });
+  const confirmDelete = (j: Job) =>
+    Alert.alert(
+      'Delete this job?',
+      j.applicantsCount > 0
+        ? `${j.applicantsCount} applicant${j.applicantsCount === 1 ? '' : 's'} will lose this application. Closing the job keeps them.`
+        : 'This cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', style: 'destructive', onPress: () => remove.mutate(j.id) },
+      ],
+    );
 
   const {
     data: allJobs,
@@ -129,7 +168,14 @@ export const EmployerJobsScreen: React.FC = () => {
                     {job.location.city} · {t(SHIFT_LABEL[job.shift])} · {formatPay(job.payMin, job.payMax, job.payPeriod)}
                   </Text>
                 </View>
-                <ChevronRight size={18} color={colors.inkMuted} />
+                <TouchableOpacity
+                  onPress={() => setMenuJob(job)}
+                  accessibilityLabel="Job options"
+                  hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                  style={styles.moreBtn}
+                >
+                  <MoreVertical size={20} color={colors.inkSecondary} />
+                </TouchableOpacity>
               </View>
 
               {/* Stats Bar */}
@@ -167,11 +213,84 @@ export const EmployerJobsScreen: React.FC = () => {
           ))
         )}
       </ScrollView>
+
+      <Sheet visible={!!menuJob} onClose={() => setMenuJob(null)} title={menuJob?.title} subtitle={menuJob ? `${menuJob.location.city}` : undefined}>
+        {menuJob && (
+          <>
+            <JobMenuRow
+              icon={<Pencil size={20} color={colors.primary} />}
+              label="Edit job"
+              onPress={() => {
+                const id = menuJob.id;
+                setMenuJob(null);
+                navigation.navigate('PostJobWizard', { jobId: id });
+              }}
+            />
+            {menuJob.status === 'active' && (
+              <JobMenuRow
+                icon={<PauseCircle size={20} color={colors.primary} />}
+                label="Close job (stop new applications)"
+                onPress={() => {
+                  setStatus.mutate({ id: menuJob.id, status: 'closed' });
+                  setMenuJob(null);
+                }}
+              />
+            )}
+            {menuJob.status === 'closed' && (
+              <JobMenuRow
+                icon={<PlayCircle size={20} color={colors.primary} />}
+                label="Reopen job"
+                onPress={() => {
+                  setStatus.mutate({ id: menuJob.id, status: 'active' });
+                  setMenuJob(null);
+                }}
+              />
+            )}
+            <JobMenuRow
+              icon={<Copy size={20} color={colors.primary} />}
+              label="Duplicate as draft"
+              onPress={() => {
+                duplicate.mutate(menuJob);
+                setMenuJob(null);
+              }}
+            />
+            <JobMenuRow
+              icon={<Trash2 size={20} color={colors.dangerFg} />}
+              label="Delete job"
+              danger
+              onPress={() => {
+                const j = menuJob;
+                setMenuJob(null);
+                // Wait for the sheet to slide away before showing the alert.
+                setTimeout(() => confirmDelete(j), 250);
+              }}
+            />
+          </>
+        )}
+      </Sheet>
     </Screen>
   );
 };
 
+const JobMenuRow: React.FC<{ icon: React.ReactNode; label: string; onPress: () => void; danger?: boolean }> = ({
+  icon,
+  label,
+  onPress,
+  danger,
+}) => {
+  const { colors } = useUiStore();
+  return (
+    <TouchableOpacity onPress={onPress} activeOpacity={0.7} style={[styles.menuRow, { borderColor: colors.border }]}>
+      {icon}
+      <Text style={[styles.menuLabel, { color: danger ? colors.dangerFg : colors.ink }]}>{label}</Text>
+    </TouchableOpacity>
+  );
+};
+
 const styles = StyleSheet.create({
+  moreBtn: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
+  menuRow: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 56, borderBottomWidth: StyleSheet.hairlineWidth },
+  menuLabel: { fontSize: 15, fontWeight: '600', flex: 1 },
   scrollContent: {
     padding: 16,
     paddingBottom: 48,
@@ -197,7 +316,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 5,
     paddingHorizontal: 14,
-    height: 40,
+    height: 44,
     borderRadius: 20,
   },
   postJobBtnText: {
@@ -214,7 +333,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    height: 38,
+    height: 44,
     borderRadius: 11,
   },
   tabText: {

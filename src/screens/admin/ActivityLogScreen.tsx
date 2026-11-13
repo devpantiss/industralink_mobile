@@ -38,7 +38,7 @@ export const ActivityLogScreen: React.FC = () => {
   }, [q.data]);
 
   return (
-    <Screen edges={['top']}>
+    <Screen edges={['top', 'bottom']}>
       <AppHeader />
       <ScrollView
         contentContainerStyle={styles.content}

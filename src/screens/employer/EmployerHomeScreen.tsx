@@ -28,7 +28,7 @@ import { queryKeys } from '../../api/keys';
 import { useUiStore } from '../../store/uiStore';
 import { useAuthStore } from '../../store/authStore';
 import { SHIFT_LABEL } from '../../lib/labels';
-import { formatDateTime, greeting } from '../../lib/format';
+import { formatDateTime, greeting, isAfterAgo } from '../../lib/format';
 import { t } from '../../lib/i18n';
 
 export const EmployerHomeScreen: React.FC = () => {
@@ -54,7 +54,7 @@ export const EmployerHomeScreen: React.FC = () => {
   const s = summaryQuery.data;
   const jobs = jobsQuery.data ?? [];
   const upcomingInterviews = (interviewsQuery.data ?? [])
-    .filter((c) => c.interview && new Date(c.interview.at) > new Date(Date.now() - 3_600_000))
+    .filter((c) => c.interview && isAfterAgo(c.interview.at, 3_600_000))
     .slice(0, 4);
 
   const isRefreshing = summaryQuery.isRefetching || jobsQuery.isRefetching || interviewsQuery.isRefetching;
@@ -462,7 +462,7 @@ const styles = StyleSheet.create({
     borderRadius: 7,
   },
   barCountText: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '700',
   },
   barDayText: {

@@ -20,13 +20,15 @@ export const Skeleton: React.FC<{ width?: DimensionValue; height?: number; radiu
   const colors = useUiStore((s) => s.colors);
   const o = useSharedValue(1);
   useEffect(() => {
-    o.value = withRepeat(
+    o.set(
+      withRepeat(
       withTiming(0.5, { duration: 900, easing: Easing.inOut(Easing.quad), reduceMotion: ReduceMotion.System }),
-      -1,
-      true
+        -1,
+        true
+      )
     );
-  }, []);
-  const anim = useAnimatedStyle(() => ({ opacity: o.value }));
+  }, [o]);
+  const anim = useAnimatedStyle(() => ({ opacity: o.get() }));
   return (
     <Animated.View
       style={[{ width, height, borderRadius: radius, backgroundColor: colors.surfaceStrong }, anim, style]}

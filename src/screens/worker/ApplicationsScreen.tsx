@@ -1,13 +1,5 @@
 import React, { useState } from 'react';
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  RefreshControl,
-  ActivityIndicator,
-  Linking,
-} from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { Text } from '../../components/ui/Text';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -19,11 +11,9 @@ import {
   Clock,
   FileText,
   Gift,
-  MapPin,
   Phone,
   XCircle,
 } from 'lucide-react-native';
-import * as Haptics from 'expo-haptics';
 import type { WorkerStackParamList } from '../../navigation/types';
 import { ListSkeleton } from '../../components/ui/Skeleton';
 import { SegmentedTabs } from '../../components/ui/SegmentedTabs';
@@ -35,7 +25,8 @@ import { workerApi } from '../../api/workerApi';
 import { queryKeys } from '../../api/keys';
 import { useUiStore } from '../../store/uiStore';
 import { STAGE_LABEL_WORKER } from '../../lib/labels';
-import { formatDateTime, telUrl, timeAgo } from '../../lib/format';
+import { formatDateTime, timeAgo } from '../../lib/format';
+import { openContact } from '../../lib/contact';
 import { t } from '../../lib/i18n';
 import type { WorkerApplication } from '../../types';
 
@@ -232,7 +223,7 @@ function ApplicationCard({
 
         {app.contact && (
           <TouchableOpacity
-            onPress={() => Linking.openURL(telUrl(app.contact!.phone))}
+            onPress={() => openContact('call', app.contact!.phone)}
             style={[styles.callHrBtn, { backgroundColor: colors.primary }]}
           >
             <Phone size={13} color="#FFFFFF" />
@@ -372,7 +363,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    height: 38,
+    height: 44,
     borderRadius: 11,
   },
   tabLabel: {
@@ -513,7 +504,7 @@ const styles = StyleSheet.create({
     borderRadius: 3.5,
   },
   stepLabel: {
-    fontSize: 10.5,
+    fontSize: 11.5,
     textAlign: 'center',
   },
   contextBox: {

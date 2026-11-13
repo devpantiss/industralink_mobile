@@ -10,8 +10,10 @@ interface AuthStoreState {
   isLoading: boolean;
   role: Role;
   initAuth: () => Promise<void>;
-  sendOtp: (phone: string) => Promise<{ success: boolean; message: string }>;
-  verifyOtp: (phone: string, otp: string) => Promise<void>;
+  sendOtp: (phone: string) => Promise<{ success: boolean; message: string; isNewUser?: boolean }>;
+  verifyOtp: (phone: string, otp: string, extra?: Partial<User>) => Promise<void>;
+  signupEmployer: (body: { name: string; email: string; password: string; companyName: string }) => Promise<void>;
+  completeOnboarding: (partial?: Partial<User>) => void;
   loginWithEmail: (email: string, pass: string) => Promise<void>;
   logout: () => Promise<void>;
   switchRole: (role: Role) => void;
@@ -51,9 +53,12 @@ export const useAuthStore = create<AuthStoreState>((set, get) => ({
     return authApi.sendOtp(phone);
   },
 
-  verifyOtp: async (phone: string, otp: string) => {
+  verifyOtp: async (phone: string, otp: string, extra?: Partial<User>) => {
     try {
-      const { token, user } = await authApi.verifyOtp(phone, otp);
+      const res = await authApi.verifyOtp(phone, otp);
+      const token = res.token;
+      // `extra` is merged before signing in, so a new account goes straight to onboarding.
+      const user = { ...res.user, ...extra };
       await storage.setToken(token);
       await storage.setUser(user);
       set({
@@ -65,6 +70,17 @@ export const useAuthStore = create<AuthStoreState>((set, get) => ({
     } catch (err) {
       throw err;
     }
+  },
+
+  signupEmployer: async (body) => {
+    const { token, user } = await authApi.signupEmployer(body);
+    await storage.setToken(token);
+    await storage.setUser(user);
+    set({ token, user, isAuthenticated: true, role: user.role });
+  },
+
+  completeOnboarding: (partial) => {
+    get().updateUser({ ...partial, onboarded: true });
   },
 
   loginWithEmail: async (email: string, pass: string) => {

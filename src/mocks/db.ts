@@ -90,8 +90,8 @@ class MockDatabase {
     pincode: '755026',
     employmentType: 'permanent',
     workHistory: [
-      { company: 'L&T Heavy Engineering', role: 'Arc Welder', from: '2021', to: '2024' },
-      { company: 'Jindal Steel & Power', role: 'Trainee Welder', from: '2019', to: '2021' },
+      { company: 'Konark Heavy Engineering', role: 'Arc Welder', from: '2021', to: '2024' },
+      { company: 'Mahanadi Steel & Power', role: 'Trainee Welder', from: '2019', to: '2021' },
     ],
   };
   private savedJobIds: Set<string> = new Set(['job_1']);
@@ -238,7 +238,7 @@ class MockDatabase {
     address: 'Plot 4B, Kalinganagar Industrial Complex, Gate 4',
     pincode: '755026',
     website: 'https://eastline.demo',
-    gstNumber: '21AAACE2727Q1ZT',
+    gstNumber: '21DEMO00001A1Z1',
     about: 'Steel fabrication and heavy engineering plant. We hire welders, fitters and machinists for permanent and contract roles.',
     hrName: 'Pradeep Mohanty',
     hrDesignation: 'Plant HR Manager',
@@ -356,7 +356,7 @@ class MockDatabase {
       profileHint: 'Upload your ITI certificate so employers can see it',
       missing: [{ key: 'iti', label: 'ITI Certificate', link: '/worker/profile?tab=documents' }],
       nextStep: {
-        title: 'Gate Interview Scheduled',
+        title: 'Interview scheduled',
         subtitle: 'Plant Gate 4, Kalinganagar with National Heavy Engineering HR',
         link: '/worker/applications/app_1',
         at: '2026-11-20T10:30:00Z',
@@ -578,6 +578,27 @@ class MockDatabase {
     return newDoc;
   }
 
+  async deleteDocument(id: string): Promise<void> {
+    const doc = this.documents.find((d) => d.id === id);
+    if (!doc) return;
+    const resumes = this.documents.filter((d) => d.type === 'resume');
+    if (doc.type === 'resume' && resumes.length === 1) {
+      throw new Error('This is your only resume. Add another one before deleting it.');
+    }
+    this.documents = this.documents.filter((d) => d.id !== id);
+    // If the default resume was removed, the newest remaining resume becomes the default.
+    if (doc.isDefaultResume) {
+      const next = this.documents.filter((d) => d.type === 'resume').pop();
+      if (next) next.isDefaultResume = true;
+    }
+  }
+
+  async setDefaultResume(id: string): Promise<void> {
+    this.documents.forEach((d) => {
+      if (d.type === 'resume') d.isDefaultResume = d.id === id;
+    });
+  }
+
   async getWorkerProfile(): Promise<WorkerProfile> {
     return this.workerProfile;
   }
@@ -671,6 +692,17 @@ class MockDatabase {
     };
     this.jobs.unshift(newJob);
     return newJob;
+  }
+
+  async updateJob(id: string, changes: any): Promise<Job> {
+    const i = this.jobs.findIndex((j) => j.id === id);
+    if (i < 0) throw new Error('This job no longer exists.');
+    this.jobs[i] = { ...this.jobs[i]!, ...changes, id };
+    return this.jobs[i]!;
+  }
+
+  async deleteJob(id: string): Promise<void> {
+    this.jobs = this.jobs.filter((j) => j.id !== id);
   }
 
   async getCandidates(jobId?: string): Promise<Candidate[]> {
@@ -920,6 +952,32 @@ class MockDatabase {
     reason?: string
   ): Promise<VerificationItem> {
     return this.updateVerification(id, decision === 'approve' ? 'approved' : 'rejected', reason);
+  }
+
+  /** Everything that can change while using the demo, as plain JSON (see mocks/persist.ts). */
+  snapshot() {
+    return {
+      jobs: this.jobs,
+      companies: this.companies,
+      workerProfile: this.workerProfile,
+      savedJobIds: [...this.savedJobIds],
+      documents: this.documents,
+      applications: this.applications,
+      verifications: this.verifications,
+      adminUsers: this.adminUsers,
+      reports: this.reports,
+      tickets: this.tickets,
+      audit: this.audit,
+      pool: this.pool,
+      talent: this.talent,
+      myCompany: this.myCompany,
+    };
+  }
+
+  restore(data: Partial<ReturnType<MockDatabase['snapshot']>>) {
+    const { savedJobIds, ...rest } = data;
+    Object.assign(this, rest);
+    if (savedJobIds) this.savedJobIds = new Set(savedJobIds);
   }
 
   // Helper

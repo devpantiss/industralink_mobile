@@ -22,6 +22,7 @@ import { ActivityLogScreen } from '../screens/admin/ActivityLogScreen';
 import { SettingsScreen } from '../screens/shared/SettingsScreen';
 import { useUiStore } from '../store/uiStore';
 import { useAuthStore } from '../store/authStore';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { spacing } from '../theme/spacing';
 import { typography } from '../theme/typography';
 
@@ -30,10 +31,11 @@ const Drawer = createDrawerNavigator<AdminDrawerParamList>();
 const CustomAdminDrawer: React.FC<DrawerContentComponentProps> = (props) => {
   const { colors } = useUiStore();
   const { logout } = useAuthStore();
+  const insets = useSafeAreaInsets();
 
   return (
     <View style={[styles.drawerContainer, { backgroundColor: colors.surface }]}>
-      <View style={[styles.drawerHeader, { borderBottomColor: colors.border }]}>
+      <View style={[styles.drawerHeader, { borderBottomColor: colors.border, paddingTop: insets.top + spacing.lg }]}>
         <View style={[styles.shieldBox, { backgroundColor: colors.primarySoft }]}>
           <Shield size={24} color={colors.primary} />
         </View>
@@ -49,7 +51,7 @@ const CustomAdminDrawer: React.FC<DrawerContentComponentProps> = (props) => {
         <DrawerItemList {...props} />
       </DrawerContentScrollView>
 
-      <View style={[styles.drawerFooter, { borderTopColor: colors.border }]}>
+      <View style={[styles.drawerFooter, { borderTopColor: colors.border, paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
         <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
           <LogOut size={18} color={colors.dangerFg} />
           <Text style={[typography.body, { color: colors.dangerFg, fontWeight: '600', marginLeft: 8 }]}>

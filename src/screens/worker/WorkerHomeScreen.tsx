@@ -7,7 +7,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   CalendarClock,
   Search,
-  Mic,
   SlidersHorizontal,
   ArrowRight,
   MessageCircle,
@@ -49,7 +48,6 @@ export const WorkerHomeScreen: React.FC = () => {
   const qc = useQueryClient();
 
   const [q, setQ] = useState('');
-  const [listening, setListening] = useState(false);
   const [waAlerts, setWaAlerts] = useState(true);
 
   const goTab = (screen: keyof WorkerTabParamList) => navigation.navigate('WorkerTabs', { screen });
@@ -92,17 +90,6 @@ export const WorkerHomeScreen: React.FC = () => {
   const profile = profileQuery.data;
   const firstName = (user?.name || profile?.name || '').split(' ')[0];
   const jobsLoading = latestQuery.isLoading || (profileQuery.isSuccess && forYouQuery.isLoading);
-
-  const onVoice = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
-    if (listening) return setListening(false);
-    setListening(true);
-    // Demo: real speech-to-text needs a native module (planned with the backend).
-    setTimeout(() => {
-      setQ(trade ? t(TRADE_LABEL[trade]) : 'Welder');
-      setListening(false);
-    }, 1500);
-  };
 
   const refreshing = summaryQuery.isRefetching || latestQuery.isRefetching || forYouQuery.isRefetching;
   const onRefresh = () => {
@@ -161,13 +148,6 @@ export const WorkerHomeScreen: React.FC = () => {
                   <X size={16} color={colors.inkMuted} />
                 </TouchableOpacity>
               )}
-              <TouchableOpacity
-                onPress={onVoice}
-                accessibilityLabel={listening ? t('Stop listening') : t('Search by voice')}
-                style={[styles.micBtn, { backgroundColor: listening ? colors.dangerFg : colors.surfaceMuted }]}
-              >
-                <Mic size={18} color={listening ? '#FFFFFF' : colors.ink} />
-              </TouchableOpacity>
             </View>
             <TouchableOpacity
               onPress={() => goTab('FindJobs')}
@@ -177,9 +157,6 @@ export const WorkerHomeScreen: React.FC = () => {
               <SlidersHorizontal size={18} color={colors.onInk} />
             </TouchableOpacity>
           </View>
-          {listening && (
-            <Text style={[styles.listening, { color: colors.dangerFg }]}>{t('Listening… say a trade or city')}</Text>
-          )}
         </Hero>
 
         {/* Next interview / step */}
@@ -385,9 +362,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   searchInput: { flex: 1, fontSize: 15, paddingVertical: 0 },
-  micBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   filterBtn: { width: 52, height: 52, borderRadius: 26, alignItems: 'center', justifyContent: 'center' },
-  listening: { fontSize: 13, fontWeight: '600', marginTop: 8 },
 
   nextStep: { flexDirection: 'row', alignItems: 'center', gap: 12, borderRadius: 16, padding: 14, marginBottom: 14 },
   nextIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },

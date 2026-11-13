@@ -8,7 +8,7 @@ export const SEED_COMPANIES: Company[] = [
     size: '10,000+',
     location: { city: 'Kalinganagar', state: 'Odisha' },
     website: 'https://nationaleng.demo',
-    gstNumber: '21AAACT2727Q1ZT',
+    gstNumber: '21DEMO00001A1Z1',
     about: 'Premier industrial manufacturing and precision engineering fabrication facility.',
     verification: 'approved',
     status: 'active',
@@ -16,12 +16,12 @@ export const SEED_COMPANIES: Company[] = [
   },
   {
     id: 'comp_2',
-    name: 'Larsen & Toubro Heavy Engg',
+    name: 'Konark Heavy Engineering',
     sector: 'metals',
     size: '50,000+',
     location: { city: 'Hazira', state: 'Gujarat' },
-    website: 'https://larsentoubro.com',
-    gstNumber: '24AAACL0140P1ZX',
+    website: 'https://konarkheavy.demo',
+    gstNumber: '24DEMO00002B1Z2',
     about: 'Heavy industrial engineering and nuclear boiler manufacturing facility.',
     verification: 'approved',
     status: 'active',
@@ -29,12 +29,12 @@ export const SEED_COMPANIES: Company[] = [
   },
   {
     id: 'comp_3',
-    name: 'Jindal Steel & Power Ltd',
+    name: 'Mahanadi Steel & Power Ltd',
     sector: 'mining',
     size: '25,000+',
     location: { city: 'Angul', state: 'Odisha' },
-    website: 'https://jindalsteelpower.com',
-    gstNumber: '21AAACJ0123Q1Z1',
+    website: 'https://mahanadisteel.demo',
+    gstNumber: '21DEMO00003C1Z3',
     about: 'Integrated steel plant, coal gasification and pelletization plant.',
     verification: 'approved',
     status: 'active',
@@ -42,12 +42,12 @@ export const SEED_COMPANIES: Company[] = [
   },
   {
     id: 'comp_4',
-    name: 'Adani Ports & Special Economic Zone',
+    name: 'Westcoast Ports & Logistics Ltd',
     sector: 'shipping',
     size: '15,000+',
     location: { city: 'Mundra', state: 'Gujarat' },
-    website: 'https://adaniports.com',
-    gstNumber: '24AAACA0001P1Z9',
+    website: 'https://westcoastports.demo',
+    gstNumber: '24DEMO00004D1Z4',
     about: 'Commercial port terminal and cargo handling logistics hub.',
     verification: 'approved',
     status: 'active',
@@ -55,12 +55,12 @@ export const SEED_COMPANIES: Company[] = [
   },
   {
     id: 'comp_5',
-    name: 'Mahindra & Mahindra Auto Plant',
+    name: 'Pinnacle Auto Components Plant',
     sector: 'automotive',
     size: '30,000+',
     location: { city: 'Chakan, Pune', state: 'Maharashtra' },
-    website: 'https://mahindra.com',
-    gstNumber: '27AAACM0002P1Z5',
+    website: 'https://pinnacleauto.demo',
+    gstNumber: '27DEMO00005E1Z5',
     about: 'Automobile assembly and robotic chassis welding plant.',
     verification: 'approved',
     status: 'active',
@@ -111,7 +111,7 @@ export const SEED_JOBS: Job[] = [
   {
     id: 'job_2',
     companyId: 'comp_2',
-    companyName: 'Larsen & Toubro Heavy Engg',
+    companyName: 'Konark Heavy Engineering',
     companyVerified: true,
     title: 'CNC Lathe & Milling Machinist',
     trade: 'machine_operator',
@@ -148,7 +148,7 @@ export const SEED_JOBS: Job[] = [
   {
     id: 'job_3',
     companyId: 'comp_3',
-    companyName: 'Jindal Steel & Power Ltd',
+    companyName: 'Mahanadi Steel & Power Ltd',
     companyVerified: true,
     title: 'Heavy Equipment Mechanical Fitter',
     trade: 'fitter',
@@ -177,7 +177,7 @@ export const SEED_JOBS: Job[] = [
     status: 'active',
     postedAt: '2026-11-08T14:00:00Z',
     siteName: 'Pellet Plant Section 1',
-    address: 'Jindal Industrial Park, Angul',
+    address: 'Brahmani Industrial Park, Angul',
     allowCalls: false,
     applicantsCount: 31,
     newApplicantsCount: 6,
@@ -185,7 +185,7 @@ export const SEED_JOBS: Job[] = [
   {
     id: 'job_4',
     companyId: 'comp_4',
-    companyName: 'Adani Ports & SEZ',
+    companyName: 'Westcoast Ports & Logistics',
     companyVerified: true,
     title: 'Substation Industrial Electrician',
     trade: 'electrician',
@@ -222,7 +222,7 @@ export const SEED_JOBS: Job[] = [
   {
     id: 'job_5',
     companyId: 'comp_5',
-    companyName: 'Mahindra & Mahindra Auto',
+    companyName: 'Pinnacle Auto Components',
     companyVerified: true,
     title: 'Automotive Spot & Robotic Welder',
     trade: 'welder',
@@ -300,7 +300,7 @@ export const SEED_VERIFICATIONS: VerificationItem[] = [
     submittedAt: '2026-11-10T10:00:00Z',
     status: 'pending',
     details: {
-      'GST number': '21AAACT2727Q1ZW',
+      'GST number': '21DEMO00006F1Z6',
       'Entity Name': 'National Heavy Engineering',
       'City': 'Kalinganagar, Odisha',
       'HR Contact': 'Pradeep Mohanty (+91 98111 22334)',
@@ -319,20 +319,20 @@ export const SEED_VERIFICATIONS: VerificationItem[] = [
   {
     id: 'comp_2',
     kind: 'company',
-    title: 'Jindal Heavy Logistics Ltd',
+    title: 'Brahmani Heavy Logistics Ltd',
     subtitle: 'Contracting Agency · Angul, Odisha',
     submittedAt: '2026-11-09T14:30:00Z',
     status: 'approved',
     details: {
-      'GST number': '21AABCJ3321R1ZK',
-      'Entity Name': 'Jindal Heavy Logistics Ltd',
+      'GST number': '21DEMO00007G1Z7',
+      'Entity Name': 'Brahmani Heavy Logistics Ltd',
       'City': 'Angul, Odisha',
       'HR Contact': 'Amitabh Dash (+91 94370 12345)',
     },
     documents: [
       {
         id: 'cdoc_2',
-        name: 'Factory_Registration_Jindal.pdf',
+        name: 'Factory_Registration_Brahmani.pdf',
         type: 'cin',
         mimeType: 'application/pdf',
         uploadedAt: '2026-11-09T14:30:00Z',
@@ -348,7 +348,7 @@ export const SEED_VERIFICATIONS: VerificationItem[] = [
     submittedAt: '2026-11-11T08:15:00Z',
     status: 'pending',
     details: {
-      'GST number': '21ABCFK8812M1Z3',
+      'GST number': '21DEMO00008H1Z8',
       'Entity Name': 'Kalinganagar Manpower Services',
       'City': 'Jajpur, Odisha',
       'HR Contact': 'Sushant Rout (+91 70081 44556)',
@@ -363,7 +363,7 @@ export const SEED_VERIFICATIONS: VerificationItem[] = [
     submittedAt: '2026-11-04T11:00:00Z',
     status: 'rejected',
     details: {
-      'GST number': '21AAGCP4410L1ZQ',
+      'GST number': '21DEMO00009I1Z9',
       'Entity Name': 'Paradip Bulk Handling Pvt Ltd',
       'City': 'Paradip, Odisha',
       'HR Contact': 'Nirmal Das (+91 94371 22001)',
@@ -410,7 +410,7 @@ export const SEED_APPLICANT_POOL: PoolEntry[] = [
       qualifications: ['ITI Welder (NCVT)'], licences: ['Welding cert'], skills: ['MIG Welding', 'Pipe Welding 6G', 'Gas Cutting'],
       location: { city: 'Cuttack', state: 'Odisha' }, willingToRelocate: true, expectedPay: 27000, safetyTrainingHours: 60,
       languages: ['Odia', 'Hindi'], about: 'Pipe and structural welder, 7 years in steel plants.',
-      workHistory: [{ company: 'Tata Steel (contract)', role: 'Pipe Welder', from: '2019', to: '2026' }] }),
+      workHistory: [{ company: 'Eastern Steel Works (contract)', role: 'Pipe Welder', from: '2019', to: '2026' }] }),
   },
   {
     jobId: 'job_1', stage: 'shortlisted', daysAgo: 9, sentWith: 'document',
@@ -479,13 +479,13 @@ export const SEED_ADMIN_USERS: AdminUserRow[] = [
 ];
 
 export const SEED_REPORTS: JobReport[] = [
-  { id: 'rep_1', jobId: 'job_5', jobTitle: 'Automotive Spot & Robotic Welder', companyName: 'Mahindra & Mahindra Auto', reporterName: 'Deepak Yadav',
+  { id: 'rep_1', jobId: 'job_5', jobTitle: 'Automotive Spot & Robotic Welder', companyName: 'Pinnacle Auto Components', reporterName: 'Deepak Yadav',
     reason: 'asks_money', details: 'The agent on the phone asked for ₹3,000 registration fee before the interview.', at: '2026-11-12T05:30:00Z', status: 'open' },
-  { id: 'rep_2', jobId: 'job_5', jobTitle: 'Automotive Spot & Robotic Welder', companyName: 'Mahindra & Mahindra Auto', reporterName: 'Sanjay Behera',
+  { id: 'rep_2', jobId: 'job_5', jobTitle: 'Automotive Spot & Robotic Welder', companyName: 'Pinnacle Auto Components', reporterName: 'Sanjay Behera',
     reason: 'asks_money', at: '2026-11-11T16:10:00Z', status: 'open' },
-  { id: 'rep_3', jobId: 'job_2', jobTitle: 'CNC Lathe & Milling Machinist', companyName: 'Larsen & Toubro Heavy Engg', reporterName: 'Pooja Sahu',
+  { id: 'rep_3', jobId: 'job_2', jobTitle: 'CNC Lathe & Milling Machinist', companyName: 'Konark Heavy Engineering', reporterName: 'Pooja Sahu',
     reason: 'wrong_details', details: 'Pay on the call was ₹18,000, not ₹26,000 as shown.', at: '2026-11-10T09:00:00Z', status: 'open' },
-  { id: 'rep_4', jobId: 'job_3', jobTitle: 'Heavy Equipment Mechanical Fitter', companyName: 'Jindal Steel & Power Ltd', reporterName: 'Anil Munda',
+  { id: 'rep_4', jobId: 'job_3', jobTitle: 'Heavy Equipment Mechanical Fitter', companyName: 'Mahanadi Steel & Power Ltd', reporterName: 'Anil Munda',
     reason: 'fake', at: '2026-11-02T09:00:00Z', status: 'dismissed', resolvedAt: '2026-11-03T10:00:00Z', resolvedBy: 'Admin' },
 ];
 
@@ -499,7 +499,7 @@ export const SEED_TICKETS: SupportTicket[] = [
 ];
 
 export const SEED_AUDIT: AuditEntry[] = [
-  { id: 'aud_3', at: '2026-11-09T15:00:00Z', actor: 'Admin', action: 'Approved company', target: 'Jindal Heavy Logistics Ltd' },
+  { id: 'aud_3', at: '2026-11-09T15:00:00Z', actor: 'Admin', action: 'Approved company', target: 'Brahmani Heavy Logistics Ltd' },
   { id: 'aud_2', at: '2026-11-05T12:00:00Z', actor: 'Admin', action: 'Rejected company', target: 'Paradip Bulk Handling Pvt Ltd' },
   { id: 'aud_1', at: '2026-11-03T10:00:00Z', actor: 'Admin', action: 'Dismissed report on', target: 'Heavy Equipment Mechanical Fitter' },
 ];

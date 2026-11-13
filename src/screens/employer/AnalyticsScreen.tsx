@@ -143,7 +143,7 @@ export const AnalyticsScreen: React.FC = () => {
   };
 
   return (
-    <Screen edges={['top']}>
+    <Screen edges={['top', 'bottom']}>
       <AppHeader />
       <ScrollView
         contentContainerStyle={styles.content}
@@ -216,7 +216,7 @@ const styles = StyleSheet.create({
   barCol: { flex: 1, alignItems: 'center', justifyContent: 'flex-end', gap: 4 },
   bar: { width: '70%', maxWidth: 26, borderTopLeftRadius: 4, borderTopRightRadius: 4 },
   barNum: { fontSize: 11, fontWeight: '700' },
-  barLabel: { fontSize: 10, height: 14 },
+  barLabel: { fontSize: 11, height: 14 },
   states: { gap: 12 },
   stateRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 5 },
   stateName: { fontSize: 13 },
@@ -232,7 +232,7 @@ const styles = StyleSheet.create({
   step: { flex: 1, borderRadius: 10, paddingVertical: 8, paddingHorizontal: 6, alignItems: 'center' },
   stepNum: { fontSize: 17, fontWeight: '800' },
   stepOf: { fontSize: 12, fontWeight: '600' },
-  stepLabel: { fontSize: 10.5, fontWeight: '600', marginTop: 1 },
+  stepLabel: { fontSize: 11.5, fontWeight: '600', marginTop: 1 },
   empty: { borderRadius: 16, padding: 28, alignItems: 'center', gap: 6 },
   emptyTitle: { fontSize: 15, fontWeight: '700' },
   emptyText: { fontSize: 13, textAlign: 'center', lineHeight: 18 },

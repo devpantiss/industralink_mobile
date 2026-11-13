@@ -4,15 +4,11 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
-  ImageBackground,
+  Image,
   Modal,
-  Platform,
-  KeyboardAvoidingView,
   ActivityIndicator,
   useWindowDimensions,
   Animated,
-  LayoutAnimation,
-  UIManager,
 } from 'react-native';
 import { Text, TextInput } from '../../components/ui/Text';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -46,8 +42,9 @@ import { LogoMark } from '../../components/ui/LogoMark';
 import { HazardStrip } from '../../components/ui/HazardStrip';
 import { useUiStore } from '../../store/uiStore';
 import { useAuthStore } from '../../store/authStore';
+import { USE_MOCKS } from '../../api/client';
 import { t } from '../../lib/i18n';
-import { spacing } from '../../theme/spacing';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { typography } from '../../theme/typography';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
@@ -55,25 +52,21 @@ type Audience = 'worker' | 'employer';
 
 const heroImage = require('../../../assets/login.jpg');
 
-// Enable LayoutAnimation for Android
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
-
 export const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const { height: screenHeight } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
   const { colors, theme, toggleTheme, language, setLanguage, showToast } = useUiStore();
   const { sendOtp, verifyOtp, loginWithEmail, loginAsDemo } = useAuthStore();
 
   const [role, setRole] = useState<Audience>('worker');
   const [step, setStep] = useState<'phone' | 'code'>('phone');
-  const [phone, setPhone] = useState('9876543210');
-  const [code, setCode] = useState(['1', '2', '3', '4', '5', '6']);
+  const [phone, setPhone] = useState(USE_MOCKS ? '9876543210' : '');
+  const [code, setCode] = useState(USE_MOCKS ? ['1', '2', '3', '4', '5', '6'] : ['', '', '', '', '', '']);
   const [phoneFocused, setPhoneFocused] = useState(false);
 
   // Employer state (non-controversial brand)
-  const [email, setEmail] = useState('recruiter@nationaleng.demo');
-  const [password, setPassword] = useState('password123');
+  const [email, setEmail] = useState(USE_MOCKS ? 'recruiter@nationaleng.demo' : '');
+  const [password, setPassword] = useState(USE_MOCKS ? 'password123' : '');
   const [showPassword, setShowPassword] = useState(false);
   const [emailFocused, setEmailFocused] = useState(false);
   const [passwordFocused, setPasswordFocused] = useState(false);
@@ -83,12 +76,12 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [langModalVisible, setLangModalVisible] = useState(false);
   const [countdown, setCountdown] = useState(30);
 
-  const codeInputs = useRef<Array<any>>([]);
+  const codeInputs = useRef<any[]>([]);
 
   // Animation values
-  const roleSlideAnim = useRef(new Animated.Value(0)).current;
-  const formFadeAnim = useRef(new Animated.Value(1)).current;
-  const formSlideY = useRef(new Animated.Value(0)).current;
+  const [roleSlideAnim] = useState(() => new Animated.Value(0));
+  const [formFadeAnim] = useState(() => new Animated.Value(1));
+  const [formSlideY] = useState(() => new Animated.Value(0));
 
   // Stretches hero image to cover ~39% of screen height
   const heroHeight = Math.max(300, Math.round(screenHeight * 0.39));
@@ -102,6 +95,8 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
   }, [step, countdown]);
 
   const triggerFormTransition = () => {
+    formFadeAnim.stopAnimation();
+    formSlideY.stopAnimation();
     formFadeAnim.setValue(0);
     formSlideY.setValue(8);
     Animated.parallel([
@@ -115,19 +110,17 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
         duration: 240,
         useNativeDriver: true,
       }),
-    ]).start();
+    ]).start(({ finished }) => {
+      if (!finished) {
+        formFadeAnim.setValue(1);
+        formSlideY.setValue(0);
+      }
+    });
   };
 
   const handleRoleChange = (selected: Audience) => {
     if (selected === role) return;
     Haptics.selectionAsync();
-
-    LayoutAnimation.configureNext({
-      duration: 260,
-      create: { type: LayoutAnimation.Types.easeInEaseOut, property: LayoutAnimation.Properties.opacity },
-      update: { type: LayoutAnimation.Types.easeInEaseOut },
-      delete: { type: LayoutAnimation.Types.easeInEaseOut, property: LayoutAnimation.Properties.opacity },
-    });
 
     setRole(selected);
     setStep('phone');
@@ -152,9 +145,13 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       const res = await sendOtp(phone);
+      if (res.isNewUser) {
+        // No account for this number yet: send them to sign up instead of creating one silently.
+        showToast(t('No account found for this number. Create one to continue.'), 'info');
+        navigation.navigate('Signup');
+        return;
+      }
       showToast(res.message, 'info');
-
-      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
       setStep('code');
       setCountdown(30);
       triggerFormTransition();
@@ -265,10 +262,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <Screen edges={['top']} style={{ backgroundColor: '#0B1120' }}>
       <StatusBar style="light" />
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
+      <View style={{ flex: 1 }}>
         <ScrollView
           bounces={false}
           showsVerticalScrollIndicator={false}
@@ -278,11 +272,12 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
         >
           {/* ================= HERO CONTAINER (Dark Background Behind Radius) ================= */}
           <View style={[styles.heroOuterWrapper, { backgroundColor: '#0B1120' }]}>
-            <ImageBackground
-              source={heroImage}
-              style={[styles.heroBackground, { height: heroHeight }]}
-              imageStyle={styles.heroImageStyle}
-            >
+            <View style={[styles.heroBackground, { height: heroHeight }]}>
+              <Image
+                source={heroImage}
+                resizeMode="cover"
+                style={StyleSheet.absoluteFill}
+              />
               {/* Rich cinematic gradient overlay */}
               <View style={styles.heroOverlay} />
 
@@ -326,7 +321,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
                 {/* Brand Tagline */}
                 <View style={styles.heroTaglineRow}>
                   <Text style={styles.heroTaglineText}>
-                    India's trusted platform for industrial jobs
+                    India’s trusted platform for industrial jobs
                   </Text>
                 </View>
 
@@ -382,7 +377,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
               {/* Industrial Hazard Safety Stripes */}
               <HazardStrip height={5} />
-            </ImageBackground>
+            </View>
 
             {/* Seamless 36px dark apron directly behind card top corners */}
             <View style={styles.heroDarkApron} />
@@ -484,7 +479,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
                       { color: role === 'employer' ? colors.ink : colors.inkSecondary },
                     ]}
                   >
-                    I'm hiring
+                    I’m hiring
                   </Text>
                   <Text style={[styles.segmentSub, { color: colors.inkMuted }]}>
                     Company & HR login
@@ -536,6 +531,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
                         {phone.length > 0 && (
                           <TouchableOpacity
                             onPress={() => setPhone('')}
+                            accessibilityLabel={t('Clear')}
                             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                             style={{ padding: 4 }}
                           >
@@ -577,7 +573,6 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
                         </Text>
                         <TouchableOpacity
                           onPress={() => {
-                            LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                             setStep('phone');
                             setCode(['', '', '', '', '', '']);
                             triggerFormTransition();
@@ -621,7 +616,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
 
                       <View style={styles.resendRow}>
                         <Text style={[styles.resendHint, { color: colors.inkMuted }]}>
-                          Demo code: 123456
+                          {USE_MOCKS ? 'Demo code: 123456' : ''}
                         </Text>
                         {countdown > 0 ? (
                           <Text style={[styles.countdownText, { color: colors.inkSecondary }]}>
@@ -727,6 +722,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
                     />
                     <TouchableOpacity
                       onPress={() => setShowPassword((prev) => !prev)}
+                      accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
                       hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                     >
                       {showPassword ? (
@@ -738,7 +734,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
                   </View>
 
                   {/* Forgot Password Link */}
-                  <TouchableOpacity style={styles.forgotPassBtn}>
+                  <TouchableOpacity style={styles.forgotPassBtn} onPress={() => navigation.navigate('ForgotPassword')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
                     <Text style={[styles.forgotPassText, { color: colors.primary }]}>
                       Forgot password?
                     </Text>
@@ -778,6 +774,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
             </Animated.View>
 
             {/* ================= COMPACT DEMO BAR ================= */}
+            {USE_MOCKS && (
             <View style={styles.demoBarWrapper}>
               <View style={styles.demoDividerRow}>
                 <View style={[styles.demoLine, { backgroundColor: colors.border }]} />
@@ -873,9 +870,10 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
                 </TouchableOpacity>
               </View>
             </View>
+            )}
           </View>
         </ScrollView>
-      </KeyboardAvoidingView>
+      </View>
 
       {/* ================= LANGUAGE PICKER BOTTOM SHEET ================= */}
       <Modal
@@ -890,7 +888,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
           onPress={() => setLangModalVisible(false)}
         >
           <View
-            style={[styles.modalSheet, { backgroundColor: colors.surface }]}
+            style={[styles.modalSheet, { backgroundColor: colors.surface, paddingBottom: insets.bottom + 20 }]}
             onStartShouldSetResponder={() => true}
           >
             <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
@@ -960,9 +958,6 @@ const styles = StyleSheet.create({
     width: '100%',
     justifyContent: 'space-between',
     backgroundColor: '#0B1120',
-  },
-  heroImageStyle: {
-    resizeMode: 'cover',
   },
   heroOverlay: {
     ...StyleSheet.absoluteFill,
@@ -1104,7 +1099,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   featureBadgeText: {
-    fontSize: 10.5,
+    fontSize: 11.5,
     fontWeight: '700',
     color: '#2454E6',
   },
@@ -1125,7 +1120,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   shortlistPillText: {
-    fontSize: 10.5,
+    fontSize: 11.5,
     fontWeight: '700',
     color: '#0E9F6E',
   },
@@ -1197,7 +1192,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   segmentSub: {
-    fontSize: 10,
+    fontSize: 11,
     marginTop: 1,
   },
 
@@ -1362,7 +1357,7 @@ const styles = StyleSheet.create({
     gap: 4,
   },
   demoBadgeText: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '700',
     letterSpacing: 0.8,
   },
@@ -1376,7 +1371,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 5,
-    height: 38,
+    height: 44,
     borderRadius: 10,
     borderWidth: 1,
   },
@@ -1385,7 +1380,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   demoPillWho: {
-    fontSize: 10,
+    fontSize: 11,
   },
 
   /* MODAL */

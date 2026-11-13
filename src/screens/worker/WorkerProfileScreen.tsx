@@ -6,29 +6,18 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
-  Image,
 } from 'react-native';
 import { Text } from '../../components/ui/Text';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
-import {
-  BadgeCheck,
-  Camera,
-  FileText,
-  FileImage,
-  Upload,
-  Star,
-  LogOut,
-  Pencil,
-  Plus,
-  Trash2,
-} from 'lucide-react-native';
-import * as Haptics from 'expo-haptics';
+import { BadgeCheck, Camera, FileText, Upload, Star, LogOut, Plus, Pencil, Trash2, Image as ImageIcon } from 'lucide-react-native';
 import { SegmentedTabs } from '../../components/ui/SegmentedTabs';
 import { Screen } from '../../components/layout/Screen';
 import { AppHeader } from '../../components/layout/AppHeader';
 import { Avatar } from '../../components/ui/Avatar';
+import { Sheet } from '../../components/ui/Sheet';
+import { ProfileEditSheets, type ProfileSection } from '../../components/domain/ProfileEditSheets';
 import { workerApi } from '../../api/workerApi';
 import { queryKeys } from '../../api/keys';
 import { useUiStore } from '../../store/uiStore';
@@ -43,15 +32,17 @@ import {
 } from '../../lib/labels';
 import { formatDate, formatNumber, formatPhone } from '../../lib/format';
 import { t } from '../../lib/i18n';
-import type { DocType, WorkerDocument } from '../../types';
+import type { DocType } from '../../types';
 
 type Tab = 'profile' | 'documents';
 
 export const WorkerProfileScreen: React.FC = () => {
   const { colors, showToast } = useUiStore();
-  const { user, logout } = useAuthStore();
+  const { logout } = useAuthStore();
   const qc = useQueryClient();
   const [tab, setTab] = useState<Tab>('profile');
+  const [editing, setEditing] = useState<ProfileSection | null>(null);
+  const [menu, setMenu] = useState<'photo' | 'doc' | null>(null);
 
   // Profile & Summary Queries
   const { data: profile, isLoading } = useQuery({
@@ -88,60 +79,67 @@ export const WorkerProfileScreen: React.FC = () => {
     },
   });
 
-  const handlePickPhoto = async () => {
-    Alert.alert(t('Change Profile Photo'), t('Choose a source:'), [
-      {
-        text: t('Take Photo'),
-        onPress: async () => {
-          const res = await ImagePicker.launchCameraAsync({
-            mediaTypes: ['images'],
-            quality: 0.7,
-          });
-          if (!res.canceled && res.assets[0]?.uri) {
-            updatePhotoMutation.mutate(res.assets[0].uri);
-          }
-        },
-      },
-      {
-        text: t('Choose from Gallery'),
-        onPress: async () => {
-          const res = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ['images'],
-            quality: 0.7,
-          });
-          if (!res.canceled && res.assets[0]?.uri) {
-            updatePhotoMutation.mutate(res.assets[0].uri);
-          }
-        },
-      },
+  const deleteDocMutation = useMutation({
+    mutationFn: (id: string) => workerApi.deleteDocument(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.worker.all });
+      showToast(t('Document deleted'), 'success');
+    },
+    onError: (e: Error) => showToast(t(e.message), 'error'),
+  });
+
+  const defaultResumeMutation = useMutation({
+    mutationFn: (id: string) => workerApi.setDefaultResume(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: queryKeys.worker.all });
+      showToast(t('Default resume changed'), 'success');
+    },
+  });
+
+  const confirmDelete = (id: string, name: string) =>
+    Alert.alert(t('Delete this document?'), name, [
       { text: t('Cancel'), style: 'cancel' },
+      { text: t('Delete'), style: 'destructive', onPress: () => deleteDocMutation.mutate(id) },
     ]);
+
+  const pickPhoto = async (source: 'camera' | 'gallery') => {
+    setMenu(null);
+    try {
+      const perm =
+        source === 'camera'
+          ? await ImagePicker.requestCameraPermissionsAsync()
+          : await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!perm.granted) {
+        showToast(
+          t(source === 'camera' ? 'Allow camera access in your phone settings to take a photo.' : 'Allow photo access in your phone settings to choose a photo.'),
+          'warning',
+        );
+        return;
+      }
+      const res =
+        source === 'camera'
+          ? await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 0.7 })
+          : await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.7 });
+      if (!res.canceled && res.assets[0]?.uri) updatePhotoMutation.mutate(res.assets[0].uri);
+    } catch {
+      showToast(t('Could not open the camera or photos. Try again.'), 'error');
+    }
   };
 
-  const handleUploadDocument = async () => {
-    Alert.alert(t('Upload Document'), t('Choose document type:'), [
-      {
-        text: t('Aadhaar / ID proof'),
-        onPress: () => pickAndUploadDoc('id_proof'),
-      },
-      {
-        text: t('ITI / Diploma Certificate'),
-        onPress: () => pickAndUploadDoc('iti_diploma'),
-      },
-      {
-        text: t('Resume (PDF)'),
-        onPress: () => pickAndUploadDoc('resume'),
-      },
-      { text: t('Cancel'), style: 'cancel' },
-    ]);
-  };
+  const handlePickPhoto = () => setMenu('photo');
+  const handleUploadDocument = () => setMenu('doc');
 
   const pickAndUploadDoc = async (type: DocType) => {
+    setMenu(null);
     try {
       const res = await DocumentPicker.getDocumentAsync({
         type: ['application/pdf', 'image/*'],
       });
       if (!res.canceled && res.assets[0]) {
+        if ((res.assets[0].size ?? 0) > 5 * 1024 * 1024) {
+          showToast(t('This file is too big. Choose a file under 5 MB.'), 'warning');
+          return;
+        }
         uploadDocMutation.mutate({
           name: res.assets[0].name,
           type,
@@ -149,7 +147,7 @@ export const WorkerProfileScreen: React.FC = () => {
         });
       }
     } catch {
-      // Ignored
+      showToast(t('Could not open that file. Try again.'), 'error');
     }
   };
 
@@ -173,7 +171,7 @@ export const WorkerProfileScreen: React.FC = () => {
           <View style={styles.avatarRow}>
             <View style={styles.avatarWrapper}>
               <Avatar name={profile.name} size="xl" src={profile.photoUrl} />
-              <TouchableOpacity onPress={handlePickPhoto} style={[styles.cameraBadge, { backgroundColor: colors.primary }]}>
+              <TouchableOpacity onPress={handlePickPhoto} accessibilityLabel={t('Change Profile Photo')} style={[styles.cameraBadge, { backgroundColor: colors.primary }]}>
                 <Camera size={14} color="#FFFFFF" />
               </TouchableOpacity>
             </View>
@@ -237,6 +235,7 @@ export const WorkerProfileScreen: React.FC = () => {
             <View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <View style={styles.cardHeaderRow}>
                 <Text style={[styles.cardTitle, { color: colors.ink }]}>{t('Work')}</Text>
+                <EditButton onPress={() => setEditing('work')} />
               </View>
 
               <DefinitionRow
@@ -308,6 +307,7 @@ export const WorkerProfileScreen: React.FC = () => {
             <View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
               <View style={styles.cardHeaderRow}>
                 <Text style={[styles.cardTitle, { color: colors.ink }]}>{t('Personal')}</Text>
+                <EditButton onPress={() => setEditing('personal')} />
               </View>
 
               <DefinitionRow label={t('Name')} value={profile.name} />
@@ -336,6 +336,7 @@ export const WorkerProfileScreen: React.FC = () => {
                 <Text style={[styles.cardTitle, { color: colors.ink }]}>
                   {t('Job preferences')}
                 </Text>
+                <EditButton onPress={() => setEditing('preferences')} />
               </View>
 
               <DefinitionRow
@@ -371,7 +372,7 @@ export const WorkerProfileScreen: React.FC = () => {
                     {t('Add your certificate or resume')}
                   </Text>
                   <Text style={[styles.uploadSubtitle, { color: colors.inkSecondary }]}>
-                    {t('Verified documents help you get shortlisted faster by leading industrial plants.')}
+                    {t('Adding your certificates helps employers shortlist you faster.')}
                   </Text>
                 </View>
               </View>
@@ -419,7 +420,23 @@ export const WorkerProfileScreen: React.FC = () => {
                     <Text style={[styles.docMeta, { color: colors.inkMuted }]}>
                       {t(DOC_TYPE_LABEL[d.type])} · {formatDate(d.uploadedAt)}
                     </Text>
+                    {d.type === 'resume' && !d.isDefaultResume && (
+                      <TouchableOpacity
+                        onPress={() => defaultResumeMutation.mutate(d.id)}
+                        hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                      >
+                        <Text style={[styles.docAction, { color: colors.primary }]}>{t('Make default')}</Text>
+                      </TouchableOpacity>
+                    )}
                   </View>
+                  <TouchableOpacity
+                    onPress={() => confirmDelete(d.id, d.name)}
+                    accessibilityLabel={t('Delete')}
+                    style={styles.docDelete}
+                    hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                  >
+                    <Trash2 size={18} color={colors.inkMuted} />
+                  </TouchableOpacity>
                 </View>
               ))}
             </View>
@@ -444,9 +461,47 @@ export const WorkerProfileScreen: React.FC = () => {
           <Text style={[styles.logoutBtnText, { color: colors.dangerFg }]}>{t('Log out')}</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      <ProfileEditSheets section={editing} profile={profile} onClose={() => setEditing(null)} />
+
+      <Sheet visible={menu === 'photo'} onClose={() => setMenu(null)} title={t('Change Profile Photo')}>
+        <MenuRow icon={<Camera size={20} color={colors.primary} />} label={t('Take Photo')} onPress={() => pickPhoto('camera')} />
+        <MenuRow icon={<ImageIcon size={20} color={colors.primary} />} label={t('Choose from Gallery')} onPress={() => pickPhoto('gallery')} />
+      </Sheet>
+
+      <Sheet visible={menu === 'doc'} onClose={() => setMenu(null)} title={t('Upload Document')} subtitle={t('Choose document type:')}>
+        <MenuRow icon={<FileText size={20} color={colors.primary} />} label={t('Aadhaar / ID proof')} onPress={() => pickAndUploadDoc('id_proof')} />
+        <MenuRow icon={<FileText size={20} color={colors.primary} />} label={t('ITI / Diploma Certificate')} onPress={() => pickAndUploadDoc('iti_diploma')} />
+        <MenuRow icon={<FileText size={20} color={colors.primary} />} label={t('Resume (PDF)')} onPress={() => pickAndUploadDoc('resume')} />
+      </Sheet>
     </Screen>
   );
 };
+
+function EditButton({ onPress }: { onPress: () => void }) {
+  const { colors } = useUiStore();
+  return (
+    <TouchableOpacity
+      onPress={onPress}
+      accessibilityLabel={t('Edit')}
+      hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+      style={[styles.editBtn, { backgroundColor: colors.primarySoft }]}
+    >
+      <Pencil size={14} color={colors.primary} />
+      <Text style={[styles.editBtnText, { color: colors.primary }]}>{t('Edit')}</Text>
+    </TouchableOpacity>
+  );
+}
+
+function MenuRow({ icon, label, onPress }: { icon: React.ReactNode; label: string; onPress: () => void }) {
+  const { colors } = useUiStore();
+  return (
+    <TouchableOpacity onPress={onPress} style={[styles.menuRow, { borderColor: colors.border }]} activeOpacity={0.7}>
+      {icon}
+      <Text style={[styles.menuLabel, { color: colors.ink }]}>{label}</Text>
+    </TouchableOpacity>
+  );
+}
 
 function DefinitionRow({ label, value }: { label: string; value: string }) {
   const { colors } = useUiStore();
@@ -554,7 +609,7 @@ const styles = StyleSheet.create({
   tabSwitcher: {},
   tabButton: {
     flex: 1,
-    height: 38,
+    height: 44,
     borderRadius: 19,
     justifyContent: 'center',
     alignItems: 'center',
@@ -697,9 +752,28 @@ const styles = StyleSheet.create({
     borderRadius: 999,
   },
   starBadgeText: {
-    fontSize: 10.5,
+    fontSize: 11.5,
     fontWeight: '700',
   },
+  editBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    minHeight: 34,
+    paddingHorizontal: 12,
+    borderRadius: 17,
+  },
+  editBtnText: { fontSize: 13, fontWeight: '700' },
+  menuRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    minHeight: 56,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  menuLabel: { fontSize: 15, fontWeight: '600', flex: 1 },
+  docAction: { fontSize: 12.5, fontWeight: '700', marginTop: 6 },
+  docDelete: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
   docMeta: {
     fontSize: 12,
     marginTop: 2,

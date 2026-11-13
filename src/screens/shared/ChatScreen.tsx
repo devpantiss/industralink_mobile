@@ -1,19 +1,13 @@
 import React, { useState } from 'react';
-import {
-  View,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  KeyboardAvoidingView,
-  Platform,
-} from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { t } from '../../lib/i18n';
 import { Text } from '../../components/ui/Text';
-import { Send, CheckCheck, Clock } from 'lucide-react-native';
+import { useRoute } from '@react-navigation/native';
+import { Send, CheckCheck } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { Screen } from '../../components/layout/Screen';
 import { AppHeader } from '../../components/layout/AppHeader';
 import { Input } from '../../components/ui/Input';
-import { Card } from '../../components/ui/Card';
 import { useUiStore } from '../../store/uiStore';
 import { spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
@@ -25,8 +19,12 @@ interface ChatMessage {
   time: string;
 }
 
+let msgCount = 0;
+const newMessageId = () => `msg_local_${++msgCount}`;
+
 export const ChatScreen: React.FC = () => {
-  const { colors, showToast } = useUiStore();
+  const { colors } = useUiStore();
+  const recipientName = (useRoute().params as { recipientName?: string } | undefined)?.recipientName;
   const [inputText, setInputText] = useState('');
 
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -63,7 +61,7 @@ export const ChatScreen: React.FC = () => {
 
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     const newMsg: ChatMessage = {
-      id: `msg_${Date.now()}`,
+      id: newMessageId(),
       sender: 'me',
       text: text.trim(),
       time: 'Just now',
@@ -87,8 +85,8 @@ export const ChatScreen: React.FC = () => {
   };
 
   return (
-    <Screen edges={['top']}>
-      <AppHeader title="Chat: National Heavy Eng HR" showBack />
+    <Screen edges={['top', 'bottom']}>
+      <AppHeader title={recipientName ? `Chat: ${recipientName}` : t('Chat')} showBack />
 
       <ScrollView contentContainerStyle={styles.scroll}>
         {messages.map((m) => {
@@ -164,6 +162,7 @@ export const ChatScreen: React.FC = () => {
           rightIcon={
             <TouchableOpacity
               onPress={() => handleSend()}
+              accessibilityLabel={t('Send')}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
               <Send size={18} color={colors.primary} />

@@ -61,35 +61,39 @@ export const Sheet: React.FC<SheetProps> = ({
   const progress = useSharedValue(0); // 0 hidden, 1 open
   const drag = useSharedValue(0);
 
+  // Mount as soon as it opens (render-time update, React's pattern for state derived from props).
+  if (visible && !mounted) setMounted(true);
+
   useEffect(() => {
     if (visible) {
-      setMounted(true);
-      drag.value = 0;
-      progress.value = withTiming(1, { duration: OPEN_MS, easing: EASE });
-    } else if (mounted) {
-      progress.value = withTiming(0, { duration: CLOSE_MS, easing: EASE }, (done) => {
-        if (done) runOnJS(setMounted)(false);
-      });
+      drag.set(0);
+      progress.set(withTiming(1, { duration: OPEN_MS, easing: EASE }));
+    } else {
+      progress.set(
+        withTiming(0, { duration: CLOSE_MS, easing: EASE }, (done) => {
+          if (done) runOnJS(setMounted)(false);
+        })
+      );
     }
-  }, [visible]);
+  }, [visible, drag, progress]);
 
   const pan = Gesture.Pan()
     .activeOffsetY(8)
     .failOffsetX([-16, 16])
     .onUpdate((e) => {
-      drag.value = Math.max(0, e.translationY);
+      drag.set(Math.max(0, e.translationY));
     })
     .onEnd((e) => {
       if (e.translationY > 120 || e.velocityY > 900) {
         runOnJS(onClose)();
       } else {
-        drag.value = withTiming(0, { duration: 180, easing: EASE });
+        drag.set(withTiming(0, { duration: 180, easing: EASE }));
       }
     });
 
-  const backdropStyle = useAnimatedStyle(() => ({ opacity: progress.value }));
+  const backdropStyle = useAnimatedStyle(() => ({ opacity: progress.get() }));
   const panelStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: (1 - progress.value) * height + drag.value }],
+    transform: [{ translateY: (1 - progress.get()) * height + drag.get() }],
   }));
 
   if (!mounted) return null;

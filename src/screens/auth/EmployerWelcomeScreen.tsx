@@ -6,9 +6,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { Text } from '../../components/ui/Text';
-import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Building2, Check, ArrowRight } from 'lucide-react-native';
-import { AuthStackParamList } from '../../navigation/types';
+import { Check, ArrowRight } from 'lucide-react-native';
 import { Screen } from '../../components/layout/Screen';
 import { AppHeader } from '../../components/layout/AppHeader';
 import { Card } from '../../components/ui/Card';
@@ -20,16 +18,14 @@ import { Sector } from '../../types';
 import { spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
 
-type Props = NativeStackScreenProps<AuthStackParamList, 'EmployerWelcome'>;
-
-export const EmployerWelcomeScreen: React.FC<Props> = () => {
+export const EmployerWelcomeScreen: React.FC = () => {
   const { colors, showToast } = useUiStore();
-  const { updateUser, switchRole } = useAuthStore();
+  const { user, completeOnboarding } = useAuthStore();
 
-  const [companyName, setCompanyName] = useState('National Heavy Engineering · Heavy Fabrication Div');
+  const [companyName, setCompanyName] = useState(user?.companyName ?? '');
   const [sector, setSector] = useState<Sector>('metals');
-  const [plantLocation, setPlantLocation] = useState('Kalinganagar, Odisha');
-  const [gstin, setGstin] = useState('21AAACT2727Q1ZT');
+  const [plantLocation, setPlantLocation] = useState(user?.city ?? '');
+  const [gstin, setGstin] = useState('');
 
   const sectors: { key: Sector; label: string }[] = [
     { key: 'metals', label: 'Metals & Steel Fabrication' },
@@ -41,17 +37,12 @@ export const EmployerWelcomeScreen: React.FC<Props> = () => {
   ];
 
   const handleFinish = () => {
-    updateUser({
-      companyName,
-      city: plantLocation,
-      onboarded: true,
-    });
-    showToast('Company profile verified! Welcome to Recruiter Portal.', 'success');
-    switchRole('employer');
+    completeOnboarding({ companyName: companyName.trim() || user?.companyName, city: plantLocation.trim() || undefined });
+    showToast('Company saved. Our team will review it before your jobs go live.', 'success');
   };
 
   return (
-    <Screen edges={['top']}>
+    <Screen edges={['top', 'bottom']}>
       <AppHeader title="Employer Setup" />
       <ScrollView contentContainerStyle={styles.scroll}>
         <View style={styles.top}>

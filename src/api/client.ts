@@ -23,3 +23,19 @@ apiClient.interceptors.request.use(async (config) => {
 // Helper for simulated network delay when in mock mode
 export const delay = (ms = 150) => new Promise((resolve) => setTimeout(resolve, ms));
 
+
+let unauthorizedHandler: (() => void) | null = null;
+/** Registered once by the app root; called when the server says the session is no longer valid. */
+export const setUnauthorizedHandler = (fn: (() => void) | null) => {
+  unauthorizedHandler = fn;
+};
+
+apiClient.interceptors.response.use(
+  (res) => res,
+  (error) => {
+    // Login calls return 401 for wrong credentials; those must not log the user out.
+    const url: string = error?.config?.url ?? '';
+    if (error?.response?.status === 401 && !url.startsWith('/auth/')) unauthorizedHandler?.();
+    return Promise.reject(error);
+  },
+);

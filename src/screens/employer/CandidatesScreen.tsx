@@ -14,6 +14,7 @@ import { ListSkeleton } from '../../components/ui/Skeleton';
 import { Screen } from '../../components/layout/Screen';
 import { AppHeader } from '../../components/layout/AppHeader';
 import { CandidateRow } from '../../components/domain/CandidateRow';
+import { FilterChips } from '../../components/ui/FilterChips';
 import { employerApi } from '../../api/employerApi';
 import { queryKeys } from '../../api/keys';
 import { useUiStore } from '../../store/uiStore';
@@ -83,38 +84,8 @@ export const CandidatesScreen: React.FC = () => {
           )}
         </View>
 
-        {/* Stage Filter Chips */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.stageChipsRow}
-        >
-          {stages.map((st) => {
-            const isSelected = stageFilter === st.key;
-            return (
-              <TouchableOpacity
-                key={st.key}
-                onPress={() => setStageFilter(st.key)}
-                style={[
-                  styles.stageChip,
-                  {
-                    backgroundColor: isSelected ? colors.primary : colors.surfaceMuted,
-                    borderColor: isSelected ? colors.primary : colors.border,
-                  },
-                ]}
-              >
-                <Text
-                  style={[
-                    styles.stageChipText,
-                    { color: isSelected ? '#FFFFFF' : colors.inkSecondary },
-                  ]}
-                >
-                  {st.label}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
+        {/* Stage filter */}
+        <FilterChips<'' | ApplicationStage> options={stages} value={stageFilter} onChange={setStageFilter} style={styles.stageChipsRow} />
       </View>
 
       <ScrollView
@@ -189,16 +160,6 @@ const styles = StyleSheet.create({
   stageChipsRow: {
     gap: 8,
     paddingBottom: 4,
-  },
-  stageChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 999,
-    borderWidth: 1,
-  },
-  stageChipText: {
-    fontSize: 13,
-    fontWeight: '600',
   },
   listContent: {
     padding: 16,

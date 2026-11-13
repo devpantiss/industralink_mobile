@@ -56,7 +56,7 @@ export const AdminJobsScreen: React.FC = () => {
   };
 
   return (
-    <Screen edges={['top']}>
+    <Screen edges={['top', 'bottom']}>
       <AppHeader />
       <ScrollView
         contentContainerStyle={styles.content}

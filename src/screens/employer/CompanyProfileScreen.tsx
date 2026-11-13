@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Pressable, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown, FadeOutDown } from 'react-native-reanimated';
@@ -71,7 +71,7 @@ export const CompanyProfileScreen: React.FC = () => {
   return (
     <Screen edges={['top']}>
       <AppHeader />
-      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <View style={styles.flex}>
         <ScrollView
           contentContainerStyle={[styles.pad, { paddingBottom: 120 }]}
           keyboardShouldPersistTaps="handled"
@@ -243,7 +243,7 @@ export const CompanyProfileScreen: React.FC = () => {
             <Button label="Save changes" onPress={submit} loading={save.isPending} style={styles.flex} />
           </Animated.View>
         )}
-      </KeyboardAvoidingView>
+      </View>
     </Screen>
   );
 };

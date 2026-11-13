@@ -14,6 +14,9 @@ import {
 } from '@react-navigation/drawer';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { useQuery } from '@tanstack/react-query';
+import { employerApi } from '../api/employerApi';
+import { queryKeys } from '../api/keys';
 import {
   LayoutDashboard,
   Briefcase,
@@ -38,7 +41,9 @@ import { SettingsScreen } from '../screens/shared/SettingsScreen';
 import { CompanyProfileScreen } from '../screens/employer/CompanyProfileScreen';
 import { AnalyticsScreen } from '../screens/employer/AnalyticsScreen';
 import { useUiStore } from '../store/uiStore';
+import { TabBar } from '../components/layout/TabBar';
 import { useAuthStore } from '../store/authStore';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { spacing } from '../theme/spacing';
 import { typography } from '../theme/typography';
 
@@ -47,39 +52,28 @@ const Drawer = createDrawerNavigator<EmployerDrawerParamList>();
 const Stack = createNativeStackNavigator<EmployerStackParamList>();
 
 const EmployerTabs: React.FC = () => {
-  const { colors } = useUiStore();
+  // New applicants show as a badge on the Candidates tab.
+  const summary = useQuery({ queryKey: queryKeys.employer.summary, queryFn: () => employerApi.getSummary() });
 
   return (
     <Tab.Navigator
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.inkMuted,
-        tabBarStyle: {
-          backgroundColor: colors.surface,
-          borderTopColor: colors.border,
-          paddingTop: 6,
-        },
-        tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: '600',
-        },
-      }}
+      tabBar={(props) => <TabBar {...props} />}
+      screenOptions={{ headerShown: false }}
     >
       <Tab.Screen
         name="EmployerDashboard"
         component={EmployerHomeScreen}
         options={{
-          tabBarLabel: 'Dashboard',
-          tabBarIcon: ({ color, size }) => <LayoutDashboard size={size - 2} color={color} />,
+          tabBarLabel: 'Home',
+          tabBarIcon: ({ color, focused }) => <LayoutDashboard size={22} color={color} strokeWidth={focused ? 2.2 : 1.8} />,
         }}
       />
       <Tab.Screen
         name="EmployerJobs"
         component={EmployerJobsScreen}
         options={{
-          tabBarLabel: 'My Jobs',
-          tabBarIcon: ({ color, size }) => <Briefcase size={size - 2} color={color} />,
+          tabBarLabel: 'Jobs',
+          tabBarIcon: ({ color, focused }) => <Briefcase size={22} color={color} strokeWidth={focused ? 2.2 : 1.8} />,
         }}
       />
       <Tab.Screen
@@ -87,15 +81,16 @@ const EmployerTabs: React.FC = () => {
         component={CandidatesScreen}
         options={{
           tabBarLabel: 'Candidates',
-          tabBarIcon: ({ color, size }) => <Users size={size - 2} color={color} />,
+          tabBarBadge: summary.data?.newApplicants || undefined,
+          tabBarIcon: ({ color, focused }) => <Users size={22} color={color} strokeWidth={focused ? 2.2 : 1.8} />,
         }}
       />
       <Tab.Screen
         name="FindWorkers"
         component={FindWorkersScreen}
         options={{
-          tabBarLabel: 'Find Workers',
-          tabBarIcon: ({ color, size }) => <UserSearch size={size - 2} color={color} />,
+          tabBarLabel: 'Workers',
+          tabBarIcon: ({ color, focused }) => <UserSearch size={22} color={color} strokeWidth={focused ? 2.2 : 1.8} />,
         }}
       />
     </Tab.Navigator>
@@ -105,10 +100,11 @@ const EmployerTabs: React.FC = () => {
 const CustomDrawer: React.FC<DrawerContentComponentProps> = (props) => {
   const { colors } = useUiStore();
   const { user, logout } = useAuthStore();
+  const insets = useSafeAreaInsets();
 
   return (
     <View style={[styles.drawerContainer, { backgroundColor: colors.surface }]}>
-      <View style={[styles.drawerHeader, { borderBottomColor: colors.border }]}>
+      <View style={[styles.drawerHeader, { borderBottomColor: colors.border, paddingTop: insets.top + spacing.lg }]}>
         <View style={[styles.companyAvatar, { backgroundColor: colors.primarySoft }]}>
           <Building size={22} color={colors.primary} />
         </View>
@@ -134,7 +130,7 @@ const CustomDrawer: React.FC<DrawerContentComponentProps> = (props) => {
         />
       </DrawerContentScrollView>
 
-      <View style={[styles.drawerFooter, { borderTopColor: colors.border }]}>
+      <View style={[styles.drawerFooter, { borderTopColor: colors.border, paddingBottom: Math.max(insets.bottom, spacing.lg) }]}>
         <TouchableOpacity style={styles.logoutBtn} onPress={logout}>
           <LogOut size={18} color={colors.dangerFg} />
           <Text style={[typography.body, { color: colors.dangerFg, fontWeight: '600', marginLeft: 8 }]}>

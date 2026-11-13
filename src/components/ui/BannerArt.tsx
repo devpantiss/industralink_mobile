@@ -2,13 +2,14 @@ import React from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
 import Svg, { Polygon, Defs, ClipPath, G, Rect } from 'react-native-svg';
 
+import { useUiStore } from '../../store/uiStore';
+
 // Diagonal hazard stripes for the bottom-right block, drawn as shapes
 // (rotated SVG patterns render as dots in react-native-svg).
 const STRIPES = Array.from({ length: 12 }, (_, i) => {
   const x = 430 + i * 16;
   return `${x},260 ${x + 8},260 ${x + 68},200 ${x + 60},200`;
 });
-import { useUiStore } from '../../store/uiStore';
 
 interface BannerArtProps {
   style?: ViewStyle;
