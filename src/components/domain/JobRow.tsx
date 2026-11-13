@@ -17,6 +17,7 @@ import { t } from '../../lib/i18n';
 import { PressableScale } from '../ui/PressableScale';
 import { useUiStore } from '../../store/uiStore';
 import { spacing } from '../../theme/spacing';
+import { shadows } from '../../theme/shadows';
 
 interface JobRowProps {
   job: JobForWorker;
@@ -180,10 +181,11 @@ export const JobRow: React.FC<JobRowProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1,
     padding: 16,
     marginBottom: spacing.md,
+    ...shadows.card,
   },
   topRow: {
     flexDirection: 'row',

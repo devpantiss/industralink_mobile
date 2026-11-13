@@ -9,6 +9,7 @@ import { EXPERIENCE_LABEL, STAGE_LABEL, TRADE_LABEL } from '../../lib/labels';
 import { timeAgo } from '../../lib/format';
 import type { ThemeColors } from '../../theme/colors';
 import type { ApplicationStage, Candidate } from '../../types';
+import { shadows } from '../../theme/shadows';
 
 /** One colour per stage, used for chips, dots and badges (web: STAGE_CHIP / COLUMN). */
 export function stageTone(stage: ApplicationStage, c: ThemeColors): { bg: string; fg: string; dot: string } {
@@ -135,7 +136,7 @@ export const CandidateRow: React.FC<Props> = ({ candidate: c, onPress, showJob =
 };
 
 const styles = StyleSheet.create({
-  row: { borderRadius: 14, borderWidth: 1, padding: 14, gap: 10 },
+  row: { borderRadius: 16, borderWidth: 1, padding: 14, gap: 10, ...shadows.card },
   top: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   main: { flex: 1, gap: 2 },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },

@@ -18,9 +18,6 @@ import {
   HardHat,
   Building2,
   ShieldCheck,
-  BadgeCheck,
-  CheckCircle2,
-  Flame,
   Languages,
   Moon,
   Sun,
@@ -32,20 +29,15 @@ import {
   Lock,
   X,
   RotateCw,
-  MapPin,
-  UtensilsCrossed,
   ArrowLeft,
   ArrowRight,
   User as UserIcon,
-  Sparkles,
 } from 'lucide-react-native';
 import { AuthStackParamList } from '../../navigation/types';
 import { Screen } from '../../components/layout/Screen';
 import { LogoMark } from '../../components/ui/LogoMark';
-import { HazardStrip } from '../../components/ui/HazardStrip';
 import { useUiStore } from '../../store/uiStore';
 import { useAuthStore } from '../../store/authStore';
-import { USE_MOCKS } from '../../api/client';
 import { t } from '../../lib/i18n';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Signup'>;
@@ -54,7 +46,7 @@ type Audience = 'worker' | 'employer';
 const heroImage = require('../../../assets/login.jpg');
 
 export const SignupScreen: React.FC<Props> = ({ navigation }) => {
-  const { height: screenHeight } = useWindowDimensions();
+  const { width: screenWidth } = useWindowDimensions();
   const { colors, theme, toggleTheme, language, setLanguage, showToast } = useUiStore();
   const { sendOtp, verifyOtp, signupEmployer } = useAuthStore();
 
@@ -63,8 +55,8 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
 
   // Worker form state
   const [workerName, setWorkerName] = useState('');
-  const [workerPhone, setWorkerPhone] = useState(USE_MOCKS ? '9876543210' : '');
-  const [code, setCode] = useState(USE_MOCKS ? ['1', '2', '3', '4', '5', '6'] : ['', '', '', '', '', '']);
+  const [workerPhone, setWorkerPhone] = useState('');
+  const [code, setCode] = useState(['', '', '', '', '', '']);
   const [workerNameFocused, setWorkerNameFocused] = useState(false);
   const [workerPhoneFocused, setWorkerPhoneFocused] = useState(false);
 
@@ -91,7 +83,6 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
   const [formSlideY] = useState(() => new Animated.Value(0));
 
   // Hero proportion matching login screen (~39%)
-  const heroHeight = Math.max(300, Math.round(screenHeight * 0.39));
 
   useEffect(() => {
     let timer: any = null;
@@ -294,8 +285,13 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
         >
           {/* ================= HERO CONTAINER (Dark Background Behind Radius) ================= */}
           <View style={[styles.heroOuterWrapper, { backgroundColor: '#0B1120' }]}>
-            <View style={[styles.heroBackground, { height: heroHeight }]}>
-              <Image source={heroImage} resizeMode="cover" style={StyleSheet.absoluteFill} />
+            <View style={styles.heroBackground}>
+              {/* The photo is tall; crop it so the people (about a quarter of the way down) stay in view. */}
+              <Image
+                source={heroImage}
+                resizeMode="cover"
+                style={{ position: 'absolute', left: 0, width: screenWidth, height: screenWidth * 1.5, top: -screenWidth * 1.5 * 0.2 }}
+              />
               {/* Rich cinematic gradient overlay */}
               <View style={styles.heroOverlay} />
 
@@ -344,129 +340,6 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
                 </View>
               </View>
 
-              {/* Dynamic Hero Showcase based on Selected Role */}
-              <View style={styles.heroShowcaseBody}>
-                {role === 'worker' ? (
-                  <>
-                    <View style={styles.heroTaglineRow}>
-                      <Text style={styles.heroTaglineText}>
-                        India’s trusted platform for industrial jobs
-                      </Text>
-                    </View>
-
-                    {/* Main Glassmorphic Job Card */}
-                    <View style={styles.mainGlassCard}>
-                      <View style={styles.glassCardTopRow}>
-                        <View style={styles.companyGlyphBox}>
-                          <Flame size={17} color="#FFFFFF" />
-                        </View>
-                        <View style={{ flex: 1, marginLeft: 10 }}>
-                          <View style={styles.cardTitleRow}>
-                            <Text style={styles.jobTitleText} numberOfLines={1}>
-                              Welder (ITI / 6G)
-                            </Text>
-                            <View style={styles.payPill}>
-                              <Text style={styles.payPillText}>₹24,000/mo</Text>
-                            </View>
-                          </View>
-                          <View style={styles.locationRow}>
-                            <MapPin size={11} color="#64748B" style={{ marginRight: 3 }} />
-                            <Text style={styles.locationText} numberOfLines={1}>
-                              National Heavy Engineering · Kalinganagar, Odisha
-                            </Text>
-                          </View>
-                        </View>
-                      </View>
-
-                      <View style={styles.glassDivider} />
-
-                      <View style={styles.cardBadgesRow}>
-                        <View style={styles.featureBadge}>
-                          <BadgeCheck size={13} color="#2454E6" />
-                          <Text style={styles.featureBadgeText}>Verified Employer</Text>
-                        </View>
-                        <View style={styles.featureBadge}>
-                          <UtensilsCrossed size={12} color="#086337" />
-                          <Text style={[styles.featureBadgeText, { color: '#086337' }]}>
-                            Food & Stay Included
-                          </Text>
-                        </View>
-                      </View>
-                    </View>
-
-                    {/* Overlapping Shortlisted Badge Pill */}
-                    <View style={styles.shortlistFloatingPill}>
-                      <CheckCircle2 size={13} color="#0E9F6E" />
-                      <Text style={styles.shortlistPillText}>
-                        Direct Plant Hiring · Zero Worker Fees
-                      </Text>
-                    </View>
-                  </>
-                ) : (
-                  <>
-                    <View style={styles.heroTaglineRow}>
-                      <Text style={styles.heroTaglineText}>
-                        Hire verified industrial workers, faster
-                      </Text>
-                    </View>
-
-                    {/* Main Glassmorphic Candidate Card */}
-                    <View style={styles.mainGlassCard}>
-                      <View style={styles.glassCardTopRow}>
-                        <View style={[styles.companyGlyphBox, { backgroundColor: '#2454E6' }]}>
-                          <HardHat size={17} color="#FFFFFF" />
-                        </View>
-                        <View style={{ flex: 1, marginLeft: 10 }}>
-                          <View style={styles.cardTitleRow}>
-                            <Text style={styles.jobTitleText} numberOfLines={1}>
-                              Ramesh Kumar · ITI Welder
-                            </Text>
-                            <View style={[styles.payPill, { backgroundColor: '#EBF0FE' }]}>
-                              <Text style={[styles.payPillText, { color: '#1D45C4' }]}>
-                                5 yrs exp
-                              </Text>
-                            </View>
-                          </View>
-                          <View style={styles.locationRow}>
-                            <MapPin size={11} color="#64748B" style={{ marginRight: 3 }} />
-                            <Text style={styles.locationText} numberOfLines={1}>
-                              Kalinganagar, Odisha · Ready to relocate
-                            </Text>
-                          </View>
-                        </View>
-                      </View>
-
-                      <View style={styles.glassDivider} />
-
-                      <View style={styles.cardBadgesRow}>
-                        <View style={styles.featureBadge}>
-                          <ShieldCheck size={13} color="#2454E6" />
-                          <Text style={[styles.featureBadgeText, { color: '#2454E6' }]}>
-                            Certificates uploaded
-                          </Text>
-                        </View>
-                        <View style={styles.featureBadge}>
-                          <Sparkles size={12} color="#086337" />
-                          <Text style={[styles.featureBadgeText, { color: '#086337' }]}>
-                            Immediate Joining
-                          </Text>
-                        </View>
-                      </View>
-                    </View>
-
-                    {/* Overlapping Candidate Verified Pill */}
-                    <View style={styles.shortlistFloatingPill}>
-                      <ShieldCheck size={13} color="#2454E6" />
-                      <Text style={[styles.shortlistPillText, { color: '#2454E6' }]}>
-                        Pre-screened Candidates · Zero Middlemen
-                      </Text>
-                    </View>
-                  </>
-                )}
-              </View>
-
-              {/* Industrial Hazard Safety Stripes */}
-              <HazardStrip height={5} />
             </View>
 
             {/* Seamless 36px dark apron directly behind card top corners */}
@@ -527,8 +400,11 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
                     color={role === 'worker' ? '#FFFFFF' : colors.inkMuted}
                   />
                 </View>
-                <View style={{ marginLeft: 8 }}>
+                <View style={{ marginLeft: 8, flexShrink: 1 }}>
                   <Text
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.8}
                     style={[
                       styles.segmentTitle,
                       { color: role === 'worker' ? colors.ink : colors.inkSecondary },
@@ -536,7 +412,7 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
                   >
                     I need a job
                   </Text>
-                  <Text style={[styles.segmentSub, { color: colors.inkMuted }]}>
+                  <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} style={[styles.segmentSub, { color: colors.inkMuted }]}>
                     Workers · mobile signup
                   </Text>
                 </View>
@@ -562,8 +438,11 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
                     color={role === 'employer' ? '#FFFFFF' : colors.inkMuted}
                   />
                 </View>
-                <View style={{ marginLeft: 8 }}>
+                <View style={{ marginLeft: 8, flexShrink: 1 }}>
                   <Text
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    minimumFontScale={0.8}
                     style={[
                       styles.segmentTitle,
                       { color: role === 'employer' ? colors.ink : colors.inkSecondary },
@@ -571,7 +450,7 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
                   >
                     I’m hiring
                   </Text>
-                  <Text style={[styles.segmentSub, { color: colors.inkMuted }]}>
+                  <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} style={[styles.segmentSub, { color: colors.inkMuted }]}>
                     Companies & HR
                   </Text>
                 </View>
@@ -1093,6 +972,8 @@ const styles = StyleSheet.create({
 
   /* HERO (Dark container behind top rounded corners) */
   heroOuterWrapper: {
+    flex: 1,
+    minHeight: 200,
     width: '100%',
     backgroundColor: '#0B1120',
   },
@@ -1102,7 +983,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#0B1120',
   },
   heroBackground: {
+    flex: 1,
     width: '100%',
+    overflow: 'hidden',
     justifyContent: 'space-between',
     backgroundColor: '#0B1120',
   },
@@ -1111,7 +994,7 @@ const styles = StyleSheet.create({
   },
   heroOverlay: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: 'rgba(11, 17, 32, 0.72)',
+    backgroundColor: 'rgba(11, 17, 32, 0.34)',
   },
   heroTopBar: {
     flexDirection: 'row',
@@ -1132,7 +1015,7 @@ const styles = StyleSheet.create({
   },
   brandText: {
     fontSize: 18,
-    fontWeight: '800',
+    fontWeight: '700',
     color: '#FFFFFF',
     letterSpacing: -0.3,
   },
@@ -1212,7 +1095,7 @@ const styles = StyleSheet.create({
   },
   jobTitleText: {
     fontSize: 13.5,
-    fontWeight: '800',
+    fontWeight: '700',
     color: '#15191E',
     flex: 1,
   },
@@ -1225,7 +1108,7 @@ const styles = StyleSheet.create({
   },
   payPillText: {
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '700',
     color: '#086337',
   },
   locationRow: {
@@ -1281,21 +1164,19 @@ const styles = StyleSheet.create({
 
   /* FORM CARD (White all the way to screen bottom with no gray cutoff) */
   formContainer: {
-    flex: 1,
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
     marginTop: -36,
     paddingHorizontal: 20,
     paddingTop: 24,
-    paddingBottom: 56,
-    minHeight: 520,
+    paddingBottom: 32,
   },
   titleBlock: {
     marginBottom: 14,
   },
   mainTitle: {
     fontSize: 23,
-    fontWeight: '800',
+    fontWeight: '700',
     letterSpacing: -0.4,
   },
   mainSubtitle: {
@@ -1418,7 +1299,7 @@ const styles = StyleSheet.create({
   },
   otpHeaderTitle: {
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: '700',
   },
   otpHeaderSub: {
     fontSize: 12,
@@ -1441,7 +1322,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     textAlign: 'center',
     fontSize: 19,
-    fontWeight: '800',
+    fontWeight: '700',
   },
   resendRow: {
     alignItems: 'center',
@@ -1524,7 +1405,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '700',
   },
   langOptionRow: {
     flexDirection: 'row',

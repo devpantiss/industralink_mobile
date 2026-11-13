@@ -331,7 +331,7 @@ const styles = StyleSheet.create({
     gap: 12,
     padding: 14,
     borderRadius: 12,
-    borderWidth: 1.5,
+    borderWidth: 1,
     marginBottom: 10,
   },
   radioCircle: {
@@ -407,7 +407,7 @@ const styles = StyleSheet.create({
   },
   successTitle: {
     fontSize: 22,
-    fontWeight: '800',
+    fontWeight: '700',
   },
   successDesc: {
     fontSize: 14,

@@ -12,6 +12,7 @@ import { JobDetailScreen } from '../screens/worker/JobDetailScreen';
 import { ApplicationDetailScreen } from '../screens/worker/ApplicationDetailScreen';
 import { CompaniesScreen } from '../screens/worker/CompaniesScreen';
 import { CompanyDetailScreen } from '../screens/worker/CompanyDetailScreen';
+import { HelpScreen } from '../screens/shared/HelpScreen';
 import { InboxScreen } from '../screens/shared/InboxScreen';
 import { ChatScreen } from '../screens/shared/ChatScreen';
 import { SettingsScreen } from '../screens/shared/SettingsScreen';
@@ -81,6 +82,7 @@ export const WorkerNavigator: React.FC = () => {
       <Stack.Screen name="CompanyDetail" component={CompanyDetailScreen} />
       <Stack.Screen name="ChatThread" component={ChatScreen} />
       <Stack.Screen name="Inbox" component={InboxScreen} />
+      <Stack.Screen name="Help" component={HelpScreen} />
       <Stack.Screen name="Settings" component={SettingsScreen} />
     </Stack.Navigator>
   );

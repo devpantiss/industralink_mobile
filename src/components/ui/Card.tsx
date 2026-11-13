@@ -2,6 +2,7 @@ import React from 'react';
 import { View, StyleSheet, ViewStyle, TouchableOpacity, StyleProp } from 'react-native';
 import { useUiStore } from '../../store/uiStore';
 import { radii, spacing } from '../../theme/spacing';
+import { shadows } from '../../theme/shadows';
 
 interface CardProps {
   children: React.ReactNode;
@@ -19,6 +20,7 @@ export const Card: React.FC<CardProps> = ({
   style,
 }) => {
   const { colors } = useUiStore();
+  const dark = useUiStore((s) => s.theme) === 'dark';
 
   const getBackgroundColor = () => {
     switch (variant) {
@@ -38,6 +40,8 @@ export const Card: React.FC<CardProps> = ({
     borderWidth: 1,
     borderRadius: radii.lg,
     padding,
+    // A soft shadow lifts white cards off the grey page; dark mode relies on the border.
+    ...(variant === 'surface' && !dark ? shadows.card : null),
   };
 
   if (onPress) {
@@ -56,7 +60,5 @@ export const Card: React.FC<CardProps> = ({
 };
 
 const styles = StyleSheet.create({
-  base: {
-    overflow: 'hidden',
-  },
+  base: {},
 });

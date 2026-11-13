@@ -633,7 +633,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 20,
-    fontWeight: '800',
+    fontWeight: '700',
     lineHeight: 26,
     marginTop: 2,
     letterSpacing: -0.3,
@@ -664,7 +664,7 @@ const styles = StyleSheet.create({
   },
   tileValue: {
     fontSize: 15.5,
-    fontWeight: '800',
+    fontWeight: '700',
     marginTop: 2,
   },
   tabsRow: {
@@ -708,7 +708,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '700',
     letterSpacing: -0.2,
     marginBottom: 2,
   },
@@ -841,7 +841,7 @@ const styles = StyleSheet.create({
   applyBtnText: {
     color: '#FFF',
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '700',
   },
   shareBtn: {
     width: 52,
@@ -861,7 +861,7 @@ const styles = StyleSheet.create({
   },
   trackBtnText: {
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '700',
   },
   closedBar: {
     height: 52,

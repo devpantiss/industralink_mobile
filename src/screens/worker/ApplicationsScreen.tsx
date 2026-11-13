@@ -29,6 +29,7 @@ import { formatDateTime, timeAgo } from '../../lib/format';
 import { openContact } from '../../lib/contact';
 import { t } from '../../lib/i18n';
 import type { WorkerApplication } from '../../types';
+import { shadows } from '../../theme/shadows';
 
 type NavigationProp = NativeStackNavigationProp<WorkerStackParamList>;
 type Tab = 'active' | 'interviews' | 'closed';
@@ -277,6 +278,9 @@ function ApplicationCard({
                       ) : null}
                     </View>
                     <Text
+                      numberOfLines={1}
+                      adjustsFontSizeToFit
+                      minimumFontScale={0.8}
                       style={[
                         styles.stepLabel,
                         {
@@ -346,8 +350,8 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   title: {
-    fontSize: 24,
-    fontWeight: '800',
+    fontSize: 22,
+    fontWeight: '700',
     letterSpacing: -0.4,
   },
   subtitle: {
@@ -406,6 +410,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 16,
     marginBottom: 12,
+    ...shadows.card,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -504,7 +509,8 @@ const styles = StyleSheet.create({
     borderRadius: 3.5,
   },
   stepLabel: {
-    fontSize: 11.5,
+    fontSize: 11,
+    alignSelf: 'stretch',
     textAlign: 'center',
   },
   contextBox: {

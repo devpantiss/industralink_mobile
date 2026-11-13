@@ -50,17 +50,17 @@ export const colors: { light: ThemeColors; dark: ThemeColors } = {
     primarySoft: '#EBF0FE',   // Subtle blue chip
     accent: '#F2B418',        // Safety Industrial Yellow
     onAccent: '#1C1917',
-    navy: '#15191E',          // Deep ink
-    canvas: '#F4F5F7',        // App background
+    navy: '#1E232B',          // Deep ink
+    canvas: '#F5F6F8',        // App background
     surface: '#FFFFFF',       // Card background
-    surfaceMuted: '#F5F6F8',  // Soft grey card
-    surfaceStrong: '#EDEFF2', // Active / pressed card
-    border: '#E6E8EC',        // Card outline
-    borderStrong: '#D4D8DE',
-    ink: '#15191E',           // Primary text (High contrast)
-    inkSecondary: '#505A66',  // Subtext
-    inkMuted: '#6E7783',      // Timestamps & metadata
-    inkFill: '#15191E',       // Dark pill button
+    surfaceMuted: '#F2F4F7',  // Soft grey card
+    surfaceStrong: '#EAEDF1', // Active / pressed card
+    border: '#E6E9EE',        // Card outline
+    borderStrong: '#D3D8DF',
+    ink: '#1E232B',           // Primary text (High contrast)
+    inkSecondary: '#566170',  // Subtext
+    inkMuted: '#737D8A',      // Timestamps & metadata
+    inkFill: '#262C35',       // Dark pill button
     onInk: '#FFFFFF',
 
     // Status Colors
@@ -88,22 +88,22 @@ export const colors: { light: ThemeColors; dark: ThemeColors } = {
     }
   },
   dark: {
-    primary: '#3D6AF5',       // High-contrast Cobalt
-    primaryHover: '#547DFA',
-    primarySoft: '#1E2A4D',
+    primary: '#4A78FF',       // High-contrast Cobalt
+    primaryHover: '#6690FF',
+    primarySoft: '#18244A',
     accent: '#F2B418',
     onAccent: '#1C1917',
-    navy: '#0A0C10',
-    canvas: '#11131A',        // Deep slate night canvas
-    surface: '#181B22',       // Elevated surface
-    surfaceMuted: '#1F232C',  // Dark grey card
-    surfaceStrong: '#272C37',
-    border: '#2C313D',
-    borderStrong: '#3A4050',
-    ink: '#F1F5F9',           // Crisp white-slate text
-    inkSecondary: '#A8B4C6',
-    inkMuted: '#8896AB',
-    inkFill: '#2F3648',
+    navy: '#07080B',
+    canvas: '#0A0C10',        // Deep slate night canvas
+    surface: '#14171D',       // Elevated surface
+    surfaceMuted: '#1B1F27',  // Dark grey card
+    surfaceStrong: '#232833',
+    border: '#242934',
+    borderStrong: '#343B49',
+    ink: '#EDF0F5',           // Soft off-white text (pure white glares on dark)
+    inkSecondary: '#AEB7C5',
+    inkMuted: '#7E899B',
+    inkFill: '#2A303C',
     onInk: '#FFFFFF',
 
     // Dark Status Colors

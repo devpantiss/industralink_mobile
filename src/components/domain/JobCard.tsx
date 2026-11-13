@@ -17,6 +17,7 @@ import { t } from '../../lib/i18n';
 import { PressableScale } from '../ui/PressableScale';
 import { useUiStore } from '../../store/uiStore';
 import { spacing } from '../../theme/spacing';
+import { shadows } from '../../theme/shadows';
 
 interface JobCardProps {
   job: JobForWorker;
@@ -173,10 +174,11 @@ export const JobCard: React.FC<JobCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 14,
-    borderWidth: 1.5,
+    borderRadius: 16,
+    borderWidth: 1,
     padding: 16,
     marginBottom: spacing.md,
+    ...shadows.card,
   },
   // Small neutral shadow only (no coloured glow).
   selectedShadow: {

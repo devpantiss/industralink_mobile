@@ -32,6 +32,7 @@ import {
 import { formatNumber } from '../../lib/format';
 import { t } from '../../lib/i18n';
 import type { TalentProfile, Trade } from '../../types';
+import { shadows } from '../../theme/shadows';
 
 export const FindWorkersScreen: React.FC = () => {
   const { colors, showToast } = useUiStore();
@@ -328,8 +329,8 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   title: {
-    fontSize: 24,
-    fontWeight: '800',
+    fontSize: 22,
+    fontWeight: '700',
     letterSpacing: -0.3,
   },
   subtitle: {
@@ -374,6 +375,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 16,
     gap: 12,
+    ...shadows.card,
   },
   workerTopRow: {
     flexDirection: 'row',
@@ -466,7 +468,7 @@ const styles = StyleSheet.create({
     padding: 14,
     minHeight: 56,
     borderRadius: 12,
-    borderWidth: 1.5,
+    borderWidth: 1,
   },
   jobOptionTitle: {
     fontSize: 14,

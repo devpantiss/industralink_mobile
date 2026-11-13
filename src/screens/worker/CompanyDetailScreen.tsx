@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
   },
   companyName: {
     fontSize: 20,
-    fontWeight: '800',
+    fontWeight: '700',
     letterSpacing: -0.3,
   },
   metaRow: {
@@ -310,7 +310,7 @@ const styles = StyleSheet.create({
   },
   jobsHeading: {
     fontSize: 18,
-    fontWeight: '800',
+    fontWeight: '700',
     marginBottom: 12,
     letterSpacing: -0.2,
   },

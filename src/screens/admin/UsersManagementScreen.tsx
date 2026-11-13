@@ -17,6 +17,7 @@ import { queryKeys } from '../../api/keys';
 import { useUiStore } from '../../store/uiStore';
 import { formatDate, formatPhone } from '../../lib/format';
 import type { AdminUserRow } from '../../types';
+import { shadows } from '../../theme/shadows';
 
 type RoleKey = 'all' | 'worker' | 'employer';
 const VERIFY_LABEL = { approved: 'Approved', pending: 'Waiting for approval', rejected: 'Not approved' } as const;
@@ -192,12 +193,12 @@ const Pill: React.FC<{ text: string; bg: string; fg: string }> = ({ text, bg, fg
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   content: { padding: 16, paddingBottom: 48 },
-  title: { fontSize: 24, fontWeight: '800', letterSpacing: -0.3 },
+  title: { fontSize: 22, fontWeight: '700', letterSpacing: -0.3 },
   subtitle: { fontSize: 13, marginTop: 2, marginBottom: 14, lineHeight: 18 },
   search: { height: 46, borderRadius: 23, borderWidth: 1, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 14, gap: 8 },
   searchInput: { flex: 1, fontSize: 14 },
   chips: { paddingVertical: 12 },
-  card: { borderWidth: 1, borderRadius: 14, padding: 14, marginBottom: 10, gap: 12 },
+  card: { borderWidth: 1, borderRadius: 16, padding: 14, marginBottom: 10, gap: 12, ...shadows.card },
   top: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   name: { fontSize: 15, fontWeight: '700' },
   meta: { fontSize: 13, marginTop: 1 },

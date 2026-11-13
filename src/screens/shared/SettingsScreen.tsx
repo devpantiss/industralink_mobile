@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Text } from '../../components/ui/Text';
-import { Moon, Sun, Globe, LogOut, Check, Smartphone, Lock, Trash2 } from 'lucide-react-native';
+import { Moon, Sun, Globe, LogOut, Check, Smartphone, Lock, Trash2, LifeBuoy, ChevronRight } from 'lucide-react-native';
+import { useNavigation } from '@react-navigation/native';
 import { Input } from '../../components/ui/Input';
 import { accountApi } from '../../api/accountApi';
 import { adminApi } from '../../api/adminApi';
@@ -26,6 +27,7 @@ export const SettingsScreen: React.FC = () => {
   const { user, role, switchRole, logout } = useAuthStore();
   const currentLang = language;
   const qc = useQueryClient();
+  const navigation = useNavigation<any>();
 
   const settingsQuery = useQuery({ queryKey: queryKeys.settings, queryFn: () => accountApi.getSettings() });
   const saveSettings = useMutation({
@@ -274,6 +276,19 @@ export const SettingsScreen: React.FC = () => {
           </Card>
         )}
 
+        {role !== 'admin' && (
+          <Card style={styles.card} onPress={() => navigation.navigate('Help')}>
+            <View style={styles.helpRow}>
+              <LifeBuoy size={20} color={colors.primary} />
+              <View style={styles.switchText}>
+                <Text style={[typography.body, { color: colors.ink, fontWeight: '600' }]}>{t('Help & support')}</Text>
+                <Text style={[typography.caption, { color: colors.inkSecondary, marginTop: 2 }]}>{t('Common questions, or send us a message')}</Text>
+              </View>
+              <ChevronRight size={18} color={colors.inkMuted} />
+            </View>
+          </Card>
+        )}
+
         <Button
           label={t('Log out')}
           variant="outline"
@@ -321,6 +336,7 @@ const SettingSwitch: React.FC<{ label: string; hint?: string; value: boolean; on
 const styles = StyleSheet.create({
   switchRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingVertical: spacing.sm, minHeight: 52 },
   switchText: { flex: 1 },
+  helpRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   deleteRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: spacing.md, marginBottom: spacing['3xl'] },
   scroll: {
     padding: spacing.lg,

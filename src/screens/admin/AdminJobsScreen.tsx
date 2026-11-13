@@ -16,6 +16,7 @@ import { queryKeys } from '../../api/keys';
 import { useUiStore } from '../../store/uiStore';
 import { formatDate, formatPay } from '../../lib/format';
 import type { AdminJobRow } from '../../types';
+import { shadows } from '../../theme/shadows';
 
 const REASONS = ['Asks workers for money', 'Fake or misleading job', 'Pay not shown / unrealistic', 'Duplicate post', 'Other'];
 type StatusKey = 'active' | 'closed' | 'all';
@@ -244,7 +245,7 @@ const Pill: React.FC<{ text: string; bg: string; fg: string }> = ({ text, bg, fg
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   content: { padding: 16, paddingBottom: 48 },
-  title: { fontSize: 24, fontWeight: '800', letterSpacing: -0.3 },
+  title: { fontSize: 22, fontWeight: '700', letterSpacing: -0.3 },
   subtitle: { fontSize: 13, marginTop: 2, marginBottom: 14, lineHeight: 18 },
   search: {
     height: 46,
@@ -257,7 +258,7 @@ const styles = StyleSheet.create({
   },
   searchInput: { flex: 1, fontSize: 14 },
   chips: { paddingVertical: 12 },
-  row: { borderWidth: 1, borderRadius: 14, padding: 14, marginBottom: 10, gap: 12 },
+  row: { borderWidth: 1, borderRadius: 16, padding: 14, marginBottom: 10, gap: 12, ...shadows.card },
   rowTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   jobTitle: { fontSize: 15, fontWeight: '700' },
   meta: { fontSize: 12.5, marginTop: 2 },
@@ -272,7 +273,7 @@ const styles = StyleSheet.create({
   emptyTitle: { fontSize: 15, fontWeight: '700' },
   actions: { flexDirection: 'row', gap: 10 },
   reasons: { gap: 8, marginBottom: 16 },
-  reason: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 50, paddingHorizontal: 14, borderRadius: 12, borderWidth: 1.5 },
+  reason: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 50, paddingHorizontal: 14, borderRadius: 12, borderWidth: 1 },
   radio: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
   radioDot: { width: 10, height: 10, borderRadius: 5 },
   reasonText: { fontSize: 14, fontWeight: '600', flex: 1 },

@@ -24,6 +24,7 @@ import {
 import * as Haptics from 'expo-haptics';
 import type { EmployerStackParamList } from '../../navigation/types';
 import { Sheet } from '../../components/ui/Sheet';
+import { SegmentedTabs } from '../../components/ui/SegmentedTabs';
 import { Screen } from '../../components/layout/Screen';
 import { Avatar } from '../../components/ui/Avatar';
 import { employerApi } from '../../api/employerApi';
@@ -39,6 +40,7 @@ import { formatBytes, formatPhone, timeAgo } from '../../lib/format';
 import { openContact } from '../../lib/contact';
 import { t } from '../../lib/i18n';
 import type { ApplicationStage } from '../../types';
+import { shadows } from '../../theme/shadows';
 
 type Props = NativeStackScreenProps<EmployerStackParamList, 'CandidateDossier'>;
 
@@ -249,24 +251,14 @@ export const CandidateDossierScreen: React.FC<Props> = ({ route, navigation }) =
         </View>
 
         {/* Tab Switcher */}
-        <View style={[styles.tabsWrap, { backgroundColor: colors.surfaceMuted }]}>
-          <TouchableOpacity
-            onPress={() => setActiveTab('profile')}
-            style={[styles.tabBtn, activeTab === 'profile' && { backgroundColor: colors.inkFill }]}
-          >
-            <Text style={[styles.tabBtnText, { color: activeTab === 'profile' ? colors.onInk : colors.inkSecondary }]}>
-              {t('Profile & Skills')}
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => setActiveTab('documents')}
-            style={[styles.tabBtn, activeTab === 'documents' && { backgroundColor: colors.inkFill }]}
-          >
-            <Text style={[styles.tabBtnText, { color: activeTab === 'documents' ? colors.onInk : colors.inkSecondary }]}>
-              {t('Documents')}
-            </Text>
-          </TouchableOpacity>
-        </View>
+        <SegmentedTabs
+          value={activeTab}
+          onChange={setActiveTab}
+          items={[
+            { key: 'profile', label: t('Profile & Skills') },
+            { key: 'documents', label: t('Documents') },
+          ]}
+        />
 
         {/* Tab 1: Profile & Skills */}
         {activeTab === 'profile' ? (
@@ -528,6 +520,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 16,
     gap: 14,
+    ...shadows.card,
   },
   profileRow: {
     flexDirection: 'row',
@@ -536,7 +529,7 @@ const styles = StyleSheet.create({
   },
   workerName: {
     fontSize: 18,
-    fontWeight: '800',
+    fontWeight: '700',
     letterSpacing: -0.3,
   },
   workerTrade: {
@@ -566,9 +559,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 14,
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1,
     gap: 10,
+    ...shadows.card,
   },
   appliedForLabel: {
     fontSize: 11.5,
@@ -646,10 +640,11 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 16,
     gap: 10,
+    ...shadows.card,
   },
   cardHeading: {
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: '700',
   },
   chipRow: {
     flexDirection: 'row',
@@ -687,9 +682,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 14,
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1,
     gap: 12,
+    ...shadows.card,
   },
   docName: {
     fontSize: 14,
@@ -714,7 +710,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: '800',
+    fontWeight: '700',
   },
   modalSubtitle: {
     fontSize: 13,

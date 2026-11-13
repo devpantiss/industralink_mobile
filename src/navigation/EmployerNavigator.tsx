@@ -37,6 +37,7 @@ import { FindWorkersScreen } from '../screens/employer/FindWorkersScreen';
 import { PostJobWizardScreen } from '../screens/employer/PostJobWizardScreen';
 import { CandidateDossierScreen } from '../screens/employer/CandidateDossierScreen';
 import { JobApplicantsScreen } from '../screens/employer/JobApplicantsScreen';
+import { HelpScreen } from '../screens/shared/HelpScreen';
 import { InboxScreen } from '../screens/shared/InboxScreen';
 import { ChatScreen } from '../screens/shared/ChatScreen';
 import { SettingsScreen } from '../screens/shared/SettingsScreen';
@@ -203,6 +204,7 @@ export const EmployerNavigator: React.FC = () => (
     <Stack.Screen name="CandidateDossier" component={CandidateDossierScreen} />
     <Stack.Screen name="JobApplicants" component={JobApplicantsScreen} />
     <Stack.Screen name="Inbox" component={InboxScreen} />
+    <Stack.Screen name="Help" component={HelpScreen} />
     <Stack.Screen name="ChatThread" component={ChatScreen} />
     <Stack.Screen
       name="PostJobWizard"

@@ -63,8 +63,8 @@ export const Button: React.FC<ButtonProps> = ({
         break;
       case 'outline':
         bg = 'transparent';
-        borderColor = colors.border;
-        borderWidth = 1.5;
+        borderColor = colors.borderStrong;
+        borderWidth = 1;
         break;
       case 'danger':
         bg = colors.dangerFg;
@@ -77,8 +77,8 @@ export const Button: React.FC<ButtonProps> = ({
     let height: number = layout.buttonHeight;
     let paddingHorizontal: number = 16;
     if (size === 'sm') {
-      height = 34;
-      paddingHorizontal = 12;
+      height = 38;
+      paddingHorizontal = 14;
     } else if (size === 'lg') {
       height = 54;
       paddingHorizontal = 20;

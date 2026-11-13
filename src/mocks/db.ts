@@ -1062,6 +1062,12 @@ class MockDatabase {
     this.log('Dismissed report on', r.jobTitle);
   }
 
+  async createTicket(t: Omit<SupportTicket, 'id' | 'at' | 'status'>): Promise<SupportTicket> {
+    const ticket: SupportTicket = { ...t, id: `tkt_${Date.now()}`, at: new Date().toISOString(), status: 'open' };
+    this.tickets = [ticket, ...this.tickets];
+    return ticket;
+  }
+
   async getTickets(status: string): Promise<SupportTicket[]> {
     return this.tickets
       .filter((t) => status === 'all' || t.status === status)

@@ -10,6 +10,7 @@ import { adminApi } from '../../api/adminApi';
 import { queryKeys } from '../../api/keys';
 import { useUiStore } from '../../store/uiStore';
 import type { AuditEntry } from '../../types';
+import { shadows } from '../../theme/shadows';
 
 const dayLabel = (iso: string) => {
   const d = new Date(iso);
@@ -87,11 +88,11 @@ export const ActivityLogScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   content: { padding: 16, paddingBottom: 48 },
-  title: { fontSize: 24, fontWeight: '800', letterSpacing: -0.3 },
+  title: { fontSize: 22, fontWeight: '700', letterSpacing: -0.3 },
   subtitle: { fontSize: 13, marginTop: 2, marginBottom: 14 },
   group: { marginBottom: 14 },
   day: { fontSize: 12, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 6, marginLeft: 4 },
-  card: { borderWidth: 1, borderRadius: 14, paddingHorizontal: 14 },
+  card: { borderWidth: 1, borderRadius: 16, paddingHorizontal: 14, ...shadows.card },
   row: { flexDirection: 'row', gap: 12, paddingVertical: 12 },
   time: { width: 64, fontSize: 12.5, paddingTop: 1 },
   text: { flex: 1, fontSize: 14, lineHeight: 20 },

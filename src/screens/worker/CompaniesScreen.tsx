@@ -18,6 +18,7 @@ import { SECTOR_LABEL } from '../../lib/labels';
 import { t } from '../../lib/i18n';
 import type { WorkerStackParamList } from '../../navigation/types';
 import type { Sector } from '../../types';
+import { shadows } from '../../theme/shadows';
 
 type Nav = NativeStackNavigationProp<WorkerStackParamList>;
 
@@ -115,7 +116,7 @@ const styles = StyleSheet.create({
   search: { flexDirection: 'row', alignItems: 'center', gap: 10, height: 50, borderRadius: 12, borderWidth: 1, paddingHorizontal: 14 },
   searchInput: { flex: 1, fontSize: 15 },
   chips: { paddingHorizontal: 0 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 16, borderWidth: 1 },
+  row: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 16, borderWidth: 1, ...shadows.card },
   nameRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   name: { fontSize: 15, fontWeight: '700', flexShrink: 1 },
   meta: { fontSize: 13, marginTop: 2 },

@@ -182,7 +182,7 @@ const styles = StyleSheet.create({
   flexShrink: { flexShrink: 1 },
   backdrop: { backgroundColor: 'rgba(21,25,30,0.4)' },
   anchor: { flex: 1, justifyContent: 'flex-end' },
-  panel: { borderTopLeftRadius: 20, borderTopRightRadius: 20, overflow: 'hidden' },
+  panel: { borderTopLeftRadius: 24, borderTopRightRadius: 24, overflow: 'hidden' },
   handleWrap: { alignItems: 'center', paddingTop: 8, paddingBottom: 4 },
   handle: { width: 40, height: 4, borderRadius: 2 },
   header: {
@@ -193,11 +193,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 6,
     paddingBottom: 14,
-    borderBottomWidth: 1,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
-  title: { fontSize: 18, lineHeight: 24, fontWeight: '700' },
+  title: { fontSize: 18, lineHeight: 24, fontWeight: '700', letterSpacing: -0.2 },
   subtitle: { fontSize: 13, lineHeight: 18, marginTop: 2 },
   close: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
   content: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 16 },
-  footer: { borderTopWidth: 1, paddingHorizontal: 20, paddingTop: 12 },
+  footer: { borderTopWidth: StyleSheet.hairlineWidth, paddingHorizontal: 20, paddingTop: 12 },
 });

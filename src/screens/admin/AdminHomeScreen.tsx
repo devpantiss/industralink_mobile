@@ -15,6 +15,7 @@ import { useUiStore } from '../../store/uiStore';
 import { formatNumber } from '../../lib/format';
 import type { AdminDrawerParamList } from '../../navigation/types';
 import type { TileColors } from '../../theme/colors';
+import { shadows } from '../../theme/shadows';
 
 /** Admin overview (web: AdminHome): what needs doing today, and how the platform is growing. */
 export const AdminHomeScreen: React.FC = () => {
@@ -180,8 +181,8 @@ const styles = StyleSheet.create({
   statSkeleton: { flexGrow: 1, flexBasis: '45%', height: 96, borderRadius: 16 },
   statHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 6 },
   statLabel: { fontSize: 13, fontWeight: '600', flexShrink: 1 },
-  statValue: { fontSize: 28, fontWeight: '800', marginTop: 10, letterSpacing: -0.5 },
-  card: { borderWidth: 1, borderRadius: 16, padding: 16, marginBottom: 12 },
+  statValue: { fontSize: 24, fontWeight: '700', marginTop: 10, letterSpacing: -0.5 },
+  card: { borderWidth: 1, borderRadius: 16, padding: 16, marginBottom: 12, ...shadows.card },
   cardHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14, gap: 8 },
   cardTitle: { fontSize: 16, fontWeight: '700', marginBottom: 6 },
   noMargin: { marginBottom: 0 },

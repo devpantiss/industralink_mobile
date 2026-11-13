@@ -17,6 +17,7 @@ import { useAuthStore } from '../../store/authStore';
 import { timeAgo } from '../../lib/format';
 import { t } from '../../lib/i18n';
 import type { AppNotification, MessageThread } from '../../types';
+import { shadows } from '../../theme/shadows';
 
 /** Updates and messages in one place. Opened from the bell in the top bar. */
 export const InboxScreen: React.FC = () => {
@@ -158,7 +159,7 @@ const styles = StyleSheet.create({
   list: { paddingHorizontal: 16, paddingBottom: 24, gap: 10 },
   markAll: { alignSelf: 'flex-end', minHeight: 36, justifyContent: 'center' },
   markAllText: { fontSize: 13.5, fontWeight: '700' },
-  card: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 16, borderWidth: 1 },
+  card: { flexDirection: 'row', alignItems: 'center', gap: 12, padding: 14, borderRadius: 16, borderWidth: 1, ...shadows.card },
   dot: { width: 8, height: 8, borderRadius: 4, alignSelf: 'flex-start', marginTop: 6 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   title: { fontSize: 15, fontWeight: '700' },
@@ -166,6 +167,6 @@ const styles = StyleSheet.create({
   body: { fontSize: 13.5, lineHeight: 19, marginTop: 2 },
   time: { fontSize: 12, marginTop: 4 },
   badge: { minWidth: 22, height: 22, borderRadius: 11, paddingHorizontal: 6, alignItems: 'center', justifyContent: 'center' },
-  badgeText: { color: '#FFFFFF', fontSize: 11.5, fontWeight: '800' },
+  badgeText: { color: '#FFFFFF', fontSize: 11.5, fontWeight: '700' },
   empty: { padding: 28, borderRadius: 16, alignItems: 'center', gap: 8 },
 });

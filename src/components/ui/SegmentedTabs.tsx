@@ -4,6 +4,7 @@ import Animated, { useAnimatedStyle, withTiming, Easing } from 'react-native-rea
 import * as Haptics from 'expo-haptics';
 import { Text } from './Text';
 import { useUiStore } from '../../store/uiStore';
+import { shadows } from '../../theme/shadows';
 
 export interface SegmentItem<K extends string> {
   key: K;
@@ -26,6 +27,7 @@ const EASE = Easing.bezier(0.2, 0, 0, 1);
 /** Equal-width tabs with an indicator that slides to the selected tab (web: useSlideIndicator). */
 export function SegmentedTabs<K extends string>({ items, value, onChange, variant = 'pill', style }: Props<K>) {
   const colors = useUiStore((s) => s.colors);
+  const dark = useUiStore((s) => s.theme) === 'dark';
   const [width, setWidth] = useState(0);
   const index = Math.max(0, items.findIndex((i) => i.key === value));
   const segW = width / items.length;
@@ -45,7 +47,7 @@ export function SegmentedTabs<K extends string>({ items, value, onChange, varian
       accessibilityRole="tablist"
       style={[
         isPill ? styles.pillTrack : styles.lineTrack,
-        isPill ? { backgroundColor: colors.surfaceMuted } : { borderBottomColor: colors.border },
+        isPill ? { backgroundColor: colors.surfaceStrong } : { borderBottomColor: colors.border },
         style,
       ]}
     >
@@ -54,7 +56,7 @@ export function SegmentedTabs<K extends string>({ items, value, onChange, varian
           pointerEvents="none"
           style={[
             isPill ? styles.pill : styles.line,
-            { backgroundColor: isPill ? colors.inkFill : colors.primary },
+            isPill ? [{ backgroundColor: dark ? colors.borderStrong : colors.surface }, shadows.raised] : { backgroundColor: colors.primary },
             indicator,
           ]}
         />
@@ -62,7 +64,7 @@ export function SegmentedTabs<K extends string>({ items, value, onChange, varian
       {items.map((item) => {
         const active = item.key === value;
         const color = isPill
-          ? active ? colors.onInk : colors.inkSecondary
+          ? active ? colors.ink : colors.inkSecondary
           : active ? colors.ink : colors.inkMuted;
         return (
           <Pressable
@@ -77,17 +79,17 @@ export function SegmentedTabs<K extends string>({ items, value, onChange, varian
             style={[styles.seg, isPill ? styles.pillSeg : styles.lineSeg]}
           >
             {item.icon?.(color)}
-            <Text numberOfLines={1} style={[styles.label, { color }]}>
+            <Text numberOfLines={1} style={[styles.label, { color, fontWeight: active ? '700' : '500' }]}>
               {item.label}
             </Text>
             {item.count !== undefined && (
               <View
                 style={[
                   styles.count,
-                  { backgroundColor: active ? (isPill ? 'rgba(255,255,255,0.18)' : colors.primarySoft) : colors.surfaceStrong },
+                  { backgroundColor: active ? colors.primarySoft : colors.surfaceStrong },
                 ]}
               >
-                <Text style={[styles.countText, { color: active && !isPill ? colors.primary : color }]}>{item.count}</Text>
+                <Text style={[styles.countText, { color: active ? colors.primary : color }]}>{item.count}</Text>
               </View>
             )}
           </Pressable>
@@ -98,14 +100,14 @@ export function SegmentedTabs<K extends string>({ items, value, onChange, varian
 }
 
 const styles = StyleSheet.create({
-  pillTrack: { flexDirection: 'row', borderRadius: 999, padding: 0, position: 'relative' },
+  pillTrack: { flexDirection: 'row', borderRadius: 14, padding: 0, position: 'relative' },
   lineTrack: { flexDirection: 'row', borderBottomWidth: 1, position: 'relative' },
-  pill: { position: 'absolute', top: 4, bottom: 4, left: 0, borderRadius: 999 },
+  pill: { position: 'absolute', top: 4, bottom: 4, left: 0, borderRadius: 10 },
   line: { position: 'absolute', bottom: -1, left: 0, height: 2, borderRadius: 2 },
   seg: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
   pillSeg: { minHeight: 44, paddingHorizontal: 8 },
   lineSeg: { minHeight: 44, paddingHorizontal: 4 },
-  label: { fontSize: 14, fontWeight: '600' },
+  label: { fontSize: 14 },
   count: { minWidth: 20, height: 20, borderRadius: 10, paddingHorizontal: 6, alignItems: 'center', justifyContent: 'center' },
   countText: { fontSize: 11, fontWeight: '700' },
 });

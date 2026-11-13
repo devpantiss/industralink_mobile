@@ -130,7 +130,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   title: {
-    fontWeight: '800',
+    fontWeight: '700',
     marginBottom: spacing.xs,
   },
   card: {

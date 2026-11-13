@@ -19,6 +19,7 @@ import { useUiStore } from '../../store/uiStore';
 import { COMPANY_DOC_LABEL } from '../../lib/labels';
 import { formatDate, timeAgo } from '../../lib/format';
 import type { VerificationItem, VerificationStatus } from '../../types';
+import { shadows } from '../../theme/shadows';
 
 const QUICK_REASONS = [
   'GST certificate is for a different company name',
@@ -309,10 +310,10 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   flex2: { flex: 1.6 },
   content: { padding: 16, paddingBottom: 48 },
-  title: { fontSize: 24, fontWeight: '800', letterSpacing: -0.3 },
+  title: { fontSize: 22, fontWeight: '700', letterSpacing: -0.3 },
   subtitle: { fontSize: 13, marginTop: 2, lineHeight: 18 },
   tabs: { marginTop: 10, marginBottom: 14 },
-  item: { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderRadius: 14, padding: 14, marginBottom: 10 },
+  item: { flexDirection: 'row', alignItems: 'center', gap: 12, borderWidth: 1, borderRadius: 16, padding: 14, marginBottom: 10, ...shadows.card },
   itemTitle: { fontSize: 15, fontWeight: '700' },
   itemSub: { fontSize: 13, marginTop: 1 },
   itemMeta: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 4 },

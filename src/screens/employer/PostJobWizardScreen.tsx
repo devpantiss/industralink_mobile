@@ -27,6 +27,7 @@ import {
 } from '../../lib/labels';
 import { t } from '../../lib/i18n';
 import type { Benefit, ExperienceBand, JobInput, JobType, Shift, Trade } from '../../types';
+import { shadows } from '../../theme/shadows';
 
 const TEMPLATES: Partial<Record<Trade, Partial<JobInput>>> = {
   welder: {
@@ -757,8 +758,9 @@ const styles = StyleSheet.create({
   },
   templatesBox: {
     padding: 12,
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1,
+    ...shadows.card,
   },
   templatesHeading: {
     fontSize: 13,
@@ -795,10 +797,11 @@ const styles = StyleSheet.create({
   },
   walkInFormBox: {
     padding: 14,
-    borderRadius: 14,
-    borderWidth: 1.5,
+    borderRadius: 16,
+    borderWidth: 1,
     gap: 10,
     marginTop: 4,
+    ...shadows.card,
   },
   previewHeading: {
     fontSize: 15,
@@ -808,10 +811,11 @@ const styles = StyleSheet.create({
   zeroFeeCard: {
     flexDirection: 'row',
     padding: 14,
-    borderRadius: 14,
-    borderWidth: 1.5,
+    borderRadius: 16,
+    borderWidth: 1,
     gap: 12,
     alignItems: 'flex-start',
+    ...shadows.card,
   },
   checkboxBox: {
     width: 20,

@@ -34,6 +34,7 @@ export function FilterChips<K extends string>({ options, value, onChange, style 
             key={o.key}
             accessibilityRole="tab"
             accessibilityState={{ selected: on }}
+            hitSlop={{ top: 4, bottom: 4 }}
             onPress={() => {
               if (on) return;
               Haptics.selectionAsync().catch(() => {});
@@ -42,13 +43,13 @@ export function FilterChips<K extends string>({ options, value, onChange, style 
             style={[
               styles.chip,
               on
-                ? { backgroundColor: colors.inkFill, borderColor: colors.inkFill }
+                ? { backgroundColor: colors.primarySoft, borderColor: colors.primary }
                 : { backgroundColor: colors.surface, borderColor: colors.border },
             ]}
           >
-            <Text style={[styles.label, { color: on ? colors.onInk : colors.ink }]}>{o.label}</Text>
+            <Text style={[styles.label, { color: on ? colors.primary : colors.inkSecondary, fontWeight: on ? '700' : '500' }]}>{o.label}</Text>
             {o.count !== undefined && (
-              <Text style={[styles.count, { color: on ? colors.onInk : colors.inkMuted }]}>{o.count}</Text>
+              <Text style={[styles.count, { color: on ? colors.primary : colors.inkMuted }]}>{o.count}</Text>
             )}
           </Pressable>
         );
@@ -63,11 +64,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    height: 44,
+    height: 38,
     paddingHorizontal: 14,
     borderRadius: 19,
     borderWidth: 1,
   },
-  label: { fontSize: 13, fontWeight: '600' },
+  label: { fontSize: 13.5 },
   count: { fontSize: 12, fontWeight: '700' },
 });

@@ -30,6 +30,7 @@ import { useAuthStore } from '../../store/authStore';
 import { SHIFT_LABEL } from '../../lib/labels';
 import { formatDateTime, greeting, isAfterAgo } from '../../lib/format';
 import { t } from '../../lib/i18n';
+import { shadows } from '../../theme/shadows';
 
 export const EmployerHomeScreen: React.FC = () => {
   const navigation = useNavigation<any>();
@@ -413,8 +414,8 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   statTileNumber: {
-    fontSize: 24,
-    fontWeight: '800',
+    fontSize: 22,
+    fontWeight: '700',
     marginTop: 6,
     lineHeight: 28,
   },
@@ -427,6 +428,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     padding: 16,
+    ...shadows.card,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -436,7 +438,7 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '700',
   },
   cardSubtitle: {
     fontSize: 12,

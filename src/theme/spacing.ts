@@ -13,9 +13,9 @@ export const spacing = {
 export const radii = {
   xs: 4,
   sm: 8,      // Fact tiles, small chips
-  md: 10,     // Inputs, buttons
+  md: 12,     // Inputs, buttons
   lg: 16,     // Standard cards
-  xl: 20,     // Modals, bottom sheets
+  xl: 24,     // Modals, bottom sheets
   full: 9999, // Circular avatars, pills
 } as const;
 

@@ -44,6 +44,7 @@ const linking: LinkingOptions<RootStackParamList> = {
           CompanyDetail: 'company/:companyId',
           ChatThread: 'chat/:threadId',
           Inbox: 'inbox',
+          Help: 'help',
           Settings: 'settings',
         },
       },
@@ -69,6 +70,7 @@ const linking: LinkingOptions<RootStackParamList> = {
           CandidateDossier: 'employer/candidate/:candidateId',
           JobApplicants: 'employer/job/:jobId',
           Inbox: 'employer/inbox',
+          Help: 'employer/help',
         },
       },
       Admin: {

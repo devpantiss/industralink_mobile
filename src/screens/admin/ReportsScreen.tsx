@@ -17,6 +17,7 @@ import { useUiStore } from '../../store/uiStore';
 import { formatPhone, timeAgo } from '../../lib/format';
 import { openContact } from '../../lib/contact';
 import type { AdminReportRow, ReportReason } from '../../types';
+import { shadows } from '../../theme/shadows';
 
 export const REPORT_REASON_LABEL: Record<ReportReason, string> = {
   asks_money: 'Asked for money',
@@ -324,11 +325,11 @@ const Pill: React.FC<{ text: string; bg: string; fg: string }> = ({ text, bg, fg
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   top: { paddingHorizontal: 16, paddingTop: 16 },
-  title: { fontSize: 24, fontWeight: '800', letterSpacing: -0.3 },
+  title: { fontSize: 22, fontWeight: '700', letterSpacing: -0.3 },
   subtitle: { fontSize: 13, marginTop: 2, marginBottom: 10, lineHeight: 18 },
   chips: { paddingVertical: 12 },
   list: { paddingHorizontal: 16, paddingBottom: 48, gap: 10 },
-  card: { borderWidth: 1, borderRadius: 14, padding: 14, gap: 6 },
+  card: { borderWidth: 1, borderRadius: 16, padding: 14, gap: 6, ...shadows.card },
   badges: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 6 },
   pill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 999 },
   pillText: { fontSize: 11, fontWeight: '700' },

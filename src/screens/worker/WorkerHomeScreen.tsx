@@ -34,6 +34,7 @@ import { formatDateTime } from '../../lib/format';
 import { t } from '../../lib/i18n';
 import type { JobForWorker } from '../../types';
 import type { TileColors } from '../../theme/colors';
+import { shadows } from '../../theme/shadows';
 
 type NavigationProp = NativeStackNavigationProp<WorkerStackParamList>;
 
@@ -120,6 +121,7 @@ export const WorkerHomeScreen: React.FC = () => {
       >
         {/* Banner with search */}
         <Hero
+          artHeight={76}
           eyebrow={firstName ? t('Hi {name}', { name: firstName }) : undefined}
           title={t("Let's find your next job.")}
           subtitle={
@@ -152,9 +154,9 @@ export const WorkerHomeScreen: React.FC = () => {
             <TouchableOpacity
               onPress={() => goTab('FindJobs')}
               accessibilityLabel={t('More filters')}
-              style={[styles.filterBtn, { backgroundColor: colors.inkFill }]}
+              style={[styles.filterBtn, { backgroundColor: colors.primary }]}
             >
-              <SlidersHorizontal size={18} color={colors.onInk} />
+              <SlidersHorizontal size={18} color="#FFFFFF" />
             </TouchableOpacity>
           </View>
         </Hero>
@@ -372,10 +374,10 @@ const styles = StyleSheet.create({
 
   stats: { flexDirection: 'row', gap: 10, marginBottom: 14 },
   stat: { flex: 1, borderRadius: 14, paddingVertical: 12, paddingHorizontal: 12, minHeight: 86 },
-  statValue: { fontSize: 26, lineHeight: 30, fontWeight: '800', marginTop: 6, fontVariant: ['tabular-nums'] },
+  statValue: { fontSize: 24, lineHeight: 30, fontWeight: '700', marginTop: 6, fontVariant: ['tabular-nums'] },
   statLabel: { fontSize: 12.5, fontWeight: '600' },
 
-  profileCard: { borderRadius: 16, borderWidth: 1, padding: 14, marginBottom: 20 },
+  profileCard: { borderRadius: 16, borderWidth: 1, padding: 14, marginBottom: 20, ...shadows.card },
   profileTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   profileTitle: { fontSize: 15, fontWeight: '700' },
   profileHint: { fontSize: 13, lineHeight: 18, marginTop: 2 },
@@ -383,7 +385,7 @@ const styles = StyleSheet.create({
   fill: { height: '100%', borderRadius: 3 },
 
   sectionHead: { flexDirection: 'row', alignItems: 'flex-end', marginBottom: 12 },
-  sectionTitle: { fontSize: 20, lineHeight: 26, fontWeight: '800', letterSpacing: -0.3 },
+  sectionTitle: { fontSize: 20, lineHeight: 26, fontWeight: '700', letterSpacing: -0.3 },
   sectionSub: { fontSize: 13, marginTop: 2 },
   seeAll: { flexDirection: 'row', alignItems: 'center', gap: 2, paddingVertical: 4 },
   seeAllText: { fontSize: 14, fontWeight: '700' },

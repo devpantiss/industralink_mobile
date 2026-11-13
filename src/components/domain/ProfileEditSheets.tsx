@@ -23,6 +23,7 @@ import {
 } from '../../lib/labels';
 import { t } from '../../lib/i18n';
 import type { WorkerProfile, WorkHistoryItem, Trade, ExperienceBand, Shift, Availability } from '../../types';
+import { shadows } from '../../theme/shadows';
 
 export type ProfileSection = 'work' | 'personal' | 'preferences';
 
@@ -571,7 +572,7 @@ const styles = StyleSheet.create({
   error: { fontSize: 12.5, marginTop: 4, marginBottom: 8 },
   addRow: { flexDirection: 'row', gap: 8, alignItems: 'flex-start', marginTop: 8 },
   addBtn: { width: 50, height: 50, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
-  historyCard: { borderWidth: 1, borderRadius: 14, padding: 12, marginBottom: 10 },
+  historyCard: { borderWidth: 1, borderRadius: 16, padding: 12, marginBottom: 10, ...shadows.card },
   historyHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
   footer: { flexDirection: 'row', gap: 8 },
 });

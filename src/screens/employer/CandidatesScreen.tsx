@@ -142,8 +142,8 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   title: {
-    fontSize: 24,
-    fontWeight: '800',
+    fontSize: 22,
+    fontWeight: '700',
     letterSpacing: -0.3,
   },
   subtitle: {

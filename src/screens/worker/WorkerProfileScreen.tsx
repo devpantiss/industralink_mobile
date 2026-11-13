@@ -33,6 +33,7 @@ import {
 import { formatDate, formatNumber, formatPhone } from '../../lib/format';
 import { t } from '../../lib/i18n';
 import type { DocType } from '../../types';
+import { shadows } from '../../theme/shadows';
 
 type Tab = 'profile' | 'documents';
 
@@ -537,6 +538,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     padding: 16,
+    ...shadows.card,
   },
   avatarRow: {
     flexDirection: 'row',
@@ -569,7 +571,7 @@ const styles = StyleSheet.create({
   },
   profileName: {
     fontSize: 18,
-    fontWeight: '800',
+    fontWeight: '700',
     letterSpacing: -0.3,
   },
   verifiedPill: {
@@ -635,6 +637,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 16,
     gap: 12,
+    ...shadows.card,
   },
   cardHeaderRow: {
     flexDirection: 'row',
@@ -644,7 +647,7 @@ const styles = StyleSheet.create({
   },
   cardTitle: {
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '700',
   },
   defRow: {
     flexDirection: 'row',
@@ -700,6 +703,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 16,
     gap: 14,
+    ...shadows.card,
   },
   uploadPromptHeader: {
     flexDirection: 'row',
@@ -731,9 +735,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 14,
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1,
     gap: 12,
+    ...shadows.card,
   },
   docIconCircle: {
     width: 40,
@@ -790,12 +795,13 @@ const styles = StyleSheet.create({
   logoutBtn: {
     flexDirection: 'row',
     height: 48,
-    borderRadius: 14,
+    borderRadius: 16,
     borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
     gap: 8,
     marginTop: 10,
+    ...shadows.card,
   },
   logoutBtnText: {
     fontSize: 14,

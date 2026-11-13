@@ -17,6 +17,7 @@ import { formatPay } from '../../lib/format';
 import { STAGE_LABEL } from '../../lib/labels';
 import type { EmployerStackParamList } from '../../navigation/types';
 import type { ApplicationStage, Candidate } from '../../types';
+import { shadows } from '../../theme/shadows';
 
 type Tab = 'all' | ApplicationStage;
 const TABS: { key: Tab; label: string }[] = [
@@ -200,13 +201,13 @@ export const JobApplicantsScreen: React.FC = () => {
                   style={[
                     styles.step,
                     active
-                      ? { backgroundColor: colors.inkFill, borderColor: colors.inkFill }
+                      ? { backgroundColor: colors.primarySoft, borderColor: colors.primary }
                       : { backgroundColor: colors.surface, borderColor: colors.border },
                   ]}
                 >
-                  {t.key !== 'all' && <View style={[styles.dot, { backgroundColor: active ? colors.onInk : dot }]} />}
-                  <Text style={[styles.stepText, { color: active ? colors.onInk : colors.ink }]}>{t.label}</Text>
-                  <Text style={[styles.stepCount, { color: active ? colors.onInk : colors.inkMuted }]}>
+                  {t.key !== 'all' && <View style={[styles.dot, { backgroundColor: dot }]} />}
+                  <Text style={[styles.stepText, { color: active ? colors.primary : colors.inkSecondary, fontWeight: active ? '700' : '500' }]}>{t.label}</Text>
+                  <Text style={[styles.stepCount, { color: active ? colors.primary : colors.inkMuted }]}>
                     {counts[t.key]}
                   </Text>
                 </Pressable>
@@ -292,15 +293,15 @@ const styles = StyleSheet.create({
   round: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   barTitle: { flex: 1, fontSize: 17, fontWeight: '700', textAlign: 'center' },
   content: { paddingBottom: 48 },
-  jobCard: { margin: 16, marginBottom: 4, borderWidth: 1, borderRadius: 16, padding: 16, gap: 6 },
+  jobCard: { margin: 16, marginBottom: 4, borderWidth: 1, borderRadius: 16, padding: 16, gap: 6, ...shadows.card },
   jobHead: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
-  jobTitle: { flex: 1, fontSize: 20, lineHeight: 26, fontWeight: '800', letterSpacing: -0.3 },
+  jobTitle: { flex: 1, fontSize: 20, lineHeight: 26, fontWeight: '700', letterSpacing: -0.3 },
   status: { paddingHorizontal: 9, paddingVertical: 3, borderRadius: 999, marginTop: 3 },
   statusText: { fontSize: 11, fontWeight: '700' },
   jobMeta: { fontSize: 13, lineHeight: 18 },
   fillRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 },
   fillText: { fontSize: 13 },
-  fillNum: { fontWeight: '800' },
+  fillNum: { fontWeight: '700' },
   track: { height: 8, borderRadius: 4, overflow: 'hidden' },
   fill: { height: 8, borderRadius: 4 },
   note: { flexDirection: 'row', gap: 8, alignItems: 'flex-start', borderRadius: 10, padding: 10, marginTop: 8 },

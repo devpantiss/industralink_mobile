@@ -12,6 +12,7 @@ import { employerApi } from '../../api/employerApi';
 import { queryKeys } from '../../api/keys';
 import { useUiStore } from '../../store/uiStore';
 import type { TileColors } from '../../theme/colors';
+import { shadows } from '../../theme/shadows';
 
 /** Hiring numbers: speed, fill rate, where applicants come from, and each job's steps (web: Analytics). */
 export const AnalyticsScreen: React.FC = () => {
@@ -200,15 +201,15 @@ const Card: React.FC<{ title: string; caption?: string; children: React.ReactNod
 
 const styles = StyleSheet.create({
   content: { padding: 16, paddingBottom: 48 },
-  title: { fontSize: 24, fontWeight: '800', letterSpacing: -0.3 },
+  title: { fontSize: 22, fontWeight: '700', letterSpacing: -0.3 },
   subtitle: { fontSize: 13, marginTop: 2, marginBottom: 14 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 12 },
   stat: { flexGrow: 1, flexBasis: '45%', borderRadius: 16, padding: 14, minHeight: 104 },
   statHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 6 },
   statLabel: { fontSize: 13, fontWeight: '600', flexShrink: 1 },
-  statValue: { fontSize: 28, fontWeight: '800', marginTop: 8, letterSpacing: -0.5 },
+  statValue: { fontSize: 24, fontWeight: '700', marginTop: 8, letterSpacing: -0.5 },
   statHint: { fontSize: 11.5, marginTop: 2, opacity: 0.9 },
-  card: { borderWidth: 1, borderRadius: 16, padding: 16, marginBottom: 12 },
+  card: { borderWidth: 1, borderRadius: 16, padding: 16, marginBottom: 12, ...shadows.card },
   cardHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 14, gap: 8 },
   cardTitle: { fontSize: 16, fontWeight: '700' },
   cardCaption: { fontSize: 12 },
@@ -223,14 +224,14 @@ const styles = StyleSheet.create({
   stateNum: { fontSize: 13, fontWeight: '700' },
   track: { height: 8, borderRadius: 4, overflow: 'hidden' },
   fill: { height: 8, borderRadius: 4 },
-  section: { fontSize: 18, fontWeight: '800', marginTop: 8 },
+  section: { fontSize: 18, fontWeight: '700', marginTop: 8 },
   sectionCaption: { fontSize: 13, marginTop: 2, marginBottom: 10 },
-  job: { borderWidth: 1, borderRadius: 14, padding: 14, marginBottom: 10, gap: 10 },
+  job: { borderWidth: 1, borderRadius: 16, padding: 14, marginBottom: 10, gap: 10, ...shadows.card },
   jobHead: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   jobTitle: { flex: 1, fontSize: 15, fontWeight: '700' },
   steps: { flexDirection: 'row', gap: 6 },
   step: { flex: 1, borderRadius: 10, paddingVertical: 8, paddingHorizontal: 6, alignItems: 'center' },
-  stepNum: { fontSize: 17, fontWeight: '800' },
+  stepNum: { fontSize: 17, fontWeight: '700' },
   stepOf: { fontSize: 12, fontWeight: '600' },
   stepLabel: { fontSize: 11.5, fontWeight: '600', marginTop: 1 },
   empty: { borderRadius: 16, padding: 28, alignItems: 'center', gap: 6 },

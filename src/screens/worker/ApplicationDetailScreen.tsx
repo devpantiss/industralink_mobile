@@ -35,6 +35,7 @@ import { PAY_TYPE_LABEL, STAGE_LABEL_WORKER } from '../../lib/labels';
 import { openContact } from '../../lib/contact';
 import { t } from '../../lib/i18n';
 import type { Offer } from '../../types';
+import { shadows } from '../../theme/shadows';
 
 type RouteProps = RouteProp<WorkerStackParamList, 'ApplicationDetail'>;
 type NavProps = NativeStackNavigationProp<WorkerStackParamList>;
@@ -212,7 +213,7 @@ export const ApplicationDetailScreen: React.FC = () => {
           <View style={[styles.bannerSuccess, { backgroundColor: colors.successBg }]}>
             <PartyPopper size={20} color={colors.successFg} />
             <Text style={[styles.bannerSuccessText, { color: colors.successFg }]}>
-              {t('Joining date')}: <Text style={{ fontWeight: '800' }}>{formatDate(a.offer.joiningDate)}</Text> · {a.offer.place}
+              {t('Joining date')}: <Text style={{ fontWeight: '700' }}>{formatDate(a.offer.joiningDate)}</Text> · {a.offer.place}
             </Text>
           </View>
         )}
@@ -542,6 +543,7 @@ const styles = StyleSheet.create({
     padding: 16,
     borderRadius: 16,
     borderWidth: 1,
+    ...shadows.card,
   },
   summaryTopRow: {
     flexDirection: 'row',
@@ -554,7 +556,7 @@ const styles = StyleSheet.create({
   },
   summaryTitle: {
     fontSize: 17,
-    fontWeight: '800',
+    fontWeight: '700',
     letterSpacing: -0.2,
   },
   summaryCompany: {
@@ -596,8 +598,9 @@ const styles = StyleSheet.create({
   offerCard: {
     padding: 16,
     borderRadius: 16,
-    borderWidth: 1.5,
+    borderWidth: 1,
     gap: 12,
+    ...shadows.card,
   },
   offerHeader: {
     flexDirection: 'row',
@@ -606,7 +609,7 @@ const styles = StyleSheet.create({
   },
   offerTitle: {
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '700',
   },
   offerDetailsBox: {
     padding: 12,
@@ -670,8 +673,9 @@ const styles = StyleSheet.create({
   interviewCard: {
     padding: 16,
     borderRadius: 16,
-    borderWidth: 1.5,
+    borderWidth: 1,
     gap: 10,
+    ...shadows.card,
   },
   interviewHeader: {
     flexDirection: 'row',
@@ -680,11 +684,11 @@ const styles = StyleSheet.create({
   },
   interviewHeaderTitle: {
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: '700',
   },
   interviewTime: {
     fontSize: 18,
-    fontWeight: '800',
+    fontWeight: '700',
   },
   locationRow: {
     flexDirection: 'row',
@@ -782,6 +786,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     gap: 12,
+    ...shadows.card,
   },
   contactTitle: {
     fontSize: 15,

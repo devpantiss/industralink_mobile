@@ -23,6 +23,7 @@ export type WorkerStackParamList = {
   ApplicationDetail: { applicationId: string };
   ChatThread: { threadId: string; recipientName: string };
   Inbox: undefined;
+  Help: undefined;
   Settings: undefined;
 };
 
@@ -48,6 +49,7 @@ export type EmployerStackParamList = {
   CandidateDossier: { candidateId: string };
   JobApplicants: { jobId: string };
   Inbox: undefined;
+  Help: undefined;
   ChatThread: { threadId: string; recipientName: string };
 };
 

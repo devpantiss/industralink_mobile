@@ -18,6 +18,7 @@ import { t } from '../../lib/i18n';
 import { spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
 import type { Message } from '../../types';
+import { shadows } from '../../theme/shadows';
 
 const WORKER_QUICK = ['I will be there on time', 'Please share the exact location', 'What time should I report?', 'I have all my documents ready'];
 const HR_QUICK = ['Please bring your original documents', 'Can you join this week?', 'Please confirm you will attend', 'Thank you for your reply'];
@@ -157,7 +158,7 @@ const styles = StyleSheet.create({
   bubbleWrapper: { marginVertical: 4, maxWidth: '82%' },
   right: { alignSelf: 'flex-end' },
   left: { alignSelf: 'flex-start' },
-  bubble: { paddingVertical: 10, paddingHorizontal: 14, borderRadius: 14, borderWidth: 1 },
+  bubble: { paddingVertical: 10, paddingHorizontal: 14, borderRadius: 16, borderWidth: 1, ...shadows.card },
   time: { marginTop: 4, textAlign: 'right' },
   quickBar: { paddingVertical: 6, borderTopWidth: 1 },
   quickScroll: { paddingHorizontal: spacing.lg, gap: 6 },

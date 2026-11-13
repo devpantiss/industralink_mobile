@@ -19,6 +19,7 @@ import { useUiStore } from '../../store/uiStore';
 import { COMPANY_DOC_LABEL, HIRING_TYPE_LABEL, SECTOR_LABEL } from '../../lib/labels';
 import { formatDate } from '../../lib/format';
 import type { Company, CompanyDocType, HiringType, Sector } from '../../types';
+import { shadows } from '../../theme/shadows';
 
 const SIZES = ['1–50', '50–200', '200–1000', '1000+'];
 
@@ -392,11 +393,11 @@ const styles = StyleSheet.create({
   docDelete: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
   flex: { flex: 1 },
   pad: { padding: 16 },
-  title: { fontSize: 24, fontWeight: '800', letterSpacing: -0.3 },
+  title: { fontSize: 22, fontWeight: '700', letterSpacing: -0.3 },
   subtitle: { fontSize: 13, marginTop: 2, marginBottom: 14 },
-  card: { borderWidth: 1, borderRadius: 16, padding: 16, marginBottom: 12 },
+  card: { borderWidth: 1, borderRadius: 16, padding: 16, marginBottom: 12, ...shadows.card },
   identity: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  companyName: { fontSize: 18, fontWeight: '800', lineHeight: 23 },
+  companyName: { fontSize: 18, fontWeight: '700', lineHeight: 23 },
   meta: { fontSize: 13, marginTop: 2 },
   verify: {
     flexDirection: 'row',

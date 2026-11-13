@@ -17,6 +17,7 @@ import { SHIFT_LABEL } from '../../lib/labels';
 import { formatPay } from '../../lib/format';
 import { t } from '../../lib/i18n';
 import type { Job } from '../../types';
+import { shadows } from '../../theme/shadows';
 
 export const EmployerJobsScreen: React.FC = () => {
   const navigation = useNavigation<any>();
@@ -303,8 +304,8 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   title: {
-    fontSize: 24,
-    fontWeight: '800',
+    fontSize: 22,
+    fontWeight: '700',
     letterSpacing: -0.3,
   },
   subtitle: {
@@ -371,6 +372,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 16,
     gap: 12,
+    ...shadows.card,
   },
   jobCardHeader: {
     flexDirection: 'row',
@@ -396,7 +398,7 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: 16,
-    fontWeight: '800',
+    fontWeight: '700',
   },
   statLabel: {
     fontSize: 11,

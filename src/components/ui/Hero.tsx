@@ -4,6 +4,7 @@ import Animated, { FadeIn } from 'react-native-reanimated';
 import { Text } from './Text';
 import { BannerArt } from './BannerArt';
 import { useUiStore } from '../../store/uiStore';
+import { shadows } from '../../theme/shadows';
 
 interface HeroProps {
   eyebrow?: string;
@@ -24,7 +25,7 @@ export const Hero: React.FC<HeroProps> = ({ eyebrow, title, subtitle, artHeight 
   return (
     <Animated.View
       entering={FadeIn.duration(200)}
-      style={[styles.card, { backgroundColor: colors.surfaceMuted, borderColor: colors.border }, style]}
+      style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }, shadows.card, style]}
     >
       <View style={[styles.band, { height: artHeight }]}>
         {/* Art keeps its 600x260 shape so the whole composition (incl. hazard stripe) shows. */}
@@ -49,12 +50,13 @@ export const Hero: React.FC<HeroProps> = ({ eyebrow, title, subtitle, artHeight 
 };
 
 const styles = StyleSheet.create({
-  card: { borderRadius: 16, borderWidth: 1, overflow: 'hidden', marginBottom: 14 },
-  band: { position: 'relative', justifyContent: 'flex-end', paddingHorizontal: 16, paddingBottom: 10 },
-  eyebrow: { alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4 },
+  card: { borderRadius: 16, borderWidth: 1, marginBottom: 14 },
+  // The art band clips to the top corners (the card itself must not clip, or the shadow is cut).
+  band: { overflow: 'hidden', borderTopLeftRadius: 15, borderTopRightRadius: 15, position: 'relative', justifyContent: 'flex-end', paddingHorizontal: 16, paddingBottom: 10 },
+  eyebrow: { alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4, borderWidth: StyleSheet.hairlineWidth, borderColor: 'rgba(16,24,40,0.08)' },
   eyebrowText: { fontSize: 12, fontWeight: '700' },
   body: { paddingHorizontal: 16, paddingTop: 4, paddingBottom: 16 },
-  title: { fontSize: 24, lineHeight: 30, fontWeight: '800', letterSpacing: -0.4 },
-  subtitle: { fontSize: 14, lineHeight: 20, marginTop: 6 },
+  title: { fontSize: 22, lineHeight: 28, fontWeight: '700', letterSpacing: -0.4 },
+  subtitle: { fontSize: 14, lineHeight: 21, marginTop: 6 },
   children: { marginTop: 14 },
 });

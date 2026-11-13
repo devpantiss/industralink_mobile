@@ -180,6 +180,7 @@ export const FindJobsScreen: React.FC = () => {
           <>
         <Hero
           style={styles.hero}
+          artHeight={64}
           title={t('Find work near you')}
           subtitle={t('Verified jobs from plants, ports, mines and transport companies. Apply with your profile, no resume needed.')}
         >
@@ -264,15 +265,15 @@ export const FindJobsScreen: React.FC = () => {
                 style={[
                   styles.tradePill,
                   {
-                    backgroundColor: isSelected ? colors.inkFill : colors.surface,
-                    borderColor: isSelected ? colors.inkFill : colors.border,
+                    backgroundColor: isSelected ? colors.primarySoft : colors.surface,
+                    borderColor: isSelected ? colors.primary : colors.border,
                   },
                 ]}
               >
                 <Text
                   style={[
                     styles.tradePillText,
-                    { color: isSelected ? colors.onInk : colors.inkSecondary },
+                    { color: isSelected ? colors.primary : colors.inkSecondary, fontWeight: isSelected ? '700' : '500' },
                   ]}
                 >
                   {t(TRADE_LABEL[tr])}
@@ -573,7 +574,7 @@ function FilterCheckbox({
           },
         ]}
       >
-        {checked && <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '800' }}>✓</Text>}
+        {checked && <Text style={{ color: '#FFF', fontSize: 11, fontWeight: '700' }}>✓</Text>}
       </View>
       <Text style={[styles.checkboxLabel, { color: checked ? colors.ink : colors.inkSecondary }]}>
         {label}
@@ -613,8 +614,8 @@ const styles = StyleSheet.create({
     maxWidth: '85%',
   },
   bannerTitle: {
-    fontSize: 26,
-    fontWeight: '800',
+    fontSize: 24,
+    fontWeight: '700',
     letterSpacing: -0.5,
     lineHeight: 32,
   },
@@ -682,7 +683,7 @@ const styles = StyleSheet.create({
     paddingBottom: 6,
   },
   tradePill: {
-    height: 44,
+    height: 38,
     paddingHorizontal: 14,
     borderRadius: 999,
     borderWidth: 1,
@@ -703,7 +704,7 @@ const styles = StyleSheet.create({
   },
   resultsCountText: {
     fontSize: 15,
-    fontWeight: '800',
+    fontWeight: '700',
   },
   actionsBar: {
     flexDirection: 'row',
@@ -731,7 +732,7 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 17,
-    fontWeight: '800',
+    fontWeight: '700',
     marginTop: 6,
   },
   emptyDesc: {
@@ -783,7 +784,7 @@ const styles = StyleSheet.create({
   },
   filterSheetTitle: {
     fontSize: 18,
-    fontWeight: '800',
+    fontWeight: '700',
   },
   clearLinkText: {
     fontSize: 13,

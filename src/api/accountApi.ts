@@ -1,5 +1,6 @@
 import { apiClient, USE_MOCKS, delay } from './client';
-import type { UserSettings } from '../types';
+import { mockDb } from '../mocks/db';
+import type { SupportTicket, UserSettings } from '../types';
 
 // Demo-mode copy of the user's settings (lost when the app restarts, like the other demo data).
 let mockSettings: UserSettings = {
@@ -46,5 +47,15 @@ export const accountApi = {
       return;
     }
     await apiClient.post('/me/delete', { confirm: 'DELETE' });
+  },
+
+  /** Help form: becomes a ticket the admin team sees under Reports & help. */
+  async sendSupport(body: Omit<SupportTicket, 'id' | 'at' | 'status'>): Promise<void> {
+    if (USE_MOCKS) {
+      await delay(150);
+      await mockDb.createTicket(body);
+      return;
+    }
+    await apiClient.post('/support', body);
   },
 };

@@ -39,6 +39,7 @@ export const Input: React.FC<InputProps> = ({
       <View
         style={[
           styles.inputContainer,
+          props.multiline && styles.multilineContainer,
           {
             backgroundColor: colors.surface,
             borderColor: error
@@ -56,8 +57,9 @@ export const Input: React.FC<InputProps> = ({
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           style={[
-            typography.body,
+            typography.bodyLg,
             styles.textInput,
+            props.multiline && styles.multilineInput,
             { color: colors.ink },
           ]}
           {...props}
@@ -91,7 +93,11 @@ const styles = StyleSheet.create({
   textInput: {
     flex: 1,
     height: '100%',
+    fontWeight: '500',
   },
+  // Several lines: grow from 96pt, text starts at the top.
+  multilineContainer: { height: undefined, minHeight: 96, alignItems: 'flex-start', paddingVertical: 10 },
+  multilineInput: { height: undefined, minHeight: 76, textAlignVertical: 'top', paddingTop: 0 },
   leftIcon: {
     marginRight: spacing.sm,
   },

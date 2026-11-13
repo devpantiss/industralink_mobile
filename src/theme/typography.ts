@@ -1,32 +1,33 @@
 import { TextStyle } from 'react-native';
-import { FONT } from './fonts';
+import { FONT, FONT_DISPLAY } from './fonts';
 
 const fontFamily = FONT;
+const display = FONT_DISPLAY;
 
 export const typography: Record<string, TextStyle> = {
   display: {
-    fontFamily,
-    fontSize: 28,
-    lineHeight: 34,
+    fontFamily: display,
+    fontSize: 26,
+    lineHeight: 32,
     fontWeight: '700',
-    letterSpacing: -0.5,
+    letterSpacing: -0.4,
   },
   h1: {
-    fontFamily,
-    fontSize: 22,
-    lineHeight: 28,
+    fontFamily: display,
+    fontSize: 21,
+    lineHeight: 27,
     fontWeight: '700',
     letterSpacing: -0.3,
   },
   h2: {
-    fontFamily,
+    fontFamily: display,
     fontSize: 18,
     lineHeight: 24,
     fontWeight: '600',
     letterSpacing: -0.2,
   },
   h3: {
-    fontFamily,
+    fontFamily: display,
     fontSize: 16,
     lineHeight: 22,
     fontWeight: '600',
