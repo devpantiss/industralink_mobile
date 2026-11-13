@@ -1,3 +1,4 @@
+import { findFeeWording } from '../lib/scam';
 import {
   Job,
   JobForWorker,
@@ -1027,7 +1028,13 @@ class MockDatabase {
         };
       });
   }
+  private checkNoFees(data: any) {
+    if (data?.status !== 'active') return;
+    const hits = findFeeWording(data.title, ...(data.responsibilities ?? []), ...(data.requirements ?? []), data.walkIn?.bring);
+    if (hits.length) this.fail('This job asks workers for money. Remove that wording before you publish.', 'FEE_WORDING');
+  }
   async createJob(data: any): Promise<Job> {
+    this.checkNoFees(data);
     const c = this.myCompany;
     if (data?.status !== 'draft' && c.verification !== 'approved') {
       this.fail('You can publish jobs after your company is verified. Save it as a draft for now.', 'NOT_VERIFIED');
@@ -1058,6 +1065,7 @@ class MockDatabase {
     return newJob;
   }
   async updateJob(id: string, changes: any): Promise<Job> {
+    this.checkNoFees(changes);
     const i = this.jobs.findIndex((j) => j.id === id && this.ownerOf(j) === this.companyId);
     if (i < 0) this.fail('This job no longer exists.', 'NOT_FOUND');
     const wasLive = this.jobs[i]!.status === 'active';
