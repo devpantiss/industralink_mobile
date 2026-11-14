@@ -2,7 +2,7 @@ import { LegalScreen } from '../screens/shared/LegalScreen';
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Home, Search, FileCheck2, Bookmark, User } from 'lucide-react-native';
+import { Home, Search, FileCheck2, Bookmark, User } from '../components/ui/icons';
 import { WorkerTabParamList, WorkerStackParamList } from './types';
 import { WorkerHomeScreen } from '../screens/worker/WorkerHomeScreen';
 import { FindJobsScreen } from '../screens/worker/FindJobsScreen';
@@ -34,7 +34,7 @@ const WorkerTabs: React.FC = () => {
         component={WorkerHomeScreen}
         options={{
           tabBarLabel: 'Home',
-          tabBarIcon: ({ color, focused }) => <Home size={22} color={color} strokeWidth={focused ? 2.2 : 1.8} />,
+          tabBarIcon: ({ color, focused }) => <Home size={22} color={color} weight={focused ? 'fill' : 'regular'} />,
         }}
       />
       <Tab.Screen
@@ -42,7 +42,7 @@ const WorkerTabs: React.FC = () => {
         component={FindJobsScreen}
         options={{
           tabBarLabel: 'Jobs',
-          tabBarIcon: ({ color, focused }) => <Search size={22} color={color} strokeWidth={focused ? 2.2 : 1.8} />,
+          tabBarIcon: ({ color, focused }) => <Search size={22} color={color} weight={focused ? 'fill' : 'regular'} />,
         }}
       />
       <Tab.Screen
@@ -50,7 +50,7 @@ const WorkerTabs: React.FC = () => {
         component={ApplicationsScreen}
         options={{
           tabBarLabel: 'Applied',
-          tabBarIcon: ({ color, focused }) => <FileCheck2 size={22} color={color} strokeWidth={focused ? 2.2 : 1.8} />,
+          tabBarIcon: ({ color, focused }) => <FileCheck2 size={22} color={color} weight={focused ? 'fill' : 'regular'} />,
         }}
       />
       <Tab.Screen
@@ -58,7 +58,7 @@ const WorkerTabs: React.FC = () => {
         component={SavedJobsScreen}
         options={{
           tabBarLabel: 'Saved',
-          tabBarIcon: ({ color, focused }) => <Bookmark size={22} color={color} strokeWidth={focused ? 2.2 : 1.8} />,
+          tabBarIcon: ({ color, focused }) => <Bookmark size={22} color={color} weight={focused ? 'fill' : 'regular'} />,
         }}
       />
       <Tab.Screen
@@ -66,7 +66,7 @@ const WorkerTabs: React.FC = () => {
         component={WorkerProfileScreen}
         options={{
           tabBarLabel: 'Profile',
-          tabBarIcon: ({ color, focused }) => <User size={22} color={color} strokeWidth={focused ? 2.2 : 1.8} />,
+          tabBarIcon: ({ color, focused }) => <User size={22} color={color} weight={focused ? 'fill' : 'regular'} />,
         }}
       />
     </Tab.Navigator>

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
 import { View, StyleSheet, Pressable } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { ChevronDown, CheckCircle2 } from 'lucide-react-native';
+import { ChevronDown, CheckCircle2 } from '../../components/ui/icons';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { Text } from '../../components/ui/Text';
 import { Screen } from '../../components/layout/Screen';

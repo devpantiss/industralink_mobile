@@ -18,9 +18,11 @@ import Animated, {
 } from 'react-native-reanimated';
 import { Gesture, GestureDetector, GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { X } from 'lucide-react-native';
+import { X } from './icons';
 import { Text } from './Text';
 import { useUiStore } from '../../store/uiStore';
+import { BlurView } from 'expo-blur';
+import { canBlur } from '../../theme/effects';
 
 const EASE = Easing.bezier(0.2, 0, 0, 1);
 const OPEN_MS = 280;
@@ -116,6 +118,8 @@ export const Sheet: React.FC<SheetProps> = ({
     <Modal visible transparent animationType="none" statusBarTranslucent onRequestClose={onClose}>
       <GestureHandlerRootView style={styles.flex}>
         <Animated.View style={[StyleSheet.absoluteFill, styles.backdrop, backdropStyle]}>
+          {/* Frosted backdrop on iOS; plain dim on Android (blur is costly there). */}
+          {canBlur && <BlurView intensity={18} tint="dark" style={StyleSheet.absoluteFill} />}
           <Pressable style={styles.flex} onPress={onClose} accessibilityLabel="Close" />
         </Animated.View>
         <KeyboardAvoidingView
@@ -182,7 +186,7 @@ export const Sheet: React.FC<SheetProps> = ({
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   flexShrink: { flexShrink: 1 },
-  backdrop: { backgroundColor: 'rgba(21,25,30,0.4)' },
+  backdrop: { backgroundColor: 'rgba(11,18,32,0.42)' },
   anchor: { flex: 1, justifyContent: 'flex-end' },
   panel: { borderTopLeftRadius: 24, borderTopRightRadius: 24, overflow: 'hidden', flexShrink: 1 },
   handleWrap: { alignItems: 'center', paddingTop: 8, paddingBottom: 4 },

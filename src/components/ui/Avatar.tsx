@@ -9,6 +9,8 @@ import {
 import { Text } from '../../components/ui/Text';
 import { useUiStore } from '../../store/uiStore';
 import { radii } from '../../theme/spacing';
+import { LinearGradient } from 'expo-linear-gradient';
+import { identityGradient } from '../../theme/effects';
 
 export type AvatarSize = 'sm' | 'md' | 'lg' | 'xl' | number;
 
@@ -71,30 +73,16 @@ export const Avatar: React.FC<AvatarProps> = ({
     );
   }
 
+  // Initials on a gradient picked from the name, so each person keeps the same colour.
   return (
-    <View
-      style={[
-        styles.fallback,
-        {
-          width: numSize,
-          height: numSize,
-          borderRadius,
-          backgroundColor: colors.primarySoft,
-        },
-        style,
-      ]}
-    >
-      <Text
-        style={[
-          styles.text,
-          {
-            fontSize: numSize * 0.38,
-            color: colors.primary,
-          },
-        ]}
-      >
-        {initials || '?'}
-      </Text>
+    <View style={[styles.fallback, { width: numSize, height: numSize, borderRadius }, style]}>
+      <LinearGradient
+        colors={identityGradient(name)}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[StyleSheet.absoluteFill, { borderRadius }]}
+      />
+      <Text style={[styles.text, { fontSize: numSize * 0.38, color: '#FFFFFF' }]}>{initials || '?'}</Text>
     </View>
   );
 };
@@ -103,6 +91,7 @@ const styles = StyleSheet.create({
   fallback: {
     justifyContent: 'center',
     alignItems: 'center',
+    overflow: 'hidden',
   },
   text: {
     fontWeight: '700',

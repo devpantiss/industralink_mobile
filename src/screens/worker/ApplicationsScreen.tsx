@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTabBarSpace } from '../../components/layout/TabBar';
 import { View, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { Text } from '../../components/ui/Text';
 import { useNavigation } from '@react-navigation/native';
@@ -13,7 +14,7 @@ import {
   Gift,
   Phone,
   XCircle,
-} from 'lucide-react-native';
+} from '../../components/ui/icons';
 import type { WorkerStackParamList } from '../../navigation/types';
 import { ListSkeleton } from '../../components/ui/Skeleton';
 import { SegmentedTabs } from '../../components/ui/SegmentedTabs';
@@ -55,6 +56,7 @@ function stepOf(a: WorkerApplication): number {
 export const ApplicationsScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const { colors } = useUiStore();
+  const tabSpace = useTabBarSpace();
   const [tab, setTab] = useState<Tab>('active');
 
   const {
@@ -81,7 +83,7 @@ export const ApplicationsScreen: React.FC = () => {
       <AppHeader />
 
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: tabSpace }]}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl

@@ -22,7 +22,7 @@ import {
   ChevronLeft,
   CalendarClock,
   Gift,
-} from 'lucide-react-native';
+} from '../../components/ui/icons';
 import * as Haptics from 'expo-haptics';
 import type { EmployerStackParamList } from '../../navigation/types';
 import { SegmentedTabs } from '../../components/ui/SegmentedTabs';

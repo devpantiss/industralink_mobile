@@ -18,7 +18,7 @@ import {
   Fuel,
   Truck,
   Car,
-} from 'lucide-react-native';
+} from '../ui/icons';
 import type { Benefit, Job, JobForWorker, Sector } from '../../types';
 import { BENEFIT_LABEL, JOB_TYPE_LABEL } from '../../lib/labels';
 import { formatCompact, formatDate, formatNumber } from '../../lib/format';

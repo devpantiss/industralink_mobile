@@ -1,4 +1,5 @@
 import { errorText } from '../../lib/errors';
+import { useTabBarSpace } from '../../components/layout/TabBar';
 import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
 import { VerificationBanner } from '../../components/domain/VerificationBanner';
 import React, { useState } from 'react';
@@ -16,7 +17,7 @@ import {
   EyeOff,
   UserSearch,
   CheckCircle2,
-} from 'lucide-react-native';
+} from '../../components/ui/icons';
 import * as Haptics from 'expo-haptics';
 import { ListSkeleton } from '../../components/ui/Skeleton';
 import { Screen } from '../../components/layout/Screen';
@@ -39,6 +40,7 @@ import { shadows } from '../../theme/shadows';
 
 export const FindWorkersScreen: React.FC = () => {
   const { colors, showToast } = useUiStore();
+  const tabSpace = useTabBarSpace();
   const qc = useQueryClient();
 
   const [q, setQ] = useState('');
@@ -89,7 +91,7 @@ export const FindWorkersScreen: React.FC = () => {
     <Screen edges={['top']}>
       <AppHeader />
 
-      <KeyboardScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <KeyboardScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: tabSpace }]} showsVerticalScrollIndicator={false}>
         <VerificationBanner />
         {/* Title Block */}
         <View style={styles.titleBlock}>

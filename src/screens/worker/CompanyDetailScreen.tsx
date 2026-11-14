@@ -18,7 +18,7 @@ import {
   MapPin,
   ShieldCheck,
   Users,
-} from 'lucide-react-native';
+} from '../../components/ui/icons';
 import type { WorkerStackParamList } from '../../navigation/types';
 import { Screen } from '../../components/layout/Screen';
 import { CompanyLogo } from '../../components/domain/CompanyLogo';

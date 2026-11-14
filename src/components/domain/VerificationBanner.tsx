@@ -2,7 +2,7 @@ import React from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
-import { Clock, AlertTriangle, FileUp } from 'lucide-react-native';
+import { Clock, AlertTriangle, FileUp } from '../ui/icons';
 import { Text } from '../ui/Text';
 import { employerApi } from '../../api/employerApi';
 import { queryKeys } from '../../api/keys';

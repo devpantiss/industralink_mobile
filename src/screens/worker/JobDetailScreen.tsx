@@ -18,7 +18,7 @@ import {
   ArrowRight,
   ChevronLeft,
   MessageCircle,
-} from 'lucide-react-native';
+} from '../../components/ui/icons';
 import * as Haptics from 'expo-haptics';
 import Animated, { useSharedValue, useAnimatedScrollHandler, useAnimatedStyle, interpolate, Extrapolation } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';

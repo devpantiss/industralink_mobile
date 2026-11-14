@@ -29,7 +29,7 @@ import {
   BarChart3,
   Settings,
   LogOut,
-} from 'lucide-react-native';
+} from '../components/ui/icons';
 import { EmployerTabParamList, EmployerDrawerParamList, EmployerStackParamList } from './types';
 import { EmployerHomeScreen } from '../screens/employer/EmployerHomeScreen';
 import { EmployerJobsScreen } from '../screens/employer/EmployerJobsScreen';
@@ -69,7 +69,7 @@ const EmployerTabs: React.FC = () => {
         component={EmployerHomeScreen}
         options={{
           tabBarLabel: 'Home',
-          tabBarIcon: ({ color, focused }) => <LayoutDashboard size={22} color={color} strokeWidth={focused ? 2.2 : 1.8} />,
+          tabBarIcon: ({ color, focused }) => <LayoutDashboard size={22} color={color} weight={focused ? 'fill' : 'regular'} />,
         }}
       />
       <Tab.Screen
@@ -77,7 +77,7 @@ const EmployerTabs: React.FC = () => {
         component={EmployerJobsScreen}
         options={{
           tabBarLabel: 'Jobs',
-          tabBarIcon: ({ color, focused }) => <Briefcase size={22} color={color} strokeWidth={focused ? 2.2 : 1.8} />,
+          tabBarIcon: ({ color, focused }) => <Briefcase size={22} color={color} weight={focused ? 'fill' : 'regular'} />,
         }}
       />
       <Tab.Screen
@@ -86,7 +86,7 @@ const EmployerTabs: React.FC = () => {
         options={{
           tabBarLabel: 'Candidates',
           tabBarBadge: summary.data?.newApplicants || undefined,
-          tabBarIcon: ({ color, focused }) => <Users size={22} color={color} strokeWidth={focused ? 2.2 : 1.8} />,
+          tabBarIcon: ({ color, focused }) => <Users size={22} color={color} weight={focused ? 'fill' : 'regular'} />,
         }}
       />
       <Tab.Screen
@@ -94,7 +94,7 @@ const EmployerTabs: React.FC = () => {
         component={FindWorkersScreen}
         options={{
           tabBarLabel: 'Workers',
-          tabBarIcon: ({ color, focused }) => <UserSearch size={22} color={color} strokeWidth={focused ? 2.2 : 1.8} />,
+          tabBarIcon: ({ color, focused }) => <UserSearch size={22} color={color} weight={focused ? 'fill' : 'regular'} />,
         }}
       />
     </Tab.Navigator>

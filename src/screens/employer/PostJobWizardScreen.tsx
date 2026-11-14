@@ -4,7 +4,7 @@ import { View, StyleSheet, Pressable, Switch, Alert } from 'react-native';
 import { Text } from '../../components/ui/Text';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Check, ChevronLeft, ArrowRight, Sparkles, AlertTriangle } from 'lucide-react-native';
+import { Check, ChevronLeft, ArrowRight, Sparkles, AlertTriangle } from '../../components/ui/icons';
 import * as Haptics from 'expo-haptics';
 import { Screen } from '../../components/layout/Screen';
 import { JobCard } from '../../components/domain/JobCard';

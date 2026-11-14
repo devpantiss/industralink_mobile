@@ -31,7 +31,7 @@ import {
   X,
   RotateCw,
   Sparkles,
-} from 'lucide-react-native';
+} from '../../components/ui/icons';
 import { AuthStackParamList } from '../../navigation/types';
 import { Screen } from '../../components/layout/Screen';
 import { LogoMark } from '../../components/ui/LogoMark';

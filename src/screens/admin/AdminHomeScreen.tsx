@@ -2,7 +2,7 @@ import React from 'react';
 import { View, StyleSheet, ScrollView, RefreshControl, Pressable } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, BadgeCheck, Briefcase, Building2, HardHat, PartyPopper } from 'lucide-react-native';
+import { ArrowRight, BadgeCheck, Briefcase, Building2, HardHat, PartyPopper } from '../../components/ui/icons';
 import { Text } from '../../components/ui/Text';
 import { useTileStyle, TileIcon } from '../../components/ui/tileStyle';
 import { Screen } from '../../components/layout/Screen';

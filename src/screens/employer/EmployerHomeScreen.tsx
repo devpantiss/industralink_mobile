@@ -1,4 +1,5 @@
 import { VerificationBanner } from '../../components/domain/VerificationBanner';
+import { useTabBarSpace } from '../../components/layout/TabBar';
 import React from 'react';
 import {
   View,
@@ -20,7 +21,7 @@ import {
   Plus,
   UserPlus,
   ChevronRight,
-} from 'lucide-react-native';
+} from '../../components/ui/icons';
 import { Screen } from '../../components/layout/Screen';
 import { AppHeader } from '../../components/layout/AppHeader';
 import { Avatar } from '../../components/ui/Avatar';
@@ -38,6 +39,7 @@ import { shadows } from '../../theme/shadows';
 export const EmployerHomeScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { colors } = useUiStore();
+  const tabSpace = useTabBarSpace();
   const { user } = useAuthStore();
 
   const companyQuery = useQuery({ queryKey: queryKeys.employer.company, queryFn: () => employerApi.getCompany() });
@@ -77,7 +79,7 @@ export const EmployerHomeScreen: React.FC = () => {
       <AppHeader />
 
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: tabSpace }]}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl

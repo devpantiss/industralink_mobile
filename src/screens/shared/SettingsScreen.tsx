@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, Switch, Alert } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Text } from '../../components/ui/Text';
-import { Moon, Sun, Globe, LogOut, Check, Smartphone, Lock, Trash2, LifeBuoy, ChevronRight } from 'lucide-react-native';
+import { Moon, Sun, Globe, LogOut, Check, Smartphone, Lock, Trash2, LifeBuoy, ChevronRight } from '../../components/ui/icons';
 import { useNavigation } from '@react-navigation/native';
 import { Input } from '../../components/ui/Input';
 import { accountApi } from '../../api/accountApi';

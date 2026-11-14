@@ -6,7 +6,7 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
-import { ArrowLeft, Search, Share2, Users, X, CheckCircle2 } from 'lucide-react-native';
+import { ArrowLeft, Search, Share2, Users, X, CheckCircle2 } from '../../components/ui/icons';
 import { Text, TextInput } from '../../components/ui/Text';
 import { Screen } from '../../components/layout/Screen';
 import { ListSkeleton } from '../../components/ui/Skeleton';

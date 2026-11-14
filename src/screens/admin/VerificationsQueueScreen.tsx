@@ -4,7 +4,7 @@ import React, { useMemo, useState } from 'react';
 import { View, StyleSheet, RefreshControl, Linking, Pressable } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Animated, { FadeIn } from 'react-native-reanimated';
-import { BadgeCheck, ChevronRight, ExternalLink, FileText, AlertTriangle } from 'lucide-react-native';
+import { BadgeCheck, ChevronRight, ExternalLink, FileText, AlertTriangle } from '../../components/ui/icons';
 import * as Haptics from 'expo-haptics';
 import { Text, TextInput } from '../../components/ui/Text';
 import { ListSkeleton } from '../../components/ui/Skeleton';

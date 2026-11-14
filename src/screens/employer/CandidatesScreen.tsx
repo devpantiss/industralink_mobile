@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useTabBarSpace } from '../../components/layout/TabBar';
 import {
   View,
   StyleSheet,
@@ -9,7 +10,7 @@ import {
 import { Text, TextInput } from '../../components/ui/Text';
 import { useNavigation } from '@react-navigation/native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Search, UserSearch } from 'lucide-react-native';
+import { Search, UserSearch } from '../../components/ui/icons';
 import { ErrorState } from '../../components/ui/ErrorState';
 import { ListSkeleton } from '../../components/ui/Skeleton';
 import { Screen } from '../../components/layout/Screen';
@@ -28,6 +29,7 @@ import type { ApplicationStage } from '../../types';
 export const CandidatesScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { colors } = useUiStore();
+  const tabSpace = useTabBarSpace();
 
   const [q, setQ] = useState('');
   const [stageFilter, setStageFilter] = useState<ApplicationStage | ''>('');
@@ -143,7 +145,7 @@ export const CandidatesScreen: React.FC = () => {
         keyboardDismissMode="on-drag"
         data={filtered}
         keyExtractor={(c) => c.id}
-        contentContainerStyle={styles.listContent}
+        contentContainerStyle={[styles.listContent, { paddingBottom: tabSpace }]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         refreshControl={

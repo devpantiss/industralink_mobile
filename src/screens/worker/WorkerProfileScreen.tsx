@@ -1,4 +1,5 @@
 import { errorText } from '../../lib/errors';
+import { useTabBarSpace } from '../../components/layout/TabBar';
 import { DocumentViewer } from '../../components/domain/DocumentViewer';
 import React, { useState } from 'react';
 import {
@@ -13,7 +14,7 @@ import { Text } from '../../components/ui/Text';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
-import { BadgeCheck, Camera, FileText, Upload, Star, LogOut, Plus, Pencil, Trash2, Image as ImageIcon } from 'lucide-react-native';
+import { BadgeCheck, Camera, FileText, Upload, Star, LogOut, Plus, Pencil, Trash2, Image as ImageIcon } from '../../components/ui/icons';
 import { SegmentedTabs } from '../../components/ui/SegmentedTabs';
 import { Screen } from '../../components/layout/Screen';
 import { AppHeader } from '../../components/layout/AppHeader';
@@ -42,6 +43,7 @@ type Tab = 'profile' | 'documents';
 
 export const WorkerProfileScreen: React.FC = () => {
   const { colors, showToast } = useUiStore();
+  const tabSpace = useTabBarSpace();
   const { logout } = useAuthStore();
   const qc = useQueryClient();
   const [tab, setTab] = useState<Tab>('profile');
@@ -170,7 +172,7 @@ export const WorkerProfileScreen: React.FC = () => {
     <Screen edges={['top']}>
       <AppHeader />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: tabSpace }]} showsVerticalScrollIndicator={false}>
         {/* Profile Card Header */}
         <View style={[styles.headerCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={styles.avatarRow}>

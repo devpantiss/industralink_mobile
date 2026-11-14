@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from 'react';
+import { useTabBarSpace } from '../../components/layout/TabBar';
 import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
 import { View, StyleSheet, TouchableOpacity, RefreshControl, Switch } from 'react-native';
 import { Text, TextInput } from '../../components/ui/Text';
@@ -17,7 +18,7 @@ import {
   X,
   Send,
   Bookmark,
-} from 'lucide-react-native';
+} from '../../components/ui/icons';
 import * as Haptics from 'expo-haptics';
 import type { WorkerStackParamList, WorkerTabParamList } from '../../navigation/types';
 import { ListSkeleton, Skeleton } from '../../components/ui/Skeleton';
@@ -47,6 +48,7 @@ type NavigationProp = NativeStackNavigationProp<WorkerStackParamList>;
 export const WorkerHomeScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const colors = useUiStore((s) => s.colors);
+  const tabSpace = useTabBarSpace();
   const dark = useUiStore((s) => s.theme) === 'dark';
   const user = useAuthStore((s) => s.user);
   const qc = useQueryClient();
@@ -115,7 +117,7 @@ export const WorkerHomeScreen: React.FC = () => {
       <AppHeader />
 
       <KeyboardScrollView
-        contentContainerStyle={styles.scroll}
+        contentContainerStyle={[styles.scroll, { paddingBottom: tabSpace }]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         refreshControl={

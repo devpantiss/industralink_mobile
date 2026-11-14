@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, StyleSheet, FlatList, Pressable } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Send } from 'lucide-react-native';
+import { Send } from '../../components/ui/icons';
 import * as Haptics from 'expo-haptics';
 import { Text } from '../../components/ui/Text';
 import { Screen } from '../../components/layout/Screen';

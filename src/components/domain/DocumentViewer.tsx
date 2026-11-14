@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { View, Image, StyleSheet, Linking, ActivityIndicator } from 'react-native';
-import { FileText } from 'lucide-react-native';
+import { FileText } from '../ui/icons';
 import { Sheet } from '../ui/Sheet';
 import { Button } from '../ui/Button';
 import { Text } from '../ui/Text';

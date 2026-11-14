@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
-import { Check, ChevronRight, FileText } from 'lucide-react-native';
+import { Check, ChevronRight, FileText } from '../ui/icons';
 import { Text } from '../ui/Text';
 import { Avatar } from '../ui/Avatar';
 import { PressableScale } from '../ui/PressableScale';

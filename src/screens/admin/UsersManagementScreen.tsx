@@ -3,7 +3,7 @@ import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
 import { View, StyleSheet, RefreshControl, Pressable } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Animated, { FadeIn } from 'react-native-reanimated';
-import { Search, Users, X } from 'lucide-react-native';
+import { Search, Users, X } from '../../components/ui/icons';
 import * as Haptics from 'expo-haptics';
 import { Text, TextInput } from '../../components/ui/Text';
 import { Screen } from '../../components/layout/Screen';

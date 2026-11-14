@@ -3,7 +3,7 @@ import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
 import React, { useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { Lock } from 'lucide-react-native';
+import { Lock } from '../../components/ui/icons';
 import { Text } from '../../components/ui/Text';
 import { Screen } from '../../components/layout/Screen';
 import { AppHeader } from '../../components/layout/AppHeader';

@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { View, StyleSheet, RefreshControl, Pressable } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Animated, { FadeIn } from 'react-native-reanimated';
-import { Flag, LifeBuoy, Phone } from 'lucide-react-native';
+import { Flag, LifeBuoy, Phone } from '../../components/ui/icons';
 import { Text, TextInput } from '../../components/ui/Text';
 import { Screen } from '../../components/layout/Screen';
 import { AppHeader } from '../../components/layout/AppHeader';

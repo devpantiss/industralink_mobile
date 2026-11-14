@@ -3,7 +3,7 @@ import { View, StyleSheet, FlatList, Pressable, RefreshControl } from 'react-nat
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useQuery } from '@tanstack/react-query';
-import { BadgeCheck, ChevronRight, Search, Building2 } from 'lucide-react-native';
+import { BadgeCheck, ChevronRight, Search, Building2 } from '../../components/ui/icons';
 import { Text, TextInput } from '../../components/ui/Text';
 import { Screen } from '../../components/layout/Screen';
 import { AppHeader } from '../../components/layout/AppHeader';

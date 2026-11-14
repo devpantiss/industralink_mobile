@@ -21,7 +21,7 @@ import {
   MessageSquare,
   PartyPopper,
   Phone,
-} from 'lucide-react-native';
+} from '../../components/ui/icons';
 import * as Haptics from 'expo-haptics';
 import type { WorkerStackParamList } from '../../navigation/types';
 import { Dialog } from '../../components/ui/Dialog';

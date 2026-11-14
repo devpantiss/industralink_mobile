@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useTabBarSpace } from '../../components/layout/TabBar';
 import {
   View,
   StyleSheet,
@@ -22,7 +23,7 @@ import {
   ChevronRight,
   ChevronDown,
   Check,
-} from 'lucide-react-native';
+} from '../../components/ui/icons';
 import * as Haptics from 'expo-haptics';
 import type { WorkerStackParamList } from '../../navigation/types';
 import { ErrorState } from '../../components/ui/ErrorState';
@@ -56,6 +57,7 @@ const QUICK_TRADES: Trade[] = [
 export const FindJobsScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const { colors } = useUiStore();
+  const tabSpace = useTabBarSpace();
   const qc = useQueryClient();
 
   // Filters State
@@ -152,7 +154,7 @@ export const FindJobsScreen: React.FC = () => {
         keyboardDismissMode="on-drag"
         data={jobsList}
         keyExtractor={(j) => j.id}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: tabSpace }]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         onEndReachedThreshold={0.6}

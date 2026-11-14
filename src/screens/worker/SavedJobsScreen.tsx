@@ -1,10 +1,11 @@
 import React from 'react';
+import { useTabBarSpace } from '../../components/layout/TabBar';
 import { View, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { Text } from '../../components/ui/Text';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Bookmark } from 'lucide-react-native';
+import { Bookmark } from '../../components/ui/icons';
 import type { WorkerStackParamList } from '../../navigation/types';
 import { ListSkeleton } from '../../components/ui/Skeleton';
 import { Screen } from '../../components/layout/Screen';
@@ -22,6 +23,7 @@ type NavigationProp = NativeStackNavigationProp<WorkerStackParamList>;
 export const SavedJobsScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const { colors } = useUiStore();
+  const tabSpace = useTabBarSpace();
   const qc = useQueryClient();
 
   const { data: jobs, isLoading, isRefetching, refetch } = useQuery({
@@ -45,7 +47,7 @@ export const SavedJobsScreen: React.FC = () => {
       <AppHeader />
 
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: tabSpace }]}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl

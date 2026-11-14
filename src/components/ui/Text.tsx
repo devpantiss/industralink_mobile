@@ -10,7 +10,7 @@ import { notifyInputFocus } from '../../lib/keyboard';
 export const MAX_FONT_SCALE = 1.3;
 
 /** Headline size: bold text this big or bigger uses the display font, everything else uses the body font. */
-const DISPLAY_FROM = 17;
+const DISPLAY_FROM = 16;
 
 /** Picks the font family from the final style, unless the style names one already. */
 function familyFor(style: StyleProp<TextStyle>): string {

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, StyleSheet, FlatList, Pressable, RefreshControl } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Bell, MessageCircle } from 'lucide-react-native';
+import { Bell, MessageCircle } from '../../components/ui/icons';
 import { Text } from '../../components/ui/Text';
 import { Screen } from '../../components/layout/Screen';
 import { AppHeader } from '../../components/layout/AppHeader';

@@ -3,6 +3,8 @@ import { ScrollView, Pressable, StyleSheet, ViewStyle } from 'react-native';
 import * as Haptics from 'expo-haptics';
 import { Text } from './Text';
 import { useUiStore } from '../../store/uiStore';
+import { LinearGradient } from 'expo-linear-gradient';
+import { gradients } from '../../theme/effects';
 
 export interface ChipOption<K extends string> {
   key: K;
@@ -20,6 +22,7 @@ interface Props<K extends string> {
 /** One-choice filter row that scrolls sideways (status, role, trade). */
 export function FilterChips<K extends string>({ options, value, onChange, style }: Props<K>) {
   const colors = useUiStore((s) => s.colors);
+  const theme = useUiStore((s) => s.theme);
   return (
     <ScrollView
       horizontal
@@ -42,14 +45,15 @@ export function FilterChips<K extends string>({ options, value, onChange, style 
             }}
             style={[
               styles.chip,
-              on
-                ? { backgroundColor: colors.primarySoft, borderColor: colors.primary }
-                : { backgroundColor: colors.surface, borderColor: colors.border },
+              on ? { borderColor: 'transparent' } : { backgroundColor: colors.surface, borderColor: colors.border },
             ]}
           >
-            <Text style={[styles.label, { color: on ? colors.primary : colors.inkSecondary, fontWeight: on ? '700' : '500' }]}>{o.label}</Text>
+            {on && (
+              <LinearGradient colors={gradients[theme].brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
+            )}
+            <Text style={[styles.label, { color: on ? '#FFFFFF' : colors.inkSecondary, fontWeight: on ? '700' : '500' }]}>{o.label}</Text>
             {o.count !== undefined && (
-              <Text style={[styles.count, { color: on ? colors.primary : colors.inkMuted }]}>{o.count}</Text>
+              <Text style={[styles.count, { color: on ? 'rgba(255,255,255,0.85)' : colors.inkMuted }]}>{o.count}</Text>
             )}
           </Pressable>
         );
@@ -68,6 +72,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     borderRadius: 19,
     borderWidth: 1,
+    overflow: 'hidden',
   },
   label: { fontSize: 13.5 },
   count: { fontSize: 12, fontWeight: '700' },

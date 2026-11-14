@@ -1,10 +1,11 @@
 import { errorText } from '../../lib/errors';
+import { useTabBarSpace } from '../../components/layout/TabBar';
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Alert } from 'react-native';
 import { Text } from '../../components/ui/Text';
 import { useNavigation } from '@react-navigation/native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, Briefcase, MoreVertical, Pencil, Copy, PauseCircle, PlayCircle, Trash2 } from 'lucide-react-native';
+import { Plus, Briefcase, MoreVertical, Pencil, Copy, PauseCircle, PlayCircle, Trash2 } from '../../components/ui/icons';
 import { Sheet } from '../../components/ui/Sheet';
 import { ListSkeleton } from '../../components/ui/Skeleton';
 import { SegmentedTabs } from '../../components/ui/SegmentedTabs';
@@ -23,6 +24,7 @@ import { shadows } from '../../theme/shadows';
 export const EmployerJobsScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const { colors } = useUiStore();
+  const tabSpace = useTabBarSpace();
   const [tab, setTab] = useState<'active' | 'draft' | 'closed'>('active');
   const [menuJob, setMenuJob] = useState<Job | null>(null);
   const qc = useQueryClient();
@@ -92,7 +94,7 @@ export const EmployerJobsScreen: React.FC = () => {
       <AppHeader />
 
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingBottom: tabSpace }]}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl

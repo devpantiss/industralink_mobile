@@ -7,7 +7,7 @@ import * as DocumentPicker from 'expo-document-picker';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { FadeInDown, FadeOutDown } from 'react-native-reanimated';
-import { BadgeCheck, Clock, EyeOff, FileText, Trash2, Plus } from 'lucide-react-native';
+import { BadgeCheck, Clock, EyeOff, FileText, Trash2, Plus } from '../../components/ui/icons';
 import { Sheet } from '../../components/ui/Sheet';
 import { Text } from '../../components/ui/Text';
 import { Screen } from '../../components/layout/Screen';

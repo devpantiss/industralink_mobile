@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import * as Haptics from 'expo-haptics';
-import { ArrowRight, ChevronLeft } from 'lucide-react-native';
+import { ArrowRight, ChevronLeft } from '../../components/ui/icons';
 import { Text } from '../../components/ui/Text';
 import { Screen } from '../../components/layout/Screen';
 import { Input } from '../../components/ui/Input';

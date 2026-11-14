@@ -6,7 +6,7 @@ import {
   ViewStyle,
 } from 'react-native';
 import { Text } from '../../components/ui/Text';
-import { MapPin, Clock, Bookmark, BadgeCheck, CheckCircle2 } from 'lucide-react-native';
+import { MapPin, Clock, Bookmark, BadgeCheck, CheckCircle2 } from '../ui/icons';
 import * as Haptics from 'expo-haptics';
 import type { JobForWorker } from '../../types';
 import { CompanyLogo } from './CompanyLogo';

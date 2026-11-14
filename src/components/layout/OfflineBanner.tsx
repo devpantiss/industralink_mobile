@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { Text } from '../../components/ui/Text';
 import NetInfo from '@react-native-community/netinfo';
-import { WifiOff } from 'lucide-react-native';
+import { WifiOff } from '../ui/icons';
 import { SafeAreaInsetsContext, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useUiStore } from '../../store/uiStore';
 import { spacing } from '../../theme/spacing';

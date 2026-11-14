@@ -60,7 +60,7 @@ export const Badge: React.FC<BadgeProps> = ({
 
   return (
     <View style={[styles.container, { backgroundColor: bg }, style]}>
-      {icon && <View style={styles.iconWrapper}>{icon}</View>}
+      {icon ? <View style={styles.iconWrapper}>{icon}</View> : <View style={[styles.dot, { backgroundColor: fg }]} />}
       <Text style={[styles.text, typography.caption, { color: fg }, textStyle]}>
         {label}
       </Text>
@@ -72,11 +72,12 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: spacing.sm,
+    paddingHorizontal: spacing.sm + 2,
     paddingVertical: spacing.xs,
-    borderRadius: radii.sm,
+    borderRadius: radii.full,
     alignSelf: 'flex-start',
   },
+  dot: { width: 6, height: 6, borderRadius: 3, marginRight: 6 },
   iconWrapper: {
     marginRight: 4,
   },

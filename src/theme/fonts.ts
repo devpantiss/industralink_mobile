@@ -2,8 +2,8 @@ import type { FontFamilyDefinition } from 'expo-font';
 
 /** Body text: Inter. Plain, very readable at small sizes on cheap screens. */
 export const FONT = 'Inter';
-/** Headlines and big numbers (17pt and up): Manrope. A little more character, still modern. */
-export const FONT_DISPLAY = 'Manrope';
+/** Headlines, card titles, salaries and big numbers (16pt+ and semibold+): Plus Jakarta Sans. */
+export const FONT_DISPLAY = 'PlusJakartaSans';
 
 /** Weights are chosen with the normal `fontWeight` style. */
 export const fontFamilies: FontFamilyDefinition[] = [
@@ -19,9 +19,9 @@ export const fontFamilies: FontFamilyDefinition[] = [
   {
     fontFamily: FONT_DISPLAY,
     fontDefinitions: [
-      { path: require('@expo-google-fonts/manrope/600SemiBold/Manrope_600SemiBold.ttf'), weight: 600 },
-      { path: require('@expo-google-fonts/manrope/700Bold/Manrope_700Bold.ttf'), weight: 700 },
-      { path: require('@expo-google-fonts/manrope/800ExtraBold/Manrope_800ExtraBold.ttf'), weight: 800 },
+      { path: require('@expo-google-fonts/plus-jakarta-sans/600SemiBold/PlusJakartaSans_600SemiBold.ttf'), weight: 600 },
+      { path: require('@expo-google-fonts/plus-jakarta-sans/700Bold/PlusJakartaSans_700Bold.ttf'), weight: 700 },
+      { path: require('@expo-google-fonts/plus-jakarta-sans/800ExtraBold/PlusJakartaSans_800ExtraBold.ttf'), weight: 800 },
     ],
   },
 ];

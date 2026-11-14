@@ -50,7 +50,8 @@
           "backgroundColor": "#2454E6"
         }
       ],
-      "@react-native-community/datetimepicker"
+      "@react-native-community/datetimepicker",
+      "expo-image"
     ]
   }
 }

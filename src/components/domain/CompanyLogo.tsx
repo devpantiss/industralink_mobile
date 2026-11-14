@@ -1,7 +1,11 @@
 import React from 'react';
-import { View, Image, StyleSheet, ViewStyle } from 'react-native';
+import { View, StyleSheet, ViewStyle } from 'react-native';
+import { Image } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Text } from '../ui/Text';
+import { identityGradient } from '../../theme/effects';
 import Svg, { Path } from 'react-native-svg';
-import { HardHat } from 'lucide-react-native';
+import { HardHat } from '../ui/icons';
 import type { Sector } from '../../types';
 
 const LOGO_COLORS = ['#E8590C', '#1C7ED6', '#2F9E44', '#5F3DC4', '#495057', '#D6336C', '#0C8599', '#E67700'];
@@ -46,33 +50,47 @@ export const CompanyLogo: React.FC<CompanyLogoProps> = ({ job, size = 'md', styl
         <Image
           source={{ uri: job.companyLogoUrl }}
           style={{ width: dimensions * 0.8, height: dimensions * 0.8 }}
-          resizeMode="contain"
+          contentFit="contain"
+          transition={200}
         />
       </View>
     );
   }
 
-  const bgColor = companyColor(job.companyName);
+  // Gradient tile with the company's initials, so companies are told apart at a glance;
+  // the sector shape sits behind as a faint watermark.
   const glyph = SECTOR_GLYPH[job.sector];
+  const initials = monogram(job.companyName);
 
   return (
-    <View
-      style={[
-        styles.container,
-        { width: dimensions, height: dimensions, borderRadius, backgroundColor: bgColor },
-        style,
-      ]}
-    >
+    <View style={[styles.container, { width: dimensions, height: dimensions, borderRadius }, style]}>
+      <LinearGradient
+        colors={identityGradient(job.companyName)}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
       {glyph ? (
-        <Svg viewBox="0 0 24 24" width={dimensions * 0.54} height={dimensions * 0.54}>
+        <Svg viewBox="0 0 24 24" width={dimensions * 0.9} height={dimensions * 0.9} style={styles.watermark}>
           <Path d={glyph} fill="#FFFFFF" fillRule="evenodd" />
         </Svg>
       ) : (
-        <HardHat size={dimensions * 0.5} color="#FFFFFF" />
+        <View style={styles.watermark}>
+          <HardHat size={dimensions * 0.8} color="#FFFFFF" />
+        </View>
       )}
+      <Text style={[styles.initials, { fontSize: dimensions * 0.36 }]}>{initials}</Text>
     </View>
   );
 };
+
+/** Two letters from the company name, skipping filler words ("Ltd", "and", "&"). */
+function monogram(name: string): string {
+  const skip = new Set(['ltd', 'ltd.', 'pvt', 'pvt.', 'limited', 'and', '&', 'the', 'of', 'private']);
+  const words = name.split(/\s+/).filter((w) => w && !skip.has(w.toLowerCase()));
+  const letters = words.slice(0, 2).map((w) => w[0]!.toUpperCase());
+  return letters.join('') || '?';
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -80,5 +98,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     overflow: 'hidden',
   },
+  watermark: { position: 'absolute', right: '-22%', bottom: '-22%', opacity: 0.16 },
+  initials: { color: '#FFFFFF', fontWeight: '800', letterSpacing: -0.3, fontFamily: 'PlusJakartaSans' },
 });
 

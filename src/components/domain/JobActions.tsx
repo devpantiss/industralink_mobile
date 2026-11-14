@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Text, TextInput } from '../../components/ui/Text';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { CheckCircle2 } from 'lucide-react-native';
+import { CheckCircle2 } from '../ui/icons';
 import * as Haptics from 'expo-haptics';
 import { workerApi } from '../../api/workerApi';
 import { queryKeys } from '../../api/keys';

@@ -6,11 +6,12 @@ import {
 } from 'react-native';
 import { Text } from '../../components/ui/Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { CheckCircle2, AlertTriangle, AlertCircle, Info, X } from 'lucide-react-native';
+import { CheckCircle2, AlertTriangle, AlertCircle, Info, X } from './icons';
 import Animated, { FadeInUp, FadeOutUp, LinearTransition } from 'react-native-reanimated';
 import { useUiStore } from '../../store/uiStore';
+import { Glass } from './Glass';
 import { useToastStore } from '../../store/toastStore';
-import { radii, spacing } from '../../theme/spacing';
+import { spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
 
 export const ToastContainer: React.FC = () => {
@@ -22,8 +23,7 @@ export const ToastContainer: React.FC = () => {
   return (
     <View pointerEvents="box-none" style={[styles.container, { top: insets.top + spacing.sm }]}>
       {toasts.map((toast) => {
-        let bg: string = colors.surface;
-        let border: string = colors.border;
+        let tint: string = colors.infoBg;
         let Icon = Info;
         let iconColor: string = colors.infoFg;
 
@@ -31,17 +31,17 @@ export const ToastContainer: React.FC = () => {
           case 'success':
             Icon = CheckCircle2;
             iconColor = colors.successFg;
-            border = colors.successBg;
+            tint = colors.successBg;
             break;
           case 'warning':
             Icon = AlertTriangle;
             iconColor = colors.warningFg;
-            border = colors.warningBg;
+            tint = colors.warningBg;
             break;
           case 'error':
             Icon = AlertCircle;
             iconColor = colors.dangerFg;
-            border = colors.dangerBg;
+            tint = colors.dangerBg;
             break;
         }
 
@@ -52,15 +52,12 @@ export const ToastContainer: React.FC = () => {
             exiting={FadeOutUp.duration(160)}
             layout={LinearTransition.duration(200)}
             accessibilityRole="alert"
-            style={[
-              styles.toast,
-              {
-                backgroundColor: bg,
-                borderColor: border,
-              },
-            ]}
+            style={styles.shadow}
           >
-            <Icon size={18} color={iconColor} style={styles.icon} />
+            <Glass style={styles.toast} intensity={60}>
+            <View style={[styles.iconChip, { backgroundColor: tint }]}>
+              <Icon size={18} color={iconColor} weight="fill" />
+            </View>
             <Text
               style={[
                 typography.small,
@@ -76,8 +73,9 @@ export const ToastContainer: React.FC = () => {
               accessibilityLabel="Dismiss"
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
-              <X size={16} color={colors.inkMuted} />
+              <X size={16} color={colors.inkMuted} weight="bold" />
             </TouchableOpacity>
+            </Glass>
           </Animated.View>
         );
       })}
@@ -92,23 +90,25 @@ const styles = StyleSheet.create({
     right: spacing.lg,
     zIndex: 9999,
   },
+  shadow: {
+    marginBottom: spacing.xs,
+    borderRadius: 18,
+    shadowColor: '#0B1220',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.14,
+    shadowRadius: 20,
+    elevation: 6,
+  },
   toast: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md,
-    borderRadius: radii.md,
-    borderWidth: 1,
-    marginBottom: spacing.xs,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    gap: spacing.sm + 2,
+    paddingVertical: 10,
+    paddingLeft: 10,
+    paddingRight: spacing.md,
+    borderRadius: 18,
   },
-  icon: {
-    marginRight: spacing.sm,
-  },
+  iconChip: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   message: {
     flex: 1,
     fontWeight: '500',

@@ -30,11 +30,15 @@ export function useTileStyle(tone: TileColors): TileStyle {
   };
 }
 
-/** Wraps a tile icon in a tinted rounded square. */
+/** Wraps a tile icon in a tinted rounded square; icons default to the two-tone (duotone) weight. */
 export const TileIcon: React.FC<{ tone: TileColors; children: React.ReactNode }> = ({ tone, children }) => (
-  <View style={[styles.chip, { backgroundColor: tone.bg }]}>{children}</View>
+  <View style={[styles.chip, { backgroundColor: tone.bg }]}>
+    {React.isValidElement<{ weight?: string; duotoneOpacity?: number }>(children)
+      ? React.cloneElement(children, { weight: children.props.weight ?? 'duotone', duotoneOpacity: 0.3 })
+      : children}
+  </View>
 );
 
 const styles = StyleSheet.create({
-  chip: { width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  chip: { width: 34, height: 34, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
 });

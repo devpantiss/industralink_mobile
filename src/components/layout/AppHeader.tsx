@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
-import { ArrowLeft, Moon, Sun, Menu, Settings, Bell } from 'lucide-react-native';
+import { ArrowLeft, Moon, Sun, Menu, Settings, Bell } from '../ui/icons';
 import { useQuery } from '@tanstack/react-query';
 import { inboxApi, type InboxRole } from '../../api/inboxApi';
 import { queryKeys } from '../../api/keys';
@@ -8,6 +8,7 @@ import { useNavigation, DrawerActions } from '@react-navigation/native';
 import { Text } from '../ui/Text';
 import { LogoMark } from '../ui/LogoMark';
 import { useUiStore } from '../../store/uiStore';
+import { Glass } from '../ui/Glass';
 import { useAuthStore } from '../../store/authStore';
 
 interface AppHeaderProps {
@@ -113,19 +114,16 @@ const RoundButton: React.FC<{ label: string; onPress: () => void; children: Reac
   onPress,
   children,
 }) => {
-  const colors = useUiStore((s) => s.colors);
   return (
     <Pressable
       onPress={onPress}
       hitSlop={6}
       accessibilityRole="button"
       accessibilityLabel={label}
-      style={({ pressed }) => [
-        styles.round,
-        { backgroundColor: pressed ? colors.surfaceStrong : colors.surface, borderColor: colors.border },
-      ]}
+      style={({ pressed }) => [styles.roundWrap, pressed && { transform: [{ scale: 0.94 }] }]}
     >
-      {children}
+      {/* Glass circle: reads as part of the chrome, not another card. */}
+      <Glass style={styles.round}>{children}</Glass>
     </Pressable>
   );
 };
@@ -145,11 +143,11 @@ const styles = StyleSheet.create({
   title: { fontSize: 17, fontWeight: '700', letterSpacing: -0.2, flexShrink: 1 },
   badge: { position: 'absolute', top: -3, right: -3, minWidth: 18, height: 18, borderRadius: 9, paddingHorizontal: 4, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
   badgeText: { color: '#FFFFFF', fontSize: 11, fontWeight: '700', lineHeight: 13 },
+  roundWrap: { borderRadius: 22 },
   round: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    borderWidth: StyleSheet.hairlineWidth,
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -6,8 +6,9 @@ import {
   TextInputProps,
 } from 'react-native';
 import { Text, TextInput } from '../../components/ui/Text';
+import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { useUiStore } from '../../store/uiStore';
-import { radii, spacing, layout } from '../../theme/spacing';
+import { spacing, layout } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
 
 interface InputProps extends TextInputProps {
@@ -28,11 +29,12 @@ export const Input: React.FC<InputProps> = ({
 }) => {
   const { colors } = useUiStore();
   const [isFocused, setIsFocused] = useState(false);
+  const ringStyle = useAnimatedStyle(() => ({ opacity: withTiming(isFocused || error ? 1 : 0, { duration: 180 }) }));
 
   return (
     <View style={[styles.wrapper, containerStyle]}>
       {label && (
-        <Text style={[typography.small, styles.label, { color: colors.inkSecondary }]}>
+        <Text style={[typography.small, styles.label, { color: isFocused ? colors.primary : colors.inkSecondary }]}>
           {label}
         </Text>
       )}
@@ -51,6 +53,11 @@ export const Input: React.FC<InputProps> = ({
           },
         ]}
       >
+        {/* Soft focus ring that fades in around the field. */}
+        <Animated.View
+          pointerEvents="none"
+          style={[styles.ring, { borderColor: error ? colors.dangerBg : colors.primarySoft }, ringStyle]}
+        />
         {leftIcon && <View style={styles.leftIcon}>{leftIcon}</View>}
         <TextInput
           placeholderTextColor={colors.inkMuted}
@@ -81,15 +88,16 @@ const styles = StyleSheet.create({
   },
   label: {
     marginBottom: spacing.xs + 2,
-    fontWeight: '500',
+    fontWeight: '600',
   },
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     height: layout.inputHeight,
-    borderRadius: radii.md,
+    borderRadius: 14,
     paddingHorizontal: spacing.md,
   },
+  ring: { position: 'absolute', top: -4, left: -4, right: -4, bottom: -4, borderRadius: 18, borderWidth: 3 },
   textInput: {
     flex: 1,
     height: '100%',

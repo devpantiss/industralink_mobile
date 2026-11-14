@@ -2,7 +2,7 @@ import React from 'react';
 import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useQuery } from '@tanstack/react-query';
-import { BarChart3, CheckCircle2, ChevronRight, FileText, Timer, Users } from 'lucide-react-native';
+import { BarChart3, CheckCircle2, ChevronRight, FileText, Timer, Users } from '../../components/ui/icons';
 import { Text } from '../../components/ui/Text';
 import { useTileStyle, TileIcon } from '../../components/ui/tileStyle';
 import { Screen } from '../../components/layout/Screen';

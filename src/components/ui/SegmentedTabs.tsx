@@ -5,6 +5,8 @@ import * as Haptics from 'expo-haptics';
 import { Text } from './Text';
 import { useUiStore } from '../../store/uiStore';
 import { shadows } from '../../theme/shadows';
+import { LinearGradient } from 'expo-linear-gradient';
+import { gradients } from '../../theme/effects';
 
 export interface SegmentItem<K extends string> {
   key: K;
@@ -27,7 +29,8 @@ const EASE = Easing.bezier(0.2, 0, 0, 1);
 /** Equal-width tabs with an indicator that slides to the selected tab (web: useSlideIndicator). */
 export function SegmentedTabs<K extends string>({ items, value, onChange, variant = 'pill', style }: Props<K>) {
   const colors = useUiStore((s) => s.colors);
-  const dark = useUiStore((s) => s.theme) === 'dark';
+  const theme = useUiStore((s) => s.theme);
+  const dark = theme === 'dark';
   const [width, setWidth] = useState(0);
   const index = Math.max(0, items.findIndex((i) => i.key === value));
   const segW = width / items.length;
@@ -56,10 +59,14 @@ export function SegmentedTabs<K extends string>({ items, value, onChange, varian
           pointerEvents="none"
           style={[
             isPill ? styles.pill : styles.line,
-            isPill ? [{ backgroundColor: dark ? colors.borderStrong : colors.surface }, shadows.raised] : { backgroundColor: colors.primary },
+            isPill ? [{ backgroundColor: dark ? colors.borderStrong : colors.surface }, shadows.raised] : null,
             indicator,
           ]}
-        />
+        >
+          {!isPill && (
+            <LinearGradient colors={gradients[theme].brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFill} />
+          )}
+        </Animated.View>
       )}
       {items.map((item) => {
         const active = item.key === value;
@@ -103,7 +110,7 @@ const styles = StyleSheet.create({
   pillTrack: { flexDirection: 'row', borderRadius: 14, padding: 0, position: 'relative' },
   lineTrack: { flexDirection: 'row', borderBottomWidth: 1, position: 'relative' },
   pill: { position: 'absolute', top: 4, bottom: 4, left: 0, borderRadius: 10 },
-  line: { position: 'absolute', bottom: -1, left: 0, height: 2, borderRadius: 2 },
+  line: { position: 'absolute', bottom: -1, left: 0, height: 3, borderRadius: 3, overflow: 'hidden' },
   seg: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
   pillSeg: { minHeight: 44, paddingHorizontal: 8 },
   lineSeg: { minHeight: 44, paddingHorizontal: 4 },

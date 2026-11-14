@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
-import { ScrollText } from 'lucide-react-native';
+import { ScrollText } from '../../components/ui/icons';
 import { Text } from '../../components/ui/Text';
 import { Screen } from '../../components/layout/Screen';
 import { AppHeader } from '../../components/layout/AppHeader';

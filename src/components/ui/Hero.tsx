@@ -5,6 +5,8 @@ import { Text } from './Text';
 import { BannerArt } from './BannerArt';
 import { useUiStore } from '../../store/uiStore';
 import { shadows } from '../../theme/shadows';
+import { LinearGradient } from 'expo-linear-gradient';
+import { gradients } from '../../theme/effects';
 
 interface HeroProps {
   eyebrow?: string;
@@ -22,14 +24,16 @@ interface HeroProps {
  */
 export const Hero: React.FC<HeroProps> = ({ eyebrow, title, subtitle, artHeight = 96, children, style }) => {
   const colors = useUiStore((s) => s.colors);
-  const dark = useUiStore((s) => s.theme) === 'dark';
+  const theme = useUiStore((s) => s.theme);
+  const dark = theme === 'dark';
   return (
     <Animated.View
       entering={FadeIn.duration(200)}
       style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.border }, shadows.card, style]}
     >
-      {/* Dark: the band gets a solid deep-cobalt backdrop so the banner reads as brand colour, not grey. */}
-      <View style={[styles.band, { height: artHeight }, dark && { backgroundColor: HERO_BAND_DARK }]}>
+      {/* The band gets a soft brand gradient (pale cobalt on light, deep night blue on dark). */}
+      <View style={[styles.band, { height: artHeight }]}>
+        <LinearGradient colors={gradients[theme].night} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
         {/* Art keeps its 600x260 shape so the whole composition (incl. hazard stripe) shows. */}
         <BannerArt opacity={1} style={{ width: Math.round((artHeight * 600) / 260) }} />
         {eyebrow ? (
@@ -51,12 +55,10 @@ export const Hero: React.FC<HeroProps> = ({ eyebrow, title, subtitle, artHeight 
   );
 };
 
-const HERO_BAND_DARK = '#111A36';
-
 const styles = StyleSheet.create({
-  card: { borderRadius: 16, borderWidth: 1, marginBottom: 14 },
+  card: { borderRadius: 20, borderWidth: 1, marginBottom: 14 },
   // The art band clips to the top corners (the card itself must not clip, or the shadow is cut).
-  band: { overflow: 'hidden', borderTopLeftRadius: 15, borderTopRightRadius: 15, position: 'relative', justifyContent: 'flex-end', paddingHorizontal: 16, paddingBottom: 10 },
+  band: { overflow: 'hidden', borderTopLeftRadius: 19, borderTopRightRadius: 19, position: 'relative', justifyContent: 'flex-end', paddingHorizontal: 16, paddingBottom: 10 },
   eyebrow: { alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4, borderWidth: StyleSheet.hairlineWidth, borderColor: 'rgba(16,24,40,0.08)' },
   eyebrowDark: { borderColor: 'rgba(255,255,255,0.10)' },
   eyebrowText: { fontSize: 12, fontWeight: '700' },

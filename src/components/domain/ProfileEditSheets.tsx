@@ -2,7 +2,7 @@ import { errorText } from '../../lib/errors';
 import React, { useEffect, useRef, useState } from 'react';
 import { View, StyleSheet, Pressable, Alert } from 'react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Plus, X } from 'lucide-react-native';
+import { Plus, X } from '../ui/icons';
 import * as Haptics from 'expo-haptics';
 import { Text } from '../ui/Text';
 import { Sheet } from '../ui/Sheet';

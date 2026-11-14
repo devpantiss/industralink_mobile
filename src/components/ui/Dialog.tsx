@@ -4,6 +4,8 @@ import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing, runOnJS
 import { Text } from './Text';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useUiStore } from '../../store/uiStore';
+import { BlurView } from 'expo-blur';
+import { canBlur } from '../../theme/effects';
 
 const EASE = Easing.bezier(0.2, 0, 0, 1);
 
@@ -50,6 +52,7 @@ export const Dialog: React.FC<DialogProps> = ({ visible, onClose, title, message
   return (
     <Modal visible transparent animationType="none" statusBarTranslucent onRequestClose={onClose}>
       <Animated.View style={[StyleSheet.absoluteFill, styles.backdrop, backdrop]}>
+        {canBlur && <BlurView intensity={18} tint="dark" style={StyleSheet.absoluteFill} />}
         <Pressable style={styles.flex} onPress={onClose} accessibilityLabel="Close" />
       </Animated.View>
       {/* Some dialogs hold a text field (e.g. a reason): keep the box above the keyboard. */}
@@ -76,9 +79,9 @@ export const Dialog: React.FC<DialogProps> = ({ visible, onClose, title, message
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  backdrop: { backgroundColor: 'rgba(21,25,30,0.4)' },
+  backdrop: { backgroundColor: 'rgba(11,18,32,0.42)' },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  box: { width: '100%', maxWidth: 420, borderRadius: 16, borderWidth: 1, padding: 20 },
+  box: { width: '100%', maxWidth: 420, borderRadius: 24, borderWidth: 1, padding: 22 },
   title: { fontSize: 18, lineHeight: 24, fontWeight: '700' },
   message: { fontSize: 14, lineHeight: 20, marginTop: 6 },
   actions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 10, marginTop: 18 },

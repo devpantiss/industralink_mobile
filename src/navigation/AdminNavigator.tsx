@@ -12,7 +12,7 @@ import {
   DrawerItemList,
   DrawerContentComponentProps,
 } from '@react-navigation/drawer';
-import { LayoutGrid, BadgeCheck, Flag, Users, Briefcase, ScrollText, Shield, Settings, LogOut } from 'lucide-react-native';
+import { LayoutGrid, BadgeCheck, Flag, Users, Briefcase, ScrollText, Shield, Settings, LogOut } from '../components/ui/icons';
 import { AdminDrawerParamList } from './types';
 import { VerificationsQueueScreen } from '../screens/admin/VerificationsQueueScreen';
 import { UsersManagementScreen } from '../screens/admin/UsersManagementScreen';
