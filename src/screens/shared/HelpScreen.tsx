@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Chip } from '../../components/ui/Chip';
 import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
 import { View, StyleSheet, Pressable } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -109,18 +110,9 @@ export const HelpScreen: React.FC = () => {
             <>
               <Text style={[styles.label, { color: colors.inkSecondary }]}>{t('Topic')}</Text>
               <View style={styles.chips}>
-                {TOPICS.map((tp) => {
-                  const on = tp === topic;
-                  return (
-                    <Pressable
-                      key={tp}
-                      onPress={() => setTopic(tp)}
-                      style={[styles.chip, { backgroundColor: on ? colors.primarySoft : colors.surface, borderColor: on ? colors.primary : colors.border }]}
-                    >
-                      <Text style={[styles.chipText, { color: on ? colors.primary : colors.inkSecondary, fontWeight: on ? '700' : '500' }]}>{t(tp)}</Text>
-                    </Pressable>
-                  );
-                })}
+                {TOPICS.map((tp) => (
+                  <Chip key={tp} label={t(tp)} selected={tp === topic} onPress={() => setTopic(tp)} />
+                ))}
               </View>
               <Input
                 label={t('Your message')}
@@ -148,8 +140,6 @@ const styles = StyleSheet.create({
   a: { fontSize: 14, lineHeight: 21, paddingHorizontal: 16, paddingBottom: 16 },
   label: { fontSize: 13.5, fontWeight: '500', marginBottom: 8 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 14 },
-  chip: { minHeight: 38, paddingHorizontal: 14, borderRadius: 19, borderWidth: 1, justifyContent: 'center' },
-  chipText: { fontSize: 13.5 },
   msg: { marginTop: 4 },
   sent: { alignItems: 'center', gap: 10, paddingVertical: 8 },
 });

@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
+import { gradients } from '../../theme/effects';
 import { useTabBarSpace } from '../../components/layout/TabBar';
 import { View, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { Text } from '../../components/ui/Text';
@@ -161,7 +163,7 @@ function ApplicationCard({
   onPress: () => void;
   onViewJob: () => void;
 }) {
-  const { colors } = useUiStore();
+  const { colors, theme } = useUiStore();
   const closed = isClosed(app) && app.stage !== 'hired';
   const step = stepOf(app);
   const pay = payShort(app.job);
@@ -250,11 +252,11 @@ function ApplicationCard({
           {/* 5-Step Stepper */}
           <View style={styles.stepperContainer}>
             <View style={[styles.stepperLineTrack, { backgroundColor: colors.border }]}>
-              <View
-                style={[
-                  styles.stepperLineFill,
-                  { width: `${(step / 4) * 100}%`, backgroundColor: colors.primary },
-                ]}
+              <LinearGradient
+                colors={gradients[theme].brand}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={[styles.stepperLineFill, { width: `${(step / 4) * 100}%` }]}
               />
             </View>
 
@@ -268,11 +270,20 @@ function ApplicationCard({
                       style={[
                         styles.stepNode,
                         {
-                          borderColor: done || now ? colors.primary : colors.borderStrong,
-                          backgroundColor: done ? colors.primary : colors.surface,
+                          borderColor: done ? 'transparent' : now ? colors.primary : colors.borderStrong,
+                          backgroundColor: colors.surface,
                         },
+                        now && { borderWidth: 2.5 },
                       ]}
                     >
+                      {done && (
+                        <LinearGradient
+                          colors={gradients[theme].brand}
+                          start={{ x: 0, y: 0 }}
+                          end={{ x: 1, y: 1 }}
+                          style={[StyleSheet.absoluteFill, styles.nodeFill]}
+                        />
+                      )}
                       {done ? (
                         <Check size={11} color="#FFFFFF" strokeWidth={3} />
                       ) : now ? (
@@ -496,6 +507,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: 58,
   },
+  nodeFill: { borderRadius: 11, margin: -2 },
   stepNode: {
     width: 22,
     height: 22,
@@ -504,6 +516,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 4,
+    overflow: 'hidden',
   },
   stepNodeDot: {
     width: 7,

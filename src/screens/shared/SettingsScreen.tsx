@@ -5,7 +5,8 @@ import React, { useState } from 'react';
 import { View, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Text } from '../../components/ui/Text';
-import { Moon, Sun, Globe, LogOut, Check, Smartphone, Lock, Trash2, LifeBuoy, ChevronRight } from '../../components/ui/icons';
+import { Moon, Sun, Globe, LogOut, Check, Smartphone, Lock, Trash2, LifeBuoy, ChevronRight, Bell, ShieldCheck, ScrollText, type AppIcon } from '../../components/ui/icons';
+import type { TileColors } from '../../theme/colors';
 import { useNavigation } from '@react-navigation/native';
 import { Input } from '../../components/ui/Input';
 import { accountApi } from '../../api/accountApi';
@@ -140,9 +141,7 @@ export const SettingsScreen: React.FC = () => {
         {/* Vernacular Language Selector (workers only) */}
         {role === 'worker' && (
         <Card style={styles.card}>
-          <Text style={[typography.h3, styles.sectionTitle, { color: colors.ink }]}>
-            {t('Language')} (भाषा / ଭାଷା)
-          </Text>
+          <SectionTitle icon={Globe} tone={colors.tiles.blue}>{t('Language')} (भाषा / ଭାଷା)</SectionTitle>
           {languages.map((lang, idx) => {
             const isSelected = currentLang === lang.code;
             return (
@@ -176,7 +175,7 @@ export const SettingsScreen: React.FC = () => {
         {/* Alerts */}
         {role !== 'admin' && settings && (
           <Card style={styles.card}>
-            <Text style={[typography.h3, styles.sectionTitle, { color: colors.ink }]}>{t('Alerts')}</Text>
+            <SectionTitle icon={Bell} tone={colors.tiles.orange}>{t('Alerts')}</SectionTitle>
             <SettingSwitch
               label={role === 'worker' ? t('New jobs that match me') : 'New applicants on my jobs'}
               value={settings.jobAlerts}
@@ -200,7 +199,7 @@ export const SettingsScreen: React.FC = () => {
         {/* Privacy (workers) */}
         {role === 'worker' && settings && (
           <Card style={styles.card}>
-            <Text style={[typography.h3, styles.sectionTitle, { color: colors.ink }]}>{t('Privacy')}</Text>
+            <SectionTitle icon={ShieldCheck} tone={colors.tiles.green}>{t('Privacy')}</SectionTitle>
             <SettingSwitch
               label={t('Let companies find my profile')}
               hint={t('Verified companies can see your trade, experience and city, and invite you to apply. Your phone number stays hidden until you apply.')}
@@ -213,7 +212,7 @@ export const SettingsScreen: React.FC = () => {
         {/* Platform rules (admin) */}
         {role === 'admin' && platform && (
           <Card style={styles.card}>
-            <Text style={[typography.h3, styles.sectionTitle, { color: colors.ink }]}>Platform rules</Text>
+            <SectionTitle icon={ScrollText} tone={colors.tiles.purple}>Platform rules</SectionTitle>
             <SettingSwitch
               label="Approve companies automatically"
               hint="New companies go live without your approval. Not recommended."
@@ -237,9 +236,7 @@ export const SettingsScreen: React.FC = () => {
 
         {/* Display & Dark Theme */}
         <Card style={styles.card}>
-          <Text style={[typography.h3, styles.sectionTitle, { color: colors.ink }]}>
-            {t('Appearance')}
-          </Text>
+          <SectionTitle icon={Moon} tone={colors.tiles.purple}>{t('Appearance')}</SectionTitle>
           <Text style={[typography.caption, { color: colors.inkSecondary, marginBottom: spacing.sm }]}>
             {t('Light is the default. System follows your phone.')}
           </Text>
@@ -258,7 +255,7 @@ export const SettingsScreen: React.FC = () => {
         {/* Password (company and admin accounts; workers sign in with an SMS code) */}
         {role !== 'worker' && (
           <Card style={styles.card}>
-            <Text style={[typography.h3, styles.sectionTitle, { color: colors.ink }]}>Change password</Text>
+            <SectionTitle icon={Lock} tone={colors.tiles.rose}>Change password</SectionTitle>
             <Input
               label="Current password"
               value={curPw}
@@ -348,7 +345,25 @@ const SettingSwitch: React.FC<{ label: string; hint?: string; value: boolean; on
   );
 };
 
+/** Card heading with a tinted duotone icon chip. */
+const SectionTitle: React.FC<{ icon: AppIcon; tone: TileColors; children: React.ReactNode }> = ({ icon: Icon, tone, children }) => {
+  const colors = useUiStore((s) => s.colors);
+  return (
+    <View style={styles.sectionHead}>
+      <View style={[styles.sectionChip, { backgroundColor: tone.bg }]}>
+        <Icon size={18} color={tone.text} weight="duotone" duotoneOpacity={0.3} />
+      </View>
+      <Text style={[typography.h3, styles.sectionTitleText, { color: colors.ink }]} accessibilityRole="header">
+        {children}
+      </Text>
+    </View>
+  );
+};
+
 const styles = StyleSheet.create({
+  sectionHead: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: spacing.sm },
+  sectionChip: { width: 34, height: 34, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
+  sectionTitleText: { fontWeight: '700', flex: 1 },
   legalRow: { flexDirection: 'row', justifyContent: 'center', gap: 20, marginBottom: 12 },
   switchRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, paddingVertical: spacing.sm, minHeight: 52 },
   switchText: { flex: 1 },
@@ -360,10 +375,6 @@ const styles = StyleSheet.create({
   card: {
     padding: spacing.lg,
     marginBottom: spacing.md,
-  },
-  sectionTitle: {
-    fontWeight: '700',
-    marginBottom: spacing.sm,
   },
   demoLabel: { marginTop: spacing.md, fontWeight: '600' },
   roleSwitchRow: {

@@ -1,4 +1,7 @@
 import { errorText } from '../../lib/errors';
+import { ProgressBar, ProgressRing } from '../../components/ui/Progress';
+import { LinearGradient } from 'expo-linear-gradient';
+import { gradients } from '../../theme/effects';
 import { useTabBarSpace } from '../../components/layout/TabBar';
 import { DocumentViewer } from '../../components/domain/DocumentViewer';
 import React, { useState } from 'react';
@@ -42,7 +45,7 @@ type Tab = 'profile' | 'documents';
 
 
 export const WorkerProfileScreen: React.FC = () => {
-  const { colors, showToast } = useUiStore();
+  const { colors, theme, showToast } = useUiStore();
   const tabSpace = useTabBarSpace();
   const { logout } = useAuthStore();
   const qc = useQueryClient();
@@ -175,9 +178,18 @@ export const WorkerProfileScreen: React.FC = () => {
       <ScrollView contentContainerStyle={[styles.scrollContent, { paddingBottom: tabSpace }]} showsVerticalScrollIndicator={false}>
         {/* Profile Card Header */}
         <View style={[styles.headerCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          {/* Soft brand gradient across the top of the card. */}
+          <LinearGradient
+            colors={gradients[theme].night}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.headerBand}
+          />
           <View style={styles.avatarRow}>
             <View style={styles.avatarWrapper}>
-              <Avatar name={profile.name} size="xl" src={profile.photoUrl} />
+              <ProgressRing value={summary?.profileStrength ?? 0} size={84} stroke={4}>
+                <Avatar name={profile.name} size={70} src={profile.photoUrl} />
+              </ProgressRing>
               <TouchableOpacity onPress={handlePickPhoto} accessibilityLabel={t('Change Profile Photo')} style={[styles.cameraBadge, { backgroundColor: colors.primary }]}>
                 <Camera size={14} color="#FFFFFF" />
               </TouchableOpacity>
@@ -208,14 +220,7 @@ export const WorkerProfileScreen: React.FC = () => {
                   {t('Profile {n}% complete', { n: summary.profileStrength })}
                 </Text>
               </View>
-              <View style={[styles.strengthTrack, { backgroundColor: colors.surfaceStrong }]}>
-                <View
-                  style={[
-                    styles.strengthFill,
-                    { width: `${summary.profileStrength}%`, backgroundColor: colors.primary },
-                  ]}
-                />
-              </View>
+              <ProgressBar value={summary.profileStrength} style={styles.strengthTrack} />
               {summary.profileHint && (
                 <TouchableOpacity
                   onPress={() => {
@@ -552,11 +557,12 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   headerCard: {
-    borderRadius: 16,
+    borderRadius: 20,
     borderWidth: 1,
     padding: 16,
     ...shadows.card,
   },
+  headerBand: { position: 'absolute', top: 0, left: 0, right: 0, height: 64, borderTopLeftRadius: 19, borderTopRightRadius: 19 },
   avatarRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -625,10 +631,6 @@ const styles = StyleSheet.create({
     height: 6,
     borderRadius: 3,
     overflow: 'hidden',
-  },
-  strengthFill: {
-    height: '100%',
-    borderRadius: 3,
   },
   strengthHint: {
     fontSize: 11.5,

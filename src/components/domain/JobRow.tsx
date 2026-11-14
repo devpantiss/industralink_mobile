@@ -2,12 +2,11 @@ import React from 'react';
 import {
   View,
   StyleSheet,
-  TouchableOpacity,
   ViewStyle,
 } from 'react-native';
 import { Text } from '../../components/ui/Text';
-import { MapPin, Clock, Bookmark, BadgeCheck, CheckCircle2 } from '../ui/icons';
-import * as Haptics from 'expo-haptics';
+import { MapPin, Clock, BadgeCheck, CheckCircle2, Banknote } from '../ui/icons';
+import { SaveButton } from './SaveButton';
 import type { JobForWorker } from '../../types';
 import { CompanyLogo } from './CompanyLogo';
 import { payLong } from './JobBits';
@@ -39,12 +38,7 @@ export const JobRow: React.FC<JobRowProps> = ({
   const pay = payLong(job);
   const isFresh = isWithin(job.postedAt, 86_400_000);
 
-  const handleSaveToggle = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    if (onToggleSave) {
-      onToggleSave(job);
-    }
-  };
+  const handleSaveToggle = () => onToggleSave?.(job);
 
   return (
     <PressableScale
@@ -111,18 +105,7 @@ export const JobRow: React.FC<JobRowProps> = ({
         </View>
 
         {onToggleSave && (
-          <TouchableOpacity
-            onPress={handleSaveToggle}
-            disabled={saving}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            style={styles.saveBtn}
-          >
-            <Bookmark
-              size={18}
-              color={job.saved ? colors.primary : colors.inkSecondary}
-              fill={job.saved ? colors.primary : 'transparent'}
-            />
-          </TouchableOpacity>
+          <SaveButton saved={!!job.saved} onPress={handleSaveToggle} disabled={saving} />
         )}
       </View>
 
@@ -143,12 +126,16 @@ export const JobRow: React.FC<JobRowProps> = ({
       {/* Pay & Shift */}
       <View style={styles.payShiftRow}>
         {pay ? (
-          <Text style={[styles.payText, { color: colors.ink }]}>
-            {pay}
-            <Text style={[styles.payPeriodText, { color: colors.inkSecondary }]}>
-              {' '}{t(job.payPeriod === 'day' ? 'per day' : 'per month')}
+          // Pay in a green pill: the first thing workers look for.
+          <View style={[styles.payPill, { backgroundColor: colors.tiles.green.bg }]}>
+            <Banknote size={15} color={colors.tiles.green.text} weight="duotone" duotoneOpacity={0.35} />
+            <Text style={[styles.payText, { color: colors.tiles.green.text }]}>
+              {pay}
+              <Text style={[styles.payPeriodText, { color: colors.tiles.green.text }]}>
+                {' '}{t(job.payPeriod === 'day' ? 'per day' : 'per month')}
+              </Text>
             </Text>
-          </Text>
+          </View>
         ) : (
           <Text style={[styles.payPeriodText, { color: colors.inkMuted }]}>
             {t('Salary not disclosed')}
@@ -181,7 +168,7 @@ export const JobRow: React.FC<JobRowProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 16,
+    borderRadius: 20,
     borderWidth: 1,
     padding: 16,
     marginBottom: spacing.md,
@@ -226,9 +213,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '700',
   },
-  saveBtn: {
-    padding: 4,
-  },
+  payPill: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 32, paddingHorizontal: 10, borderRadius: 999 },
   bulletsList: {
     marginTop: 10,
     gap: 4,
@@ -254,7 +239,7 @@ const styles = StyleSheet.create({
   },
   payText: {
     fontSize: 14.5,
-    fontWeight: '700',
+    fontWeight: '800',
   },
   payPeriodText: {
     fontSize: 13,

@@ -1,4 +1,8 @@
 import React, { useState, useMemo } from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
+import { gradients } from '../../theme/effects';
+import { TRADE_ICON } from '../../lib/tradeIcons';
+import { Stagger } from '../../components/ui/Stagger';
 import { useTabBarSpace } from '../../components/layout/TabBar';
 import {
   View,
@@ -56,7 +60,7 @@ const QUICK_TRADES: Trade[] = [
 
 export const FindJobsScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
-  const { colors } = useUiStore();
+  const { colors, theme } = useUiStore();
   const tabSpace = useTabBarSpace();
   const qc = useQueryClient();
 
@@ -170,14 +174,16 @@ export const FindJobsScreen: React.FC = () => {
             tintColor={colors.primary}
           />
         }
-        renderItem={({ item: j }) => (
-          <JobRow
-            job={j}
-            style={styles.row}
-            onPress={() => navigation.navigate('JobDetail', { jobId: j.id })}
-            onToggleSave={(job) => saveMutation.mutate(job)}
-            saving={saveMutation.isPending && saveMutation.variables?.id === j.id}
-          />
+        renderItem={({ item: j, index }) => (
+          <Stagger index={index}>
+            <JobRow
+              job={j}
+              style={styles.row}
+              onPress={() => navigation.navigate('JobDetail', { jobId: j.id })}
+              onToggleSave={(job) => saveMutation.mutate(job)}
+              saving={saveMutation.isPending && saveMutation.variables?.id === j.id}
+            />
+          </Stagger>
         )}
         ListHeaderComponent={
           <>
@@ -258,6 +264,7 @@ export const FindJobsScreen: React.FC = () => {
         >
           {QUICK_TRADES.map((tr) => {
             const isSelected = selectedTrade === tr;
+            const TradeIcon = TRADE_ICON[tr];
             return (
               <TouchableOpacity
                 key={tr}
@@ -265,18 +272,23 @@ export const FindJobsScreen: React.FC = () => {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   setSelectedTrade(isSelected ? '' : tr);
                 }}
+                accessibilityState={{ selected: isSelected }}
                 style={[
                   styles.tradePill,
                   {
-                    backgroundColor: isSelected ? colors.primarySoft : colors.surface,
-                    borderColor: isSelected ? colors.primary : colors.border,
+                    backgroundColor: isSelected ? 'transparent' : colors.surface,
+                    borderColor: isSelected ? 'transparent' : colors.border,
                   },
                 ]}
               >
+                {isSelected && (
+                  <LinearGradient colors={gradients[theme].brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
+                )}
+                <TradeIcon size={16} color={isSelected ? '#FFFFFF' : colors.primary} weight={isSelected ? 'fill' : 'duotone'} duotoneOpacity={0.25} />
                 <Text
                   style={[
                     styles.tradePillText,
-                    { color: isSelected ? colors.primary : colors.inkSecondary, fontWeight: isSelected ? '700' : '500' },
+                    { color: isSelected ? '#FFFFFF' : colors.ink, fontWeight: isSelected ? '700' : '600' },
                   ]}
                 >
                   {t(TRADE_LABEL[tr])}
@@ -686,12 +698,15 @@ const styles = StyleSheet.create({
     paddingBottom: 6,
   },
   tradePill: {
-    height: 38,
+    height: 40,
     paddingHorizontal: 14,
     borderRadius: 999,
     borderWidth: 1,
+    flexDirection: 'row',
+    gap: 7,
     justifyContent: 'center',
     alignItems: 'center',
+    overflow: 'hidden',
   },
   tradePillText: {
     fontSize: 13,

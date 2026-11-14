@@ -1,4 +1,5 @@
 import { VerificationBanner } from '../../components/domain/VerificationBanner';
+import { ProgressBar } from '../../components/ui/Progress';
 import { useTabBarSpace } from '../../components/layout/TabBar';
 import React from 'react';
 import {
@@ -280,17 +281,11 @@ export const EmployerHomeScreen: React.FC = () => {
                       {j.location.city} · {t(SHIFT_LABEL[j.shift])}
                     </Text>
                     <View style={styles.openingsProgress}>
-                      <View style={[styles.progressTrack, { backgroundColor: colors.surfaceStrong }]}>
-                        <View
-                          style={[
-                            styles.progressFill,
-                            {
-                              width: `${Math.min(100, ((j.applicantsCount || 0) / Math.max(1, j.openings)) * 100)}%`,
-                              backgroundColor: colors.primary,
-                            },
-                          ]}
-                        />
-                      </View>
+                      <ProgressBar
+                        value={Math.min(100, ((j.applicantsCount || 0) / Math.max(1, j.openings)) * 100)}
+                        height={6}
+                        style={styles.progressTrack}
+                      />
                       <Text style={[styles.openingsText, { color: colors.inkSecondary }]}>
                         {j.openings} {t('openings')} · {j.applicantsCount} {t('applied')}
                       </Text>
@@ -517,10 +512,6 @@ const styles = StyleSheet.create({
     height: 4,
     borderRadius: 2,
     overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    borderRadius: 2,
   },
   openingsText: {
     fontSize: 11,

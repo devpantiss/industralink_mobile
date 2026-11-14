@@ -1,4 +1,8 @@
 import React, { useState } from 'react';
+import { Glass } from '../../components/ui/Glass';
+import { Button } from '../../components/ui/Button';
+import type { TileColors } from '../../theme/colors';
+import type { AppIcon } from '../../components/ui/icons';
 import { HeaderButton } from '../../components/layout/AppHeader';
 import { View, StyleSheet, TouchableOpacity, Linking, Share, ActivityIndicator } from 'react-native';
 import { Text } from '../../components/ui/Text';
@@ -11,6 +15,9 @@ import {
   CalendarClock,
   MapPin,
   Clock,
+  Banknote,
+  Users,
+  Award,
   Phone,
   Building2,
   ShieldCheck,
@@ -172,41 +179,22 @@ export const JobDetailScreen: React.FC = () => {
           </View>
         </View>
 
-        {/* 4 Pastel Fact Tiles (2x2 Grid) */}
+        {/* Fact tiles (2x2): tinted icon chip, small label, bold value. */}
         <View style={styles.tilesGrid}>
-          {/* Salary Tile */}
-          <View style={[styles.tile, { backgroundColor: colors.tiles.green.bg }]}>
-            <Text style={[styles.tileLabel, { color: colors.tiles.green.text }]}>
-              {job.payType && pay ? `${t('Salary')} · ${t(PAY_TYPE_LABEL[job.payType])}` : t('Salary')}
-            </Text>
-            <Text style={[styles.tileValue, { color: colors.tiles.green.text }]} numberOfLines={1}>
-              {pay ? `${pay.range} ${pay.per}` : t('Not shown')}
-            </Text>
-          </View>
-
-          {/* Shift Tile */}
-          <View style={[styles.tile, { backgroundColor: colors.tiles.blue.bg }]}>
-            <Text style={[styles.tileLabel, { color: colors.tiles.blue.text }]}>{t('Shift')}</Text>
-            <Text style={[styles.tileValue, { color: colors.tiles.blue.text }]} numberOfLines={1}>
-              {t(SHIFT_LABEL[job.shift]).replace(/ shift$/i, '')}
-            </Text>
-          </View>
-
-          {/* Openings Tile */}
-          <View style={[styles.tile, { backgroundColor: colors.tiles.orange.bg }]}>
-            <Text style={[styles.tileLabel, { color: colors.tiles.orange.text }]}>{t('Openings')}</Text>
-            <Text style={[styles.tileValue, { color: colors.tiles.orange.text }]} numberOfLines={1}>
-              {job.openings} ({t('{n} applied', { n: job.applicantsCount })})
-            </Text>
-          </View>
-
-          {/* Experience Tile */}
-          <View style={[styles.tile, { backgroundColor: colors.tiles.purple.bg }]}>
-            <Text style={[styles.tileLabel, { color: colors.tiles.purple.text }]}>{t('Experience')}</Text>
-            <Text style={[styles.tileValue, { color: colors.tiles.purple.text }]} numberOfLines={1}>
-              {t(EXPERIENCE_LABEL[job.experience])}
-            </Text>
-          </View>
+          <FactTile
+            tone={colors.tiles.green}
+            icon={Banknote}
+            label={job.payType && pay ? `${t('Salary')} · ${t(PAY_TYPE_LABEL[job.payType])}` : t('Salary')}
+            value={pay ? `${pay.range} ${pay.per}` : t('Not shown')}
+          />
+          <FactTile tone={colors.tiles.blue} icon={Clock} label={t('Shift')} value={t(SHIFT_LABEL[job.shift]).replace(/ shift$/i, '')} />
+          <FactTile
+            tone={colors.tiles.orange}
+            icon={Users}
+            label={t('Openings')}
+            value={`${job.openings} (${t('{n} applied', { n: job.applicantsCount })})`}
+          />
+          <FactTile tone={colors.tiles.purple} icon={Award} label={t('Experience')} value={t(EXPERIENCE_LABEL[job.experience])} />
         </View>
 
         <SegmentedTabs
@@ -447,12 +435,7 @@ export const JobDetailScreen: React.FC = () => {
       </Animated.ScrollView>
 
       {/* Sticky Bottom Action Bar */}
-      <View
-        style={[
-          styles.bottomBar,
-          { backgroundColor: colors.surface, borderTopColor: colors.border, paddingBottom: Math.max(insets.bottom, 12) },
-        ]}
-      >
+      <Glass bordered={false} style={[styles.bottomBar, { borderTopColor: colors.border, paddingBottom: Math.max(insets.bottom, 12) }]}>
         {closed ? (
           <View style={[styles.closedBar, { backgroundColor: colors.surfaceStrong }]}>
             <Text style={[styles.closedText, { color: colors.inkMuted }]}>
@@ -471,12 +454,7 @@ export const JobDetailScreen: React.FC = () => {
           </TouchableOpacity>
         ) : (
           <View style={styles.actionsRow}>
-            <TouchableOpacity
-              onPress={() => setApplyModalOpen(true)}
-              style={[styles.applyBtn, { backgroundColor: colors.primary }]}
-            >
-              <Text style={styles.applyBtnText}>{t('Apply now')}</Text>
-            </TouchableOpacity>
+            <Button label={t('Apply now')} size="lg" onPress={() => setApplyModalOpen(true)} style={styles.flex1} />
 
             <TouchableOpacity
               onPress={handleShare}
@@ -487,7 +465,7 @@ export const JobDetailScreen: React.FC = () => {
             </TouchableOpacity>
           </View>
         )}
-      </View>
+      </Glass>
 
       {/* Apply Modal */}
       <ApplyModal
@@ -538,7 +516,38 @@ function FactCard({
   );
 }
 
+function FactTile({
+  tone,
+  icon: Icon,
+  label,
+  value,
+}: {
+  tone: TileColors;
+  icon: AppIcon;
+  label: string;
+  value: string;
+}) {
+  const colors = useUiStore((s) => s.colors);
+  return (
+    <View style={[styles.tile, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+      <View style={[styles.tileChip, { backgroundColor: tone.bg }]}>
+        <Icon size={18} color={tone.text} weight="duotone" duotoneOpacity={0.3} />
+      </View>
+      <View style={styles.flex1}>
+        <Text style={[styles.tileLabel, { color: colors.inkMuted }]} numberOfLines={1}>
+          {label}
+        </Text>
+        <Text style={[styles.tileValue, { color: colors.ink }]} numberOfLines={1}>
+          {value}
+        </Text>
+      </View>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  flex1: { flex: 1 },
+  tileChip: { width: 36, height: 36, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   centerContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -622,22 +631,15 @@ const styles = StyleSheet.create({
   tile: {
     flexGrow: 1,
     flexBasis: '45%',
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-    borderRadius: 14,
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+    gap: 10,
+    padding: 12,
+    borderRadius: 16,
+    borderWidth: 1,
   },
-  tileLabel: {
-    fontSize: 11.5,
-    fontWeight: '600',
-    opacity: 0.85,
-  },
-  tileValue: {
-    fontSize: 15.5,
-    fontWeight: '700',
-    marginTop: 2,
-  },
+  tileLabel: { fontSize: 11.5, fontWeight: '600' },
+  tileValue: { fontSize: 15, fontWeight: '800', marginTop: 1, letterSpacing: -0.2 },
   tabsRow: {
     marginBottom: 18,
   },
@@ -801,18 +803,6 @@ const styles = StyleSheet.create({
   actionsRow: {
     flexDirection: 'row',
     gap: 10,
-  },
-  applyBtn: {
-    flex: 1,
-    height: 52,
-    borderRadius: 26,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  applyBtnText: {
-    color: '#FFF',
-    fontSize: 16,
-    fontWeight: '700',
   },
   shareBtn: {
     width: 52,

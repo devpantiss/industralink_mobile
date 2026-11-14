@@ -5,6 +5,8 @@ import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
 import { View, StyleSheet, TouchableOpacity, RefreshControl } from 'react-native';
 import { Text, TextInput } from '../../components/ui/Text';
 import { useTileStyle, TileIcon } from '../../components/ui/tileStyle';
+import { ProgressBar, ProgressRing } from '../../components/ui/Progress';
+import { Stagger } from '../../components/ui/Stagger';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -237,7 +239,9 @@ export const WorkerHomeScreen: React.FC = () => {
             style={[styles.profileCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
           >
             <View style={styles.profileTop}>
-              <Avatar name={user?.name || profile?.name || 'Worker'} size="md" />
+              <ProgressRing value={summary.profileStrength} size={54} stroke={3.5}>
+                <Avatar name={user?.name || profile?.name || 'Worker'} size={42} />
+              </ProgressRing>
               <View style={styles.flex}>
                 <Text style={[styles.profileTitle, { color: colors.ink }]}>
                   {t('Profile {n}% complete', { n: summary.profileStrength })}
@@ -250,9 +254,7 @@ export const WorkerHomeScreen: React.FC = () => {
               </View>
               <ChevronRight size={18} color={colors.inkMuted} />
             </View>
-            <View style={[styles.track, { backgroundColor: colors.surfaceStrong }]}>
-              <View style={[styles.fill, { width: `${summary.profileStrength}%`, backgroundColor: colors.primary }]} />
-            </View>
+            <ProgressBar value={summary.profileStrength} style={styles.bar} />
           </PressableScale>
         )}
 
@@ -287,14 +289,15 @@ export const WorkerHomeScreen: React.FC = () => {
             </Text>
           </View>
         ) : (
-          jobs.map((j) => (
+          jobs.map((j, i) => (
+            <Stagger key={j.id} index={i}>
             <JobCard
-              key={j.id}
               job={j}
               onPress={() => navigation.navigate('JobDetail', { jobId: j.id })}
               onToggleSave={(job) => saveMutation.mutate(job)}
               saving={saveMutation.isPending && saveMutation.variables?.id === j.id}
             />
+            </Stagger>
           ))
         )}
 
@@ -393,8 +396,7 @@ const styles = StyleSheet.create({
   profileTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   profileTitle: { fontSize: 15, fontWeight: '700' },
   profileHint: { fontSize: 13, lineHeight: 18, marginTop: 2 },
-  track: { height: 6, borderRadius: 3, overflow: 'hidden', marginTop: 12 },
-  fill: { height: '100%', borderRadius: 3 },
+  bar: { marginTop: 12 },
 
   sectionHead: { flexDirection: 'row', alignItems: 'flex-end', marginBottom: 12 },
   sectionTitle: { fontSize: 20, lineHeight: 26, fontWeight: '700', letterSpacing: -0.3 },

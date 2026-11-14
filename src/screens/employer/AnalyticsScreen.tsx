@@ -1,4 +1,5 @@
 import React from 'react';
+import { ProgressBar } from '../../components/ui/Progress';
 import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useQuery } from '@tanstack/react-query';
@@ -95,9 +96,7 @@ export const AnalyticsScreen: React.FC = () => {
                   <Text style={[styles.stateName, { color: colors.inkSecondary }]}>{s.state}</Text>
                   <Text style={[styles.stateNum, { color: colors.ink }]}>{s.count}</Text>
                 </View>
-                <View style={[styles.track, { backgroundColor: colors.surfaceMuted }]}>
-                  <View style={[styles.fill, { width: `${(s.count / maxState) * 100}%`, backgroundColor: colors.primary }]} />
-                </View>
+                <ProgressBar value={(s.count / maxState) * 100} style={styles.track} />
               </View>
             ))}
           </View>
@@ -229,7 +228,6 @@ const styles = StyleSheet.create({
   stateName: { fontSize: 13 },
   stateNum: { fontSize: 13, fontWeight: '700' },
   track: { height: 8, borderRadius: 4, overflow: 'hidden' },
-  fill: { height: 8, borderRadius: 4 },
   section: { fontSize: 18, fontWeight: '700', marginTop: 8 },
   sectionCaption: { fontSize: 13, marginTop: 2, marginBottom: 10 },
   job: { borderWidth: 1, borderRadius: 16, padding: 14, marginBottom: 10, gap: 10, ...shadows.card },

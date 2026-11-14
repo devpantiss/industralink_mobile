@@ -1,4 +1,6 @@
 import { errorText } from '../../lib/errors';
+import { LinearGradient } from 'expo-linear-gradient';
+import { gradients } from '../../theme/effects';
 import React, { useEffect, useRef, useState } from 'react';
 import { View, StyleSheet, FlatList, Pressable } from 'react-native';
 import { useRoute } from '@react-navigation/native';
@@ -27,6 +29,7 @@ const HR_QUICK = ['Please bring your original documents', 'Can you join this wee
 /** One conversation between a worker and HR about an application. */
 export const ChatScreen: React.FC = () => {
   const colors = useUiStore((s) => s.colors);
+  const theme = useUiStore((s) => s.theme);
   const showToast = useUiStore((s) => s.showToast);
   const role = useAuthStore((s) => s.role) as InboxRole;
   const { threadId, recipientName } = (useRoute().params ?? {}) as { threadId: string; recipientName?: string };
@@ -93,9 +96,13 @@ export const ChatScreen: React.FC = () => {
                   <View
                     style={[
                       styles.bubble,
-                      { backgroundColor: isMe ? colors.primary : colors.surface, borderColor: isMe ? colors.primary : colors.border },
+                      isMe ? styles.mine : styles.theirs,
+                      { backgroundColor: isMe ? 'transparent' : colors.surface, borderColor: isMe ? 'transparent' : colors.border },
                     ]}
                   >
+                    {isMe && (
+                      <LinearGradient colors={gradients[theme].brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
+                    )}
                     <Text style={[typography.body, { color: isMe ? '#FFFFFF' : colors.ink }]}>{m.text}</Text>
                     <Text style={[typography.tiny, styles.time, { color: isMe ? 'rgba(255,255,255,0.75)' : colors.inkMuted }]}>
                       {formatDateTime(m.at)}
@@ -160,7 +167,10 @@ const styles = StyleSheet.create({
   bubbleWrapper: { marginVertical: 4, maxWidth: '82%' },
   right: { alignSelf: 'flex-end' },
   left: { alignSelf: 'flex-start' },
-  bubble: { paddingVertical: 10, paddingHorizontal: 14, borderRadius: 16, borderWidth: 1, ...shadows.card },
+  bubble: { paddingVertical: 10, paddingHorizontal: 14, borderRadius: 20, borderWidth: 1, overflow: 'hidden', ...shadows.card },
+  // A tighter corner on the side of the sender, like most chat apps.
+  mine: { borderBottomRightRadius: 6 },
+  theirs: { borderBottomLeftRadius: 6 },
   time: { marginTop: 4, textAlign: 'right' },
   quickBar: { paddingVertical: 6, borderTopWidth: 1 },
   quickScroll: { paddingHorizontal: spacing.lg, gap: 6 },

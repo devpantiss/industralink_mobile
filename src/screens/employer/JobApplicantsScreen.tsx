@@ -1,4 +1,6 @@
 import { errorText } from '../../lib/errors';
+import { ProgressBar } from '../../components/ui/Progress';
+import { gradients } from '../../theme/effects';
 import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
 import React, { useMemo, useState } from 'react';
 import { View, StyleSheet, ScrollView, Pressable, RefreshControl, Share } from 'react-native';
@@ -45,6 +47,7 @@ export const JobApplicantsScreen: React.FC = () => {
   const navigation = useNavigation<NativeStackNavigationProp<EmployerStackParamList>>();
   const { jobId } = useRoute<RouteProp<EmployerStackParamList, 'JobApplicants'>>().params;
   const colors = useUiStore((s) => s.colors);
+  const theme = useUiStore((s) => s.theme);
   const showToast = useUiStore((s) => s.showToast);
   const qc = useQueryClient();
   const [tab, setTab] = useState<Tab>('all');
@@ -168,11 +171,7 @@ export const JobApplicantsScreen: React.FC = () => {
                 </Text>
                 <Text style={[styles.fillText, { color: colors.inkMuted }]}>{list.length} applied</Text>
               </View>
-              <View style={[styles.track, { backgroundColor: colors.surfaceStrong }]}>
-                <View
-                  style={[styles.fill, { width: `${filled * 100}%`, backgroundColor: colors.tiles.green.text }]}
-                />
-              </View>
+              <ProgressBar value={filled * 100} gradient={gradients[theme].success} style={styles.track} />
 
               {j.status === 'active' && hired >= j.openings && (
                 <View style={[styles.note, { backgroundColor: colors.successBg }]}>
@@ -305,7 +304,6 @@ const styles = StyleSheet.create({
   fillText: { fontSize: 13 },
   fillNum: { fontWeight: '700' },
   track: { height: 8, borderRadius: 4, overflow: 'hidden' },
-  fill: { height: 8, borderRadius: 4 },
   note: { flexDirection: 'row', gap: 8, alignItems: 'flex-start', borderRadius: 10, padding: 10, marginTop: 8 },
   noteText: { flex: 1, fontSize: 13, lineHeight: 18 },
   sticky: { paddingTop: 12, paddingBottom: 10, gap: 10 },

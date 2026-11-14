@@ -2,12 +2,11 @@ import React from 'react';
 import {
   View,
   StyleSheet,
-  TouchableOpacity,
   ViewStyle,
 } from 'react-native';
 import { Text } from '../../components/ui/Text';
-import { Bookmark, BadgeCheck, CheckCircle2, CalendarClock } from '../ui/icons';
-import * as Haptics from 'expo-haptics';
+import { BadgeCheck, CheckCircle2, CalendarClock, Banknote, Clock, Award } from '../ui/icons';
+import { SaveButton } from './SaveButton';
 import type { JobForWorker } from '../../types';
 import { CompanyLogo } from './CompanyLogo';
 import { payShort } from './JobBits';
@@ -40,12 +39,7 @@ export const JobCard: React.FC<JobCardProps> = ({
   const closed = job.status !== 'active';
   const pay = payShort(job);
 
-  const handleSaveToggle = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    if (onToggleSave) {
-      onToggleSave(job);
-    }
-  };
+  const handleSaveToggle = () => onToggleSave?.(job);
 
   const previewSnippet = [job.responsibilities?.[0], job.requirements?.[0]].filter(Boolean).join('. ');
 
@@ -55,7 +49,7 @@ export const JobCard: React.FC<JobCardProps> = ({
       style={[
         styles.card,
         {
-          backgroundColor: selected ? colors.surface : colors.surfaceMuted,
+          backgroundColor: colors.surface,
           borderColor: selected ? colors.primary : colors.border,
           opacity: closed ? 0.7 : 1,
         },
@@ -79,29 +73,22 @@ export const JobCard: React.FC<JobCardProps> = ({
         </View>
 
         {onToggleSave && (
-          <TouchableOpacity
-            onPress={handleSaveToggle}
-            disabled={saving}
-            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            style={styles.saveBtn}
-          >
-            <Bookmark
-              size={18}
-              color={job.saved ? colors.primary : colors.inkSecondary}
-              fill={job.saved ? colors.primary : 'transparent'}
-            />
-          </TouchableOpacity>
+          <SaveButton saved={!!job.saved} onPress={handleSaveToggle} disabled={saving} />
         )}
       </View>
 
       {/* Characteristic Badges/Pills Row */}
       <View style={styles.pillsRow}>
-        <View style={[styles.pill, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        {/* Pay first and in colour: it is what workers scan for. */}
+        <View style={[styles.pill, { backgroundColor: pay ? colors.tiles.green.bg : colors.surfaceMuted, borderColor: 'transparent' }]}>
           {pay ? (
-            <Text style={[styles.pillText, { color: colors.ink }]}>
-              {pay.range}
-              <Text style={[styles.pillTextMuted, { color: colors.inkMuted }]}> {pay.per}</Text>
-            </Text>
+            <>
+              <Banknote size={15} color={colors.tiles.green.text} weight="duotone" duotoneOpacity={0.35} />
+              <Text style={[styles.payText, { color: colors.tiles.green.text }]}>
+                {pay.range}
+                <Text style={[styles.pillTextMuted, { color: colors.tiles.green.text }]}> {pay.per}</Text>
+              </Text>
+            </>
           ) : (
             <Text style={[styles.pillTextMuted, { color: colors.inkMuted }]}>
               {t('Pay not shown')}
@@ -109,13 +96,15 @@ export const JobCard: React.FC<JobCardProps> = ({
           )}
         </View>
 
-        <View style={[styles.pill, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <View style={[styles.pill, { backgroundColor: colors.surfaceMuted, borderColor: colors.border }]}>
+          <Clock size={14} color={colors.inkSecondary} />
           <Text style={[styles.pillText, { color: colors.ink }]}>
             {t(SHIFT_LABEL[job.shift]).replace(/ shift$/i, '')}
           </Text>
         </View>
 
-        <View style={[styles.pill, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+        <View style={[styles.pill, { backgroundColor: colors.surfaceMuted, borderColor: colors.border }]}>
+          <Award size={14} color={colors.inkSecondary} />
           <Text style={[styles.pillText, { color: colors.ink }]}>
             {t(EXPERIENCE_LABEL[job.experience])}
           </Text>
@@ -174,7 +163,7 @@ export const JobCard: React.FC<JobCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: 16,
+    borderRadius: 20,
     borderWidth: 1,
     padding: 16,
     marginBottom: spacing.md,
@@ -211,9 +200,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginTop: 2,
   },
-  saveBtn: {
-    padding: 4,
-  },
   pillsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -225,9 +211,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderRadius: 999,
     borderWidth: 1,
+    flexDirection: 'row',
+    gap: 5,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  payText: { fontSize: 13.5, fontWeight: '800', letterSpacing: -0.1 },
   pillText: {
     fontSize: 12.5,
     fontWeight: '700',

@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { View, StyleSheet, FlatList, Pressable, RefreshControl } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Bell, MessageCircle } from '../../components/ui/icons';
+import { Bell, MessageCircle, CalendarClock, BadgeCheck, Users, ShieldCheck, Briefcase, type AppIcon } from '../../components/ui/icons';
+import type { ThemeColors, TileColors } from '../../theme/colors';
 import { Text } from '../../components/ui/Text';
 import { Screen } from '../../components/layout/Screen';
 import { AppHeader } from '../../components/layout/AppHeader';
@@ -87,12 +88,13 @@ export const InboxScreen: React.FC = () => {
               style={[styles.card, { backgroundColor: n.read ? colors.surface : colors.primarySoft, borderColor: colors.border }]}
               accessibilityRole="button"
             >
-              <View style={[styles.dot, { backgroundColor: n.read ? 'transparent' : colors.primary }]} />
+              <NoteIcon title={n.title} colors={colors} />
               <View style={styles.flex}>
                 <Text style={[styles.title, { color: colors.ink }]}>{t(n.title)}</Text>
                 <Text style={[styles.body, { color: colors.inkSecondary }]}>{t(n.body)}</Text>
                 <Text style={[styles.time, { color: colors.inkMuted }]}>{timeAgo(n.at)}</Text>
               </View>
+              {!n.read && <View style={[styles.dot, { backgroundColor: colors.primary }]} />}
             </Pressable>
           )}
           ListEmptyComponent={
@@ -157,7 +159,25 @@ const Empty: React.FC<{ icon: React.ReactNode; text: string; hint?: string }> = 
   );
 };
 
+/** Icon chip for a notification, picked from its title (notifications carry no type yet). */
+function NoteIcon({ title, colors }: { title: string; colors: ThemeColors }) {
+  const lower = title.toLowerCase();
+  let Icon: AppIcon = Bell;
+  let tone: TileColors = colors.tiles.blue;
+  if (lower.includes('interview')) [Icon, tone] = [CalendarClock, colors.tiles.purple];
+  else if (lower.includes('shortlist') || lower.includes('offer') || lower.includes('hired')) [Icon, tone] = [BadgeCheck, colors.tiles.green];
+  else if (lower.includes('applicant')) [Icon, tone] = [Users, colors.tiles.blue];
+  else if (lower.includes('approved') || lower.includes('verified')) [Icon, tone] = [ShieldCheck, colors.tiles.green];
+  else if (lower.includes('job')) [Icon, tone] = [Briefcase, colors.tiles.orange];
+  return (
+    <View style={[styles.noteIcon, { backgroundColor: tone.bg }]}>
+      <Icon size={20} color={tone.text} weight="duotone" duotoneOpacity={0.3} />
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
+  noteIcon: { width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   flex: { flex: 1 },
   tabs: { marginHorizontal: 16, marginBottom: 8 },
   list: { paddingHorizontal: 16, paddingBottom: 24, gap: 10 },
