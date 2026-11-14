@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Pressable, Switch, Alert } from 'react-native';
+import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
+import { View, StyleSheet, Pressable, Switch, Alert } from 'react-native';
 import { Text } from '../../components/ui/Text';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -463,7 +464,7 @@ export const PostJobWizardScreen: React.FC = () => {
         })}
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+      <KeyboardScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         {step === 0 && (
           <View>
             {company.data && company.data.verification !== 'approved' ? <VerificationBanner onCompanyScreen /> : null}
@@ -748,7 +749,7 @@ export const PostJobWizardScreen: React.FC = () => {
             style={{ marginTop: 12 }}
           />
         )}
-      </ScrollView>
+      </KeyboardScrollView>
     </Screen>
   );
 };

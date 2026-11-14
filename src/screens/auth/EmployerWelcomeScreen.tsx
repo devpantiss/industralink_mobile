@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
+import { View, StyleSheet, Pressable } from 'react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import * as Haptics from 'expo-haptics';
 import { ArrowRight, ChevronLeft } from 'lucide-react-native';
@@ -97,7 +98,7 @@ export const EmployerWelcomeScreen: React.FC = () => {
         <View style={styles.back} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+      <KeyboardScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <Text style={[styles.title, { color: colors.ink }]}>{step === 0 ? t('Tell us about your company') : t('Where are you, and who do we call?')}</Text>
         <Text style={[styles.hint, { color: colors.inkSecondary }]}>
           {step === 0
@@ -145,7 +146,7 @@ export const EmployerWelcomeScreen: React.FC = () => {
         )}
 
         {error ? <Text style={[styles.error, { color: colors.dangerFg }]}>{error}</Text> : null}
-      </ScrollView>
+      </KeyboardScrollView>
 
       <View style={styles.footer}>
         <Button

@@ -7,6 +7,7 @@ import * as Haptics from 'expo-haptics';
 import { Text } from '../ui/Text';
 import { useUiStore } from '../../store/uiStore';
 import { t } from '../../lib/i18n';
+import { useKeyboardVisible } from '../../lib/keyboard';
 
 const EASE = Easing.bezier(0.2, 0, 0, 1);
 const BAR_H = 64;
@@ -14,13 +15,14 @@ const PILL_INSET = 6;
 
 /**
  * Floating bottom navigation: a rounded bar that sits above the page with a soft shadow.
- * A tinted pill slides under the selected tab (280ms ease-out, no bounce); the icon and label
- * of the selected tab turn cobalt. Supports `tabBarBadge` (number, or true for a dot).
+ * A solid cobalt pill slides under the selected tab (280ms ease-out, no bounce); the icon and
+ * label of the selected tab turn white, so the current tab is obvious at a glance. Supports `tabBarBadge` (number, or true for a dot).
  */
 export const TabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, navigation }) => {
   const colors = useUiStore((s) => s.colors);
   const dark = useUiStore((s) => s.theme) === 'dark';
   const insets = useSafeAreaInsets();
+  const keyboardVisible = useKeyboardVisible();
   const [width, setWidth] = useState(0);
   const count = state.routes.length;
   const slot = width / count;
@@ -31,6 +33,9 @@ export const TabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, naviga
   }, [state.index, slot, x]);
 
   const pill = useAnimatedStyle(() => ({ transform: [{ translateX: x.get() }] }));
+
+  // Hide while typing: gives the form the room and stops the bar floating over the keyboard.
+  if (keyboardVisible) return null;
 
   return (
     <View style={[styles.wrap, { backgroundColor: colors.canvas, paddingBottom: Math.max(insets.bottom - 6, 10) }]}>
@@ -51,7 +56,7 @@ export const TabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, naviga
             pointerEvents="none"
             style={[
               styles.pill,
-              { width: slot - PILL_INSET * 2, backgroundColor: colors.primarySoft },
+              { width: slot - PILL_INSET * 2, backgroundColor: colors.primary },
               pill,
             ]}
           />
@@ -62,7 +67,7 @@ export const TabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, naviga
           const label = typeof options.tabBarLabel === 'string' ? options.tabBarLabel : (options.title ?? route.name);
           const badge = options.tabBarBadge;
           const showBadge = badge !== undefined && badge !== 0;
-          const color = focused ? colors.primary : colors.inkMuted;
+          const color = focused ? '#FFFFFF' : colors.inkSecondary;
 
           const onPress = () => {
             const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
@@ -100,7 +105,7 @@ export const TabBar: React.FC<BottomTabBarProps> = ({ state, descriptors, naviga
               <Text
                 numberOfLines={1}
                 maxFontSizeMultiplier={1.15}
-                style={[styles.label, { color: focused ? colors.primary : colors.inkMuted, fontWeight: focused ? '700' : '500' }]}
+                style={[styles.label, { color, fontWeight: focused ? '700' : '600' }]}
               >
                 {t(label)}
               </Text>
@@ -121,7 +126,7 @@ const styles = StyleSheet.create({
     borderWidth: StyleSheet.hairlineWidth,
   },
   shadow: Platform.select({
-    ios: { shadowColor: '#101828', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.1, shadowRadius: 16 },
+    ios: { shadowColor: '#101828', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.12, shadowRadius: 18 },
     default: { elevation: 8 },
   })!,
   pill: {

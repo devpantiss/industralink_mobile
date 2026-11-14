@@ -26,6 +26,11 @@ export const BannerArt: React.FC<BannerArtProps> = ({
   opacity = 0.25,
 }) => {
   const { colors } = useUiStore();
+  const dark = useUiStore((s) => s.theme) === 'dark';
+  // On dark the grey chevrons vanish into the card, so they take two blue-slate steps instead.
+  const chevron = dark ? '#2A3B72' : colors.inkFill;
+  const chevronInner = dark ? '#1C2A55' : colors.surfaceMuted;
+  const stripe = dark ? '#151B2E' : colors.inkFill;
 
   return (
     <View style={[styles.container, { opacity }, style]} pointerEvents="none">
@@ -36,13 +41,13 @@ export const BannerArt: React.FC<BannerArtProps> = ({
           </ClipPath>
         </Defs>
         <Polygon points="70,40 230,40 175,150 15,150" fill={colors.primary} />
-        <Polygon points="250,0 400,0 530,130 400,260 250,260 380,130" fill={colors.inkFill} />
-        <Polygon points="330,0 365,0 495,130 365,260 330,260 460,130" fill={colors.surfaceMuted} />
+        <Polygon points="250,0 400,0 530,130 400,260 250,260 380,130" fill={chevron} />
+        <Polygon points="330,0 365,0 495,130 365,260 330,260 460,130" fill={chevronInner} />
         <Polygon points="455,0 600,0 600,150" fill={colors.accent} />
         <G clipPath="url(#il-hazard-clip)">
           <Rect x="440" y="200" width="160" height="60" fill={colors.accent} />
           {STRIPES.map((pts) => (
-            <Polygon key={pts} points={pts} fill={colors.inkFill} />
+            <Polygon key={pts} points={pts} fill={stripe} />
           ))}
         </G>
       </Svg>

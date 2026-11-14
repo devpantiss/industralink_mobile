@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, RefreshControl, Pressable } from 'react-native';
+import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
+import { View, StyleSheet, RefreshControl, Pressable } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { Search, Users, X } from 'lucide-react-native';
@@ -67,7 +68,7 @@ export const UsersManagementScreen: React.FC = () => {
   return (
     <Screen edges={['top', 'bottom']}>
       <AppHeader />
-      <ScrollView
+      <KeyboardScrollView
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
@@ -175,7 +176,7 @@ export const UsersManagementScreen: React.FC = () => {
             );
           })
         )}
-      </ScrollView>
+      </KeyboardScrollView>
 
       <Dialog
         visible={!!target && !suspending}

@@ -39,6 +39,7 @@ export const CompaniesScreen: React.FC = () => {
     <Screen edges={['top', 'bottom']}>
       <AppHeader title={t('Companies')} showBack />
       <FlatList
+        keyboardDismissMode="on-drag"
         data={query.data ?? []}
         keyExtractor={(r) => r.company.id}
         contentContainerStyle={styles.content}

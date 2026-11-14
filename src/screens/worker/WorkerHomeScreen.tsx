@@ -1,6 +1,8 @@
 import React, { useMemo, useState } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Switch } from 'react-native';
+import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
+import { View, StyleSheet, TouchableOpacity, RefreshControl, Switch } from 'react-native';
 import { Text, TextInput } from '../../components/ui/Text';
+import { useTileStyle, TileIcon } from '../../components/ui/tileStyle';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -45,6 +47,7 @@ type NavigationProp = NativeStackNavigationProp<WorkerStackParamList>;
 export const WorkerHomeScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const colors = useUiStore((s) => s.colors);
+  const dark = useUiStore((s) => s.theme) === 'dark';
   const user = useAuthStore((s) => s.user);
   const qc = useQueryClient();
 
@@ -111,7 +114,7 @@ export const WorkerHomeScreen: React.FC = () => {
     <Screen edges={['top']}>
       <AppHeader />
 
-      <ScrollView
+      <KeyboardScrollView
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
@@ -165,10 +168,15 @@ export const WorkerHomeScreen: React.FC = () => {
         {summary?.nextStep && (
           <PressableScale
             onPress={openNextStep}
-            style={[styles.nextStep, { backgroundColor: colors.tiles.purple.bg }]}
+            style={[
+              styles.nextStep,
+              // Card with a purple edge and chip instead of a full purple slab.
+              { backgroundColor: colors.surface, borderWidth: 1.5, borderColor: dark ? '#3D3380' : '#CFC2FA' },
+              !dark && shadows.card,
+            ]}
             accessibilityLabel={t(summary.nextStep.title)}
           >
-            <View style={[styles.nextIcon, { backgroundColor: colors.surface }]}>
+            <View style={[styles.nextIcon, { backgroundColor: colors.tiles.purple.bg }]}>
               <CalendarClock size={20} color={colors.tiles.purple.text} />
             </View>
             <View style={styles.flex}>
@@ -176,15 +184,15 @@ export const WorkerHomeScreen: React.FC = () => {
                 {t(summary.nextStep.title)}
               </Text>
               {summary.nextStep.at && (
-                <Text style={[styles.nextWhen, { color: colors.tiles.purple.text }]}>
+                <Text style={[styles.nextWhen, { color: colors.ink }]}>
                   {formatDateTime(summary.nextStep.at)}
                 </Text>
               )}
-              <Text style={[styles.nextSub, { color: colors.tiles.purple.text }]} numberOfLines={2}>
+              <Text style={[styles.nextSub, { color: colors.inkSecondary }]} numberOfLines={2}>
                 {summary.nextStep.subtitle}
               </Text>
             </View>
-            <ChevronRight size={20} color={colors.tiles.purple.text} />
+            <ChevronRight size={20} color={colors.inkMuted} />
           </PressableScale>
         )}
 
@@ -314,7 +322,7 @@ export const WorkerHomeScreen: React.FC = () => {
             accessibilityLabel={t('Job alerts on WhatsApp')}
           />
         </View>
-      </ScrollView>
+      </KeyboardScrollView>
     </Screen>
   );
 };
@@ -332,15 +340,16 @@ function StatTile({
   label: string;
   onPress: () => void;
 }) {
+  const look = useTileStyle(tone);
   return (
     <PressableScale
       onPress={onPress}
-      style={[styles.stat, { backgroundColor: tone.bg }]}
+      style={[styles.stat, look.box]}
       accessibilityLabel={`${label}: ${value}`}
     >
-      {icon}
-      <Text style={[styles.statValue, { color: tone.text }]}>{value}</Text>
-      <Text style={[styles.statLabel, { color: tone.text }]} numberOfLines={1}>
+      <TileIcon tone={tone}>{icon}</TileIcon>
+      <Text style={[styles.statValue, { color: look.value }]}>{value}</Text>
+      <Text style={[styles.statLabel, { color: look.label }]} numberOfLines={1}>
         {label}
       </Text>
     </PressableScale>

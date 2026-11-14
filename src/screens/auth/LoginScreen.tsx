@@ -1,10 +1,10 @@
 import { isValidPhone, errorText } from '../../lib/errors';
+import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   StyleSheet,
   TouchableOpacity,
-  ScrollView,
   Image,
   Modal,
   ActivityIndicator,
@@ -257,12 +257,13 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
     <Screen edges={['top']} style={{ backgroundColor: '#0B1120' }}>
       <StatusBar style="light" />
       <View style={{ flex: 1 }}>
-        <ScrollView
+        <KeyboardScrollView
           bounces={false}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           style={[styles.scrollView, { backgroundColor: colors.surface }]}
-          contentContainerStyle={[styles.scrollContent, { backgroundColor: colors.surface }]}
+          // Screen pads only the top here, so the form's last row must clear the home indicator / nav bar.
+          contentContainerStyle={[styles.scrollContent, { backgroundColor: colors.surface, paddingBottom: insets.bottom + 16 }]}
         >
           {/* ================= HERO CONTAINER (Dark Background Behind Radius) ================= */}
           <View style={[styles.heroOuterWrapper, { backgroundColor: '#0B1120' }]}>
@@ -809,7 +810,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
             </View>
             )}
           </View>
-        </ScrollView>
+        </KeyboardScrollView>
       </View>
 
       {/* ================= LANGUAGE PICKER BOTTOM SHEET ================= */}

@@ -1,6 +1,7 @@
 import { errorText } from '../../lib/errors';
+import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { MailCheck, Mail } from 'lucide-react-native';
 import { Text } from '../../components/ui/Text';
@@ -42,7 +43,7 @@ export const ForgotPasswordScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <Screen edges={['top', 'bottom']}>
       <AppHeader title="Forgot password" showBack />
-      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+      <KeyboardScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         {sent ? (
           <View style={styles.center}>
             <View style={[styles.iconCircle, { backgroundColor: colors.successBg }]}>
@@ -81,7 +82,7 @@ export const ForgotPasswordScreen: React.FC<Props> = ({ navigation }) => {
             <Button label="Send reset link" onPress={submit} loading={loading} />
           </>
         )}
-      </ScrollView>
+      </KeyboardScrollView>
     </Screen>
   );
 };

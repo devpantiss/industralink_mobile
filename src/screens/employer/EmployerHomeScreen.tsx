@@ -8,6 +8,8 @@ import {
   RefreshControl,
 } from 'react-native';
 import { Text } from '../../components/ui/Text';
+import { useTileStyle, TileIcon } from '../../components/ui/tileStyle';
+import type { TileColors } from '../../theme/colors';
 import { useNavigation } from '@react-navigation/native';
 import { useQuery } from '@tanstack/react-query';
 import {
@@ -116,74 +118,17 @@ export const EmployerHomeScreen: React.FC = () => {
 
         {/* 4 Pastel Stat Cards (2x2 Grid) */}
         <View style={styles.statsGrid}>
-          {/* Open Jobs Tile */}
-          <TouchableOpacity
-            onPress={() => navigation.navigate('EmployerJobs')}
-            style={[styles.statTile, { backgroundColor: colors.tiles.blue.bg }]}
-          >
-            <View style={styles.statTileHeader}>
-              <Text style={[styles.statTileLabel, { color: colors.tiles.blue.text }]}>
-                {t('Open jobs')}
-              </Text>
-              <Briefcase size={18} color={colors.tiles.blue.text} />
-            </View>
-            <Text style={[styles.statTileNumber, { color: colors.tiles.blue.text }]}>
-              {s?.openJobs ?? jobs.length}
-            </Text>
-          </TouchableOpacity>
-
-          {/* New Applicants Tile */}
-          <TouchableOpacity
+          <EmpStat tone={colors.tiles.blue} label={t('Open jobs')} icon={Briefcase} value={s?.openJobs ?? jobs.length} onPress={() => navigation.navigate('EmployerJobs')} />
+          <EmpStat
+            tone={colors.tiles.green}
+            label={t('New applicants')}
+            icon={UserPlus}
+            value={s?.newApplicants ?? 0}
+            note={s?.newApplicants ? 'To review' : undefined}
             onPress={() => navigation.navigate('Candidates')}
-            style={[styles.statTile, { backgroundColor: colors.tiles.green.bg }]}
-          >
-            <View style={styles.statTileHeader}>
-              <Text style={[styles.statTileLabel, { color: colors.tiles.green.text }]}>
-                {t('New applicants')}
-              </Text>
-              <UserPlus size={18} color={colors.tiles.green.text} />
-            </View>
-            <Text style={[styles.statTileNumber, { color: colors.tiles.green.text }]}>
-              {s?.newApplicants ?? 0}
-            </Text>
-            {s?.newApplicants ? (
-              <Text style={[styles.statNote, { color: colors.tiles.green.text }]}>To review</Text>
-            ) : null}
-          </TouchableOpacity>
-
-          {/* Interviews Tile */}
-          <TouchableOpacity
-            onPress={() => navigation.navigate('Candidates')}
-            style={[styles.statTile, { backgroundColor: colors.tiles.purple.bg }]}
-          >
-            <View style={styles.statTileHeader}>
-              <Text style={[styles.statTileLabel, { color: colors.tiles.purple.text }]}>
-                {t('Interviews')}
-              </Text>
-              <CalendarClock size={18} color={colors.tiles.purple.text} />
-            </View>
-            <Text style={[styles.statTileNumber, { color: colors.tiles.purple.text }]}>
-              {s?.interviewsThisWeek ?? 0}
-            </Text>
-            <Text style={[styles.statNote, { color: colors.tiles.purple.text }]}>this week</Text>
-          </TouchableOpacity>
-
-          {/* Hired Tile */}
-          <TouchableOpacity
-            onPress={() => navigation.navigate('Candidates')}
-            style={[styles.statTile, { backgroundColor: colors.tiles.orange.bg }]}
-          >
-            <View style={styles.statTileHeader}>
-              <Text style={[styles.statTileLabel, { color: colors.tiles.orange.text }]}>
-                {t('Hired')}
-              </Text>
-              <CheckCircle2 size={18} color={colors.tiles.orange.text} />
-            </View>
-            <Text style={[styles.statTileNumber, { color: colors.tiles.orange.text }]}>
-              {s?.hiredThisMonth ?? 0}
-            </Text>
-            <Text style={[styles.statNote, { color: colors.tiles.orange.text }]}>this month</Text>
-          </TouchableOpacity>
+          />
+          <EmpStat tone={colors.tiles.purple} label={t('Interviews')} icon={CalendarClock} value={s?.interviewsThisWeek ?? 0} note="this week" onPress={() => navigation.navigate('Candidates')} />
+          <EmpStat tone={colors.tiles.orange} label={t('Hired')} icon={CheckCircle2} value={s?.hiredThisMonth ?? 0} note="this month" onPress={() => navigation.navigate('Candidates')} />
         </View>
 
         {/* Applicants Per Day Bar Chart */}
@@ -359,6 +304,36 @@ export const EmployerHomeScreen: React.FC = () => {
     </Screen>
   );
 };
+
+function EmpStat({
+  tone,
+  label,
+  value,
+  note,
+  icon: Icon,
+  onPress,
+}: {
+  tone: TileColors;
+  label: string;
+  value: number;
+  note?: string;
+  icon: React.ComponentType<{ size?: number; color?: string }>;
+  onPress: () => void;
+}) {
+  const look = useTileStyle(tone);
+  return (
+    <TouchableOpacity onPress={onPress} style={[styles.statTile, look.box]} accessibilityLabel={`${label}: ${value}`}>
+      <View style={styles.statTileHeader}>
+        <Text style={[styles.statTileLabel, { color: look.label }]}>{label}</Text>
+        <TileIcon tone={tone}>
+          <Icon size={18} color={tone.text} />
+        </TileIcon>
+      </View>
+      <Text style={[styles.statTileNumber, { color: look.value }]}>{value}</Text>
+      {note ? <Text style={[styles.statNote, { color: look.label }]}>{note}</Text> : null}
+    </TouchableOpacity>
+  );
+}
 
 const styles = StyleSheet.create({
   scrollContent: {

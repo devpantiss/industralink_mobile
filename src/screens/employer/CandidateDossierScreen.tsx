@@ -1,10 +1,10 @@
 import { ErrorState } from '../../components/ui/ErrorState';
+import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
 import { DocumentViewer } from '../../components/domain/DocumentViewer';
 import React, { useState } from 'react';
 import {
   View,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
@@ -151,7 +151,7 @@ export const CandidateDossierScreen: React.FC<Props> = ({ route, navigation }) =
         </Text>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <KeyboardScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Worker Profile Header Card */}
         <View style={[styles.profileCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={styles.profileRow}>
@@ -464,7 +464,7 @@ export const CandidateDossierScreen: React.FC<Props> = ({ route, navigation }) =
             </TouchableOpacity>
           ) : null}
         </View>
-      </ScrollView>
+      </KeyboardScrollView>
 
       <DocumentViewer
         doc={viewDoc ? { ...viewDoc, typeLabel: DOC_TYPE_LABEL[viewDoc.type] } : null}

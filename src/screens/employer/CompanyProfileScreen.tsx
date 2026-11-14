@@ -1,7 +1,8 @@
 import { errorText } from '../../lib/errors';
+import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
 import { VerificationBanner } from '../../components/domain/VerificationBanner';
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
+import { View, StyleSheet, Pressable, Alert } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -122,7 +123,7 @@ export const CompanyProfileScreen: React.FC = () => {
     <Screen edges={['top']}>
       <AppHeader />
       <View style={styles.flex}>
-        <ScrollView
+        <KeyboardScrollView
           contentContainerStyle={[styles.pad, { paddingBottom: 120 }]}
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
@@ -329,7 +330,7 @@ export const CompanyProfileScreen: React.FC = () => {
               onPress={() => setDocMenu(true)}
             />}
           </Section>
-        </ScrollView>
+        </KeyboardScrollView>
 
         <Sheet visible={docMenu} onClose={() => setDocMenu(false)} title="Add a document" subtitle="Choose the document type">
           {(Object.keys(COMPANY_DOC_LABEL) as CompanyDocType[]).map((k) => (

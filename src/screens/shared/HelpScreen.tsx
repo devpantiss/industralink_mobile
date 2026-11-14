@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
+import { View, StyleSheet, Pressable } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { ChevronDown, CheckCircle2 } from 'lucide-react-native';
 import Animated, { FadeIn } from 'react-native-reanimated';
@@ -67,7 +68,7 @@ export const HelpScreen: React.FC = () => {
   return (
     <Screen edges={['top', 'bottom']}>
       <AppHeader title={t('Help')} showBack />
-      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+      <KeyboardScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <Text style={[styles.section, { color: colors.inkSecondary }]}>{t('Common questions')}</Text>
         <Card padding={0}>
           {faq.map(([q, a], i) => {
@@ -134,7 +135,7 @@ export const HelpScreen: React.FC = () => {
             </>
           )}
         </Card>
-      </ScrollView>
+      </KeyboardScrollView>
     </Screen>
   );
 };

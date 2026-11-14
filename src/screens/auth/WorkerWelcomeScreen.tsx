@@ -1,6 +1,7 @@
 import { errorText } from '../../lib/errors';
+import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { View, StyleSheet, Pressable } from 'react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import * as Haptics from 'expo-haptics';
 import { ArrowRight, ChevronLeft } from 'lucide-react-native';
@@ -113,7 +114,7 @@ export const WorkerWelcomeScreen: React.FC = () => {
         <View style={styles.back} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+      <KeyboardScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <Text style={[styles.title, { color: colors.ink }]}>{titles[step]}</Text>
         <Text style={[styles.hint, { color: colors.inkSecondary }]}>{hints[step]}</Text>
 
@@ -188,7 +189,7 @@ export const WorkerWelcomeScreen: React.FC = () => {
         )}
 
         {error ? <Text style={[styles.error, { color: colors.dangerFg }]}>{error}</Text> : null}
-      </ScrollView>
+      </KeyboardScrollView>
 
       <View style={styles.footer}>
         <Button

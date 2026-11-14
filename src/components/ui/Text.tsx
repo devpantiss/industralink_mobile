@@ -1,6 +1,7 @@
 import React from 'react';
 import { Text as RNText, TextInput as RNTextInput, StyleSheet, TextStyle, StyleProp } from 'react-native';
 import { FONT, FONT_DISPLAY } from '../../theme/fonts';
+import { notifyInputFocus } from '../../lib/keyboard';
 
 /**
  * Largest the system text size may scale our text. Without a cap, a phone set to "Largest"
@@ -24,7 +25,20 @@ export function Text({ style, maxFontSizeMultiplier = MAX_FONT_SCALE, ...rest }:
   return <RNText style={[{ fontFamily: familyFor(style) }, style]} maxFontSizeMultiplier={maxFontSizeMultiplier} {...rest} />;
 }
 
-/** React Native TextInput with the app font applied. Input text is body text. */
-export function TextInput({ style, maxFontSizeMultiplier = MAX_FONT_SCALE, ...rest }: React.ComponentProps<typeof RNTextInput>) {
-  return <RNTextInput style={[{ fontFamily: FONT }, style]} maxFontSizeMultiplier={maxFontSizeMultiplier} {...rest} />;
+/**
+ * React Native TextInput with the app font applied. Input text is body text.
+ * Focus is announced so KeyboardScrollView can scroll the field above the keyboard.
+ */
+export function TextInput({ style, maxFontSizeMultiplier = MAX_FONT_SCALE, onFocus, ...rest }: React.ComponentProps<typeof RNTextInput>) {
+  return (
+    <RNTextInput
+      style={[{ fontFamily: FONT }, style]}
+      maxFontSizeMultiplier={maxFontSizeMultiplier}
+      onFocus={(e) => {
+        onFocus?.(e);
+        notifyInputFocus();
+      }}
+      {...rest}
+    />
+  );
 }

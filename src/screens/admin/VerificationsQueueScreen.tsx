@@ -1,6 +1,7 @@
 import { errorText } from '../../lib/errors';
+import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
 import React, { useMemo, useState } from 'react';
-import { View, StyleSheet, ScrollView, RefreshControl, Linking, Pressable } from 'react-native';
+import { View, StyleSheet, RefreshControl, Linking, Pressable } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { BadgeCheck, ChevronRight, ExternalLink, FileText, AlertTriangle } from 'lucide-react-native';
@@ -84,7 +85,7 @@ export const VerificationsQueueScreen: React.FC = () => {
   return (
     <Screen edges={['top', 'bottom']}>
       <AppHeader />
-      <ScrollView
+      <KeyboardScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -150,7 +151,7 @@ export const VerificationsQueueScreen: React.FC = () => {
             </Animated.View>
           ))
         )}
-      </ScrollView>
+      </KeyboardScrollView>
 
       <Sheet
         visible={!!s}

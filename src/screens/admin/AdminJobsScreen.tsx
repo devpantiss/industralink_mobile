@@ -1,6 +1,7 @@
 import { errorText } from '../../lib/errors';
+import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, RefreshControl, Pressable } from 'react-native';
+import { View, StyleSheet, RefreshControl, Pressable } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { Briefcase, Search, X } from 'lucide-react-native';
@@ -60,7 +61,7 @@ export const AdminJobsScreen: React.FC = () => {
   return (
     <Screen edges={['top', 'bottom']}>
       <AppHeader />
-      <ScrollView
+      <KeyboardScrollView
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
@@ -166,7 +167,7 @@ export const AdminJobsScreen: React.FC = () => {
             );
           })
         )}
-      </ScrollView>
+      </KeyboardScrollView>
 
       <Sheet
         visible={!!target}

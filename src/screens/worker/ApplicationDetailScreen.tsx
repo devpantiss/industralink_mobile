@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
+import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
 import {
   View,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
   Linking,
   ActivityIndicator,
@@ -134,7 +134,7 @@ export const ApplicationDetailScreen: React.FC = () => {
         </Text>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <KeyboardScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {/* Job Summary Card */}
         <View style={[styles.summaryCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <View style={styles.summaryTopRow}>
@@ -398,7 +398,7 @@ export const ApplicationDetailScreen: React.FC = () => {
             </Text>
           </TouchableOpacity>
         )}
-      </ScrollView>
+      </KeyboardScrollView>
 
       {/* Confirm Withdraw Modal */}
       <Dialog

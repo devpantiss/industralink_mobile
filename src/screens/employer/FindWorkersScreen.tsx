@@ -1,4 +1,5 @@
 import { errorText } from '../../lib/errors';
+import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
 import { VerificationBanner } from '../../components/domain/VerificationBanner';
 import React, { useState } from 'react';
 import {
@@ -88,7 +89,7 @@ export const FindWorkersScreen: React.FC = () => {
     <Screen edges={['top']}>
       <AppHeader />
 
-      <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+      <KeyboardScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         <VerificationBanner />
         {/* Title Block */}
         <View style={styles.titleBlock}>
@@ -248,7 +249,7 @@ export const FindWorkersScreen: React.FC = () => {
             </View>
           ))
         )}
-      </ScrollView>
+      </KeyboardScrollView>
 
       {/* Invite sheet */}
       <Sheet

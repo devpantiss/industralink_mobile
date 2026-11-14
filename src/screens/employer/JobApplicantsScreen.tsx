@@ -1,4 +1,5 @@
 import { errorText } from '../../lib/errors';
+import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
 import React, { useMemo, useState } from 'react';
 import { View, StyleSheet, ScrollView, Pressable, RefreshControl, Share } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
@@ -120,7 +121,7 @@ export const JobApplicantsScreen: React.FC = () => {
         </Pressable>
       </View>
 
-      <ScrollView
+      <KeyboardScrollView
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
@@ -277,7 +278,7 @@ export const JobApplicantsScreen: React.FC = () => {
             ))
           )}
         </View>
-      </ScrollView>
+      </KeyboardScrollView>
     </Screen>
   );
 };

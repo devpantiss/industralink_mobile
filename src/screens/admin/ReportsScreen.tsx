@@ -1,6 +1,7 @@
 import { errorText } from '../../lib/errors';
+import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, RefreshControl, Pressable } from 'react-native';
+import { View, StyleSheet, RefreshControl, Pressable } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { Flag, LifeBuoy, Phone } from 'lucide-react-native';
@@ -102,7 +103,7 @@ function JobReports({ status }: { status: string }) {
 
   return (
     <>
-      <ScrollView
+      <KeyboardScrollView
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -188,7 +189,7 @@ function JobReports({ status }: { status: string }) {
             );
           })
         )}
-      </ScrollView>
+      </KeyboardScrollView>
 
       <Sheet
         visible={!!target}
@@ -241,7 +242,7 @@ function HelpRequests({ status }: { status: string }) {
   });
 
   return (
-    <ScrollView
+    <KeyboardScrollView
       contentContainerStyle={styles.list}
       showsVerticalScrollIndicator={false}
       refreshControl={
@@ -305,7 +306,7 @@ function HelpRequests({ status }: { status: string }) {
           );
         })
       )}
-    </ScrollView>
+    </KeyboardScrollView>
   );
 }
 

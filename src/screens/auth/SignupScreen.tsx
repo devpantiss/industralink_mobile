@@ -1,10 +1,11 @@
 import { isValidPhone, errorText } from '../../lib/errors';
+import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   StyleSheet,
   TouchableOpacity,
-  ScrollView,
   Image,
   Modal,
   ActivityIndicator,
@@ -47,6 +48,7 @@ type Audience = 'worker' | 'employer';
 const heroImage = require('../../../assets/login.jpg');
 
 export const SignupScreen: React.FC<Props> = ({ navigation }) => {
+  const insets = useSafeAreaInsets();
   const { width: screenWidth } = useWindowDimensions();
   const { colors, theme, toggleTheme, language, setLanguage, showToast } = useUiStore();
   const { sendOtp, verifyOtp, signupEmployer } = useAuthStore();
@@ -277,12 +279,13 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
     <Screen edges={['top']} style={{ backgroundColor: '#0B1120' }}>
       <StatusBar style="light" />
       <View style={{ flex: 1 }}>
-        <ScrollView
+        <KeyboardScrollView
           bounces={false}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
           style={[styles.scrollView, { backgroundColor: colors.surface }]}
-          contentContainerStyle={[styles.scrollContent, { backgroundColor: colors.surface }]}
+          // Screen pads only the top here, so the form's last row must clear the home indicator / nav bar.
+          contentContainerStyle={[styles.scrollContent, { backgroundColor: colors.surface, paddingBottom: insets.bottom + 16 }]}
         >
           {/* ================= HERO CONTAINER (Dark Background Behind Radius) ================= */}
           <View style={[styles.heroOuterWrapper, { backgroundColor: '#0B1120' }]}>
@@ -906,7 +909,7 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
               </Text>
             </TouchableOpacity>
           </View>
-        </ScrollView>
+        </KeyboardScrollView>
       </View>
 
       {/* Language Selector Modal */}

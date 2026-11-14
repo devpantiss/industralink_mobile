@@ -1,16 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {
-  Keyboard,
   View,
   StyleSheet,
   ViewStyle,
   KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useUiStore } from '../../store/uiStore';
 import { spacing } from '../../theme/spacing';
+import { useKeyboardVisible } from '../../lib/keyboard';
 
 interface ScreenProps {
   children: React.ReactNode;
@@ -24,20 +23,6 @@ interface ScreenProps {
   edges?: ('top' | 'bottom' | 'left' | 'right')[];
   /** Set false when the screen handles the keyboard itself. */
   keyboardAvoiding?: boolean;
-}
-
-/** True while the on-screen keyboard is open (the bottom inset is not needed then). */
-function useKeyboardVisible() {
-  const [visible, setVisible] = useState(false);
-  useEffect(() => {
-    const show = Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow', () => setVisible(true));
-    const hide = Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide', () => setVisible(false));
-    return () => {
-      show.remove();
-      hide.remove();
-    };
-  }, []);
-  return visible;
 }
 
 export const Screen: React.FC<ScreenProps> = ({
@@ -63,7 +48,10 @@ export const Screen: React.FC<ScreenProps> = ({
     <View style={[styles.root, { backgroundColor: colors.canvas }, style]}>
       <StatusBar style={theme === 'dark' ? 'light' : 'dark'} />
       <KeyboardAvoidingView
-        behavior={keyboardAvoiding && Platform.OS === 'ios' ? 'padding' : undefined}
+        // Both platforms: Android is edge-to-edge, so the window no longer resizes for the
+        // keyboard. 'padding' only adds the part of the keyboard that overlaps this view, so it
+        // never doubles up if the system did resize. Forms inside use KeyboardScrollView.
+        behavior={keyboardAvoiding ? 'padding' : undefined}
         style={styles.keyboardView}
       >
         <View

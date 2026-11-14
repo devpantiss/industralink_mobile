@@ -73,6 +73,7 @@ export const ChatScreen: React.FC = () => {
       ) : (
         <>
           <FlatList
+        keyboardDismissMode="on-drag"
             ref={listRef}
             data={messages}
             keyExtractor={(m) => m.id}

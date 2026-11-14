@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowRight, BadgeCheck, Briefcase, Building2, HardHat, PartyPopper } from 'lucide-react-native';
 import { Text } from '../../components/ui/Text';
+import { useTileStyle, TileIcon } from '../../components/ui/tileStyle';
 import { Screen } from '../../components/layout/Screen';
 import { AppHeader } from '../../components/layout/AppHeader';
 import { Hero } from '../../components/ui/Hero';
@@ -152,17 +153,22 @@ const Stat: React.FC<{
   value: string;
   icon: React.ComponentType<{ size?: number; color?: string }>;
   onPress: () => void;
-}> = ({ tone, label, value, icon: Icon, onPress }) => (
-  <PressableScale onPress={onPress} accessibilityLabel={`${label}: ${value}`} style={[styles.stat, { backgroundColor: tone.bg }]}>
-    <View style={styles.statHead}>
-      <Text style={[styles.statLabel, { color: tone.text }]} numberOfLines={1}>
-        {label}
-      </Text>
-      <Icon size={18} color={tone.text} />
-    </View>
-    <Text style={[styles.statValue, { color: tone.text }]}>{value}</Text>
-  </PressableScale>
-);
+}> = ({ tone, label, value, icon: Icon, onPress }) => {
+  const look = useTileStyle(tone);
+  return (
+    <PressableScale onPress={onPress} accessibilityLabel={`${label}: ${value}`} style={[styles.stat, look.box]}>
+      <View style={styles.statHead}>
+        <Text style={[styles.statLabel, { color: look.label }]} numberOfLines={1}>
+          {label}
+        </Text>
+        <TileIcon tone={tone}>
+          <Icon size={18} color={tone.text} />
+        </TileIcon>
+      </View>
+      <Text style={[styles.statValue, { color: look.value }]}>{value}</Text>
+    </PressableScale>
+  );
+};
 
 const styles = StyleSheet.create({
   content: { padding: 16, paddingBottom: 48 },

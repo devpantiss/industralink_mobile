@@ -13,9 +13,9 @@ const make = (y: number, radius: number, opacity: number, elevation: number): Vi
 export const shadows = {
   none: {} as ViewStyle,
   /** Resting card. */
-  card: make(2, 8, 0.05, 1),
+  card: make(4, 14, 0.07, 2),
   /** Selected segment, floating buttons. */
-  raised: make(2, 6, 0.1, 2),
+  raised: make(3, 10, 0.12, 3),
   /** Sticky bottom bars and sheets. */
   bar: make(-2, 12, 0.06, 6),
 };

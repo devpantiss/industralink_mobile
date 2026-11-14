@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useQuery } from '@tanstack/react-query';
 import { BarChart3, CheckCircle2, ChevronRight, FileText, Timer, Users } from 'lucide-react-native';
 import { Text } from '../../components/ui/Text';
+import { useTileStyle, TileIcon } from '../../components/ui/tileStyle';
 import { Screen } from '../../components/layout/Screen';
 import { AppHeader } from '../../components/layout/AppHeader';
 import { ListSkeleton } from '../../components/ui/Skeleton';
@@ -169,22 +170,27 @@ const Stat: React.FC<{
   value: string;
   hint?: string;
   icon: React.ComponentType<{ size?: number; color?: string }>;
-}> = ({ tone, label, value, hint, icon: Icon }) => (
-  <View style={[styles.stat, { backgroundColor: tone.bg }]}>
-    <View style={styles.statHead}>
-      <Text style={[styles.statLabel, { color: tone.text }]} numberOfLines={1}>
-        {label}
-      </Text>
-      <Icon size={18} color={tone.text} />
+}> = ({ tone, label, value, hint, icon: Icon }) => {
+  const look = useTileStyle(tone);
+  return (
+    <View style={[styles.stat, look.box]}>
+      <View style={styles.statHead}>
+        <Text style={[styles.statLabel, { color: look.label }]} numberOfLines={1}>
+          {label}
+        </Text>
+        <TileIcon tone={tone}>
+          <Icon size={18} color={tone.text} />
+        </TileIcon>
+      </View>
+      <Text style={[styles.statValue, { color: look.value }]}>{value}</Text>
+      {hint ? (
+        <Text style={[styles.statHint, { color: look.label }]} numberOfLines={1}>
+          {hint}
+        </Text>
+      ) : null}
     </View>
-    <Text style={[styles.statValue, { color: tone.text }]}>{value}</Text>
-    {hint ? (
-      <Text style={[styles.statHint, { color: tone.text }]} numberOfLines={1}>
-        {hint}
-      </Text>
-    ) : null}
-  </View>
-);
+  );
+};
 
 const Card: React.FC<{ title: string; caption?: string; children: React.ReactNode }> = ({ title, caption, children }) => {
   const colors = useUiStore((s) => s.colors);

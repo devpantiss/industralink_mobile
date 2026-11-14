@@ -1,6 +1,7 @@
 import { errorText } from '../../lib/errors';
+import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
 import React, { useState } from 'react';
-import { StyleSheet, ScrollView } from 'react-native';
+import { StyleSheet } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { Lock } from 'lucide-react-native';
 import { Text } from '../../components/ui/Text';
@@ -44,7 +45,7 @@ export const ResetPasswordScreen: React.FC<Props> = ({ navigation, route }) => {
   return (
     <Screen edges={['top', 'bottom']}>
       <AppHeader title="New password" showBack />
-      <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
+      <KeyboardScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         <Text style={[typography.h1, { color: colors.ink }]}>Set a new password</Text>
         <Text style={[typography.body, styles.lead, { color: colors.inkSecondary }]}>
           Use at least 8 characters.
@@ -68,7 +69,7 @@ export const ResetPasswordScreen: React.FC<Props> = ({ navigation, route }) => {
           leftIcon={<Lock size={17} color={colors.inkMuted} />}
         />
         <Button label="Save password" onPress={submit} loading={loading} />
-      </ScrollView>
+      </KeyboardScrollView>
     </Screen>
   );
 };

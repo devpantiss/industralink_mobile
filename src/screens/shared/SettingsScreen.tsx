@@ -1,6 +1,7 @@
 import { errorText } from '../../lib/errors';
+import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, Switch, Alert } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Switch, Alert } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Text } from '../../components/ui/Text';
 import { Moon, Sun, Globe, LogOut, Check, Smartphone, Lock, Trash2, LifeBuoy, ChevronRight } from 'lucide-react-native';
@@ -96,7 +97,7 @@ export const SettingsScreen: React.FC = () => {
   return (
     <Screen edges={['top', 'bottom']}>
       <AppHeader title={t('Settings')} showBack={role === 'worker'} />
-      <ScrollView contentContainerStyle={styles.scroll}>
+      <KeyboardScrollView contentContainerStyle={styles.scroll}>
         {/* Account */}
         <Card style={styles.card}>
           <Text style={[typography.h2, { color: colors.ink, fontWeight: '700' }]}>{user?.name}</Text>
@@ -317,7 +318,7 @@ export const SettingsScreen: React.FC = () => {
             <Text style={[typography.small, { color: colors.inkMuted, fontWeight: '600' }]}>{t('Delete my account')}</Text>
           </TouchableOpacity>
         )}
-      </ScrollView>
+      </KeyboardScrollView>
     </Screen>
   );
 };

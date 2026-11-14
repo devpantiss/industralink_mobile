@@ -5,10 +5,10 @@ import {
   Pressable,
   StyleSheet,
   KeyboardAvoidingView,
-  Platform,
   useWindowDimensions,
-  ScrollView,
 } from 'react-native';
+import { KeyboardScrollView } from './KeyboardScrollView';
+import { useKeyboardVisible } from '../../lib/keyboard';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -56,6 +56,8 @@ export const Sheet: React.FC<SheetProps> = ({
 }) => {
   const colors = useUiStore((s) => s.colors);
   const insets = useSafeAreaInsets();
+  // With the keyboard open the home-indicator space is under the keyboard, so drop it.
+  const bottomInset = useKeyboardVisible() ? 0 : insets.bottom;
   const { height } = useWindowDimensions();
   const [mounted, setMounted] = useState(visible);
   const progress = useSharedValue(0); // 0 hidden, 1 open
@@ -99,14 +101,13 @@ export const Sheet: React.FC<SheetProps> = ({
   if (!mounted) return null;
 
   const body = scroll ? (
-    <ScrollView
+    <KeyboardScrollView
       style={styles.flexShrink}
       contentContainerStyle={styles.content}
-      keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
     >
       {children}
-    </ScrollView>
+    </KeyboardScrollView>
   ) : (
     <View style={[styles.content, styles.flexShrink]}>{children}</View>
   );
@@ -118,8 +119,9 @@ export const Sheet: React.FC<SheetProps> = ({
           <Pressable style={styles.flex} onPress={onClose} accessibilityLabel="Close" />
         </Animated.View>
         <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          style={styles.anchor}
+          behavior="padding"
+          // Keep the panel below the status bar / notch; with the keyboard open it shrinks instead.
+          style={[styles.anchor, { paddingTop: insets.top + 8 }]}
           pointerEvents="box-none"
         >
           <Animated.View
@@ -162,13 +164,13 @@ export const Sheet: React.FC<SheetProps> = ({
               <View
                 style={[
                   styles.footer,
-                  { borderTopColor: colors.border, paddingBottom: Math.max(insets.bottom, 12) },
+                  { borderTopColor: colors.border, paddingBottom: Math.max(bottomInset, 12) },
                 ]}
               >
                 {footer}
               </View>
             ) : (
-              <View style={{ height: insets.bottom }} />
+              <View style={{ height: bottomInset }} />
             )}
           </Animated.View>
         </KeyboardAvoidingView>
@@ -182,7 +184,7 @@ const styles = StyleSheet.create({
   flexShrink: { flexShrink: 1 },
   backdrop: { backgroundColor: 'rgba(21,25,30,0.4)' },
   anchor: { flex: 1, justifyContent: 'flex-end' },
-  panel: { borderTopLeftRadius: 24, borderTopRightRadius: 24, overflow: 'hidden' },
+  panel: { borderTopLeftRadius: 24, borderTopRightRadius: 24, overflow: 'hidden', flexShrink: 1 },
   handleWrap: { alignItems: 'center', paddingTop: 8, paddingBottom: 4 },
   handle: { width: 40, height: 4, borderRadius: 2 },
   header: {

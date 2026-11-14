@@ -149,6 +149,7 @@ export const FindJobsScreen: React.FC = () => {
       <AppHeader />
 
       <FlatList
+        keyboardDismissMode="on-drag"
         data={jobsList}
         keyExtractor={(j) => j.id}
         contentContainerStyle={styles.scrollContent}

@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, View, Pressable, StyleSheet } from 'react-native';
+import { Modal, View, Pressable, StyleSheet, KeyboardAvoidingView } from 'react-native';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing, runOnJS } from 'react-native-reanimated';
 import { Text } from './Text';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useUiStore } from '../../store/uiStore';
 
 const EASE = Easing.bezier(0.2, 0, 0, 1);
@@ -19,6 +20,7 @@ interface DialogProps {
 /** Small centred confirm box (withdraw, decline offer, reject). Fades in with a slight rise. */
 export const Dialog: React.FC<DialogProps> = ({ visible, onClose, title, message, actions, children }) => {
   const colors = useUiStore((s) => s.colors);
+  const insets = useSafeAreaInsets();
   const [mounted, setMounted] = useState(visible);
   const p = useSharedValue(0);
 
@@ -50,7 +52,12 @@ export const Dialog: React.FC<DialogProps> = ({ visible, onClose, title, message
       <Animated.View style={[StyleSheet.absoluteFill, styles.backdrop, backdrop]}>
         <Pressable style={styles.flex} onPress={onClose} accessibilityLabel="Close" />
       </Animated.View>
-      <View style={styles.center} pointerEvents="box-none">
+      {/* Some dialogs hold a text field (e.g. a reason): keep the box above the keyboard. */}
+      <KeyboardAvoidingView
+        behavior="padding"
+        style={[styles.center, { paddingTop: insets.top + 24, paddingBottom: insets.bottom + 24 }]}
+        pointerEvents="box-none"
+      >
         <Animated.View
           accessibilityViewIsModal
           style={[styles.box, { backgroundColor: colors.surface, borderColor: colors.border }, box]}
@@ -62,7 +69,7 @@ export const Dialog: React.FC<DialogProps> = ({ visible, onClose, title, message
           {children}
           <View style={styles.actions}>{actions}</View>
         </Animated.View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 };

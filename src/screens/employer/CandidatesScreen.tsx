@@ -140,6 +140,7 @@ export const CandidatesScreen: React.FC = () => {
       </View>
 
       <FlatList
+        keyboardDismissMode="on-drag"
         data={filtered}
         keyExtractor={(c) => c.id}
         contentContainerStyle={styles.listContent}

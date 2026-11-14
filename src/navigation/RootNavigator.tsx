@@ -177,21 +177,22 @@ export const RootNavigator: React.FC = () => {
         savedNavState = s;
       }}
     >
-      <OfflineBanner />
-      <Stack.Navigator screenOptions={{ headerShown: false, animation: 'fade' }}>
-        {!isAuthenticated ? (
-          <Stack.Screen name="Auth" component={AuthNavigator} />
-        ) : user && !user.onboarded && role !== 'admin' ? (
-          // New account: finish the short setup first, then the app opens.
-          <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-        ) : role === 'worker' ? (
-          <Stack.Screen name="Worker" component={WorkerNavigator} />
-        ) : role === 'employer' ? (
-          <Stack.Screen name="Employer" component={EmployerNavigator} />
-        ) : (
-          <Stack.Screen name="Admin" component={AdminNavigator} />
-        )}
-      </Stack.Navigator>
+      <OfflineBanner>
+        <Stack.Navigator screenOptions={{ headerShown: false, animation: 'fade' }}>
+          {!isAuthenticated ? (
+            <Stack.Screen name="Auth" component={AuthNavigator} />
+          ) : user && !user.onboarded && role !== 'admin' ? (
+            // New account: finish the short setup first, then the app opens.
+            <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+          ) : role === 'worker' ? (
+            <Stack.Screen name="Worker" component={WorkerNavigator} />
+          ) : role === 'employer' ? (
+            <Stack.Screen name="Employer" component={EmployerNavigator} />
+          ) : (
+            <Stack.Screen name="Admin" component={AdminNavigator} />
+          )}
+        </Stack.Navigator>
+      </OfflineBanner>
       <ToastContainer />
     </NavigationContainer>
   );
