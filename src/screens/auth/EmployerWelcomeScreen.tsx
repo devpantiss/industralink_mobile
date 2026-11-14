@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
+import { gradients } from '../../theme/effects';
+import { Chip } from '../../components/ui/Chip';
 import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
 import { View, StyleSheet, Pressable } from 'react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -23,6 +26,7 @@ const GSTIN = /^\d{2}[A-Z]{5}\d{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/;
 /** Two short screens: the company, then where it is and who to call. Documents are added later on the Company page. */
 export const EmployerWelcomeScreen: React.FC = () => {
   const colors = useUiStore((s) => s.colors);
+  const theme = useUiStore((s) => s.theme);
   const showToast = useUiStore((s) => s.showToast);
   const { user, completeOnboarding } = useAuthStore();
   const qc = useQueryClient();
@@ -92,7 +96,11 @@ export const EmployerWelcomeScreen: React.FC = () => {
         )}
         <View style={styles.dots} accessibilityLabel={`${t('Step')} ${step + 1} / ${STEPS}`}>
           {Array.from({ length: STEPS }).map((_, i) => (
-            <View key={i} style={[styles.dot, { backgroundColor: i <= step ? colors.primary : colors.border }]} />
+            <View key={i} style={[styles.dot, { backgroundColor: colors.border }]}>
+              {i <= step && (
+                <LinearGradient colors={gradients[theme].brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFill} />
+              )}
+            </View>
           ))}
         </View>
         <View style={styles.back} />
@@ -166,36 +174,20 @@ const Label: React.FC<{ text: string }> = ({ text }) => {
   return <Text style={[styles.label, { color: colors.inkSecondary }]}>{text}</Text>;
 };
 
-const Chips: React.FC<{ options: { key: string; label: string }[]; value?: string; onPick: (key: string) => void }> = ({ options, value, onPick }) => {
-  const colors = useUiStore((s) => s.colors);
-  return (
-    <View style={styles.chips}>
-      {options.map((o) => {
-        const on = value === o.key;
-        return (
-          <Pressable
-            key={o.key}
-            onPress={() => {
-              Haptics.selectionAsync().catch(() => {});
-              onPick(o.key);
-            }}
-            accessibilityRole="button"
-            accessibilityState={{ selected: on }}
-            style={[styles.chip, { backgroundColor: on ? colors.primarySoft : colors.surface, borderColor: on ? colors.primary : colors.border }]}
-          >
-            <Text style={{ color: on ? colors.primary : colors.ink, fontWeight: on ? '700' : '500', fontSize: 15 }}>{o.label}</Text>
-          </Pressable>
-        );
-      })}
-    </View>
-  );
-};
+const Chips: React.FC<{ options: { key: string; label: string }[]; value?: string; onPick: (key: string) => void }> = ({ options, value, onPick }) => (
+  <View style={styles.chips}>
+    {options.map((o) => (
+      <Chip key={o.key} label={o.label} selected={value === o.key} onPress={() => onPick(o.key)} style={styles.chipBig} />
+    ))}
+  </View>
+);
 
 const styles = StyleSheet.create({
   top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 8 },
   back: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
   dots: { flexDirection: 'row', gap: 8 },
-  dot: { width: 28, height: 4, borderRadius: 2 },
+  dot: { width: 28, height: 5, borderRadius: 3, overflow: 'hidden' },
+  chipBig: { minHeight: 44, paddingHorizontal: 16 },
   scroll: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 24 },
   title: { fontSize: 26, fontWeight: '700', marginBottom: 6 },
   hint: { fontSize: 15, lineHeight: 22, marginBottom: 20 },

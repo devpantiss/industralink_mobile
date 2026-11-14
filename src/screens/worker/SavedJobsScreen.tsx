@@ -1,4 +1,5 @@
 import React from 'react';
+import { GradientFill } from '../../components/ui/GradientFill';
 import { useTabBarSpace } from '../../components/layout/TabBar';
 import { View, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { Text } from '../../components/ui/Text';
@@ -79,8 +80,9 @@ export const SavedJobsScreen: React.FC = () => {
             </Text>
             <TouchableOpacity
               onPress={() => navigation.navigate('WorkerTabs', { screen: 'FindJobs' })}
-              style={[styles.findBtn, { backgroundColor: colors.primary }]}
+              style={[styles.findBtn, { backgroundColor: 'transparent', overflow: 'hidden' }]}
             >
+              <GradientFill />
               <Text style={styles.findBtnText}>{t('Find jobs')}</Text>
             </TouchableOpacity>
           </View>

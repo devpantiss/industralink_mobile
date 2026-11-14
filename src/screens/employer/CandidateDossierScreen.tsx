@@ -1,4 +1,5 @@
 import { ErrorState } from '../../components/ui/ErrorState';
+import { GradientFill } from '../../components/ui/GradientFill';
 import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
 import { DocumentViewer } from '../../components/domain/DocumentViewer';
 import React, { useState } from 'react';
@@ -170,7 +171,8 @@ export const CandidateDossierScreen: React.FC<Props> = ({ route, navigation }) =
           </View>
 
           {/* Quick Call Button */}
-          <TouchableOpacity onPress={handleCall} style={[styles.callBtn, { backgroundColor: colors.primary }]}>
+          <TouchableOpacity onPress={handleCall} style={[styles.callBtn, { backgroundColor: 'transparent', overflow: 'hidden' }]}>
+            <GradientFill />
             <Phone size={16} color="#FFF" />
             <Text style={styles.callBtnText}>{formatPhone(w.phone)} · Call Candidate</Text>
           </TouchableOpacity>
@@ -235,8 +237,9 @@ export const CandidateDossierScreen: React.FC<Props> = ({ route, navigation }) =
             {candidate.stage === 'applied' && (
               <TouchableOpacity
                 onPress={() => updateStageMutation.mutate({ stage: 'shortlisted' })}
-                style={[styles.stageActionBtn, { backgroundColor: colors.primary }]}
+                style={[styles.stageActionBtn, { backgroundColor: 'transparent', overflow: 'hidden' }]}
               >
+                <GradientFill />
                 <CheckCircle2 size={15} color="#FFF" />
                 <Text style={styles.stageActionBtnText}>{t('Shortlist')}</Text>
               </TouchableOpacity>
@@ -254,7 +257,8 @@ export const CandidateDossierScreen: React.FC<Props> = ({ route, navigation }) =
 
             {candidate.stage === 'interview' && (
               <>
-                <TouchableOpacity onPress={() => openSheet('offer')} style={[styles.stageActionBtn, { backgroundColor: colors.primary }]}>
+                <TouchableOpacity onPress={() => openSheet('offer')} style={[styles.stageActionBtn, { backgroundColor: 'transparent', overflow: 'hidden' }]}>
+                  <GradientFill />
                   <Gift size={15} color="#FFF" />
                   <Text style={styles.stageActionBtnText}>{t('Send Offer')}</Text>
                 </TouchableOpacity>
@@ -459,7 +463,8 @@ export const CandidateDossierScreen: React.FC<Props> = ({ route, navigation }) =
             style={[styles.modalInput, { borderColor: colors.border, color: colors.ink, minHeight: 72, textAlignVertical: 'top' }]}
           />
           {note !== undefined && note !== (candidate.hrNote ?? '') ? (
-            <TouchableOpacity onPress={() => saveNote.mutate(note)} style={[styles.modalBtnPrimary, { backgroundColor: colors.primary }]}>
+            <TouchableOpacity onPress={() => saveNote.mutate(note)} style={[styles.modalBtnPrimary, { backgroundColor: 'transparent', overflow: 'hidden' }]}>
+              <GradientFill />
               <Text style={{ color: '#FFF', fontWeight: '700' }}>{t('Save note')}</Text>
             </TouchableOpacity>
           ) : null}

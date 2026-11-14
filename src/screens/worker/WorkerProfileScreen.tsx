@@ -1,4 +1,5 @@
 import { errorText } from '../../lib/errors';
+import { GradientFill } from '../../components/ui/GradientFill';
 import { ProgressBar, ProgressRing } from '../../components/ui/Progress';
 import { LinearGradient } from 'expo-linear-gradient';
 import { gradients } from '../../theme/effects';
@@ -190,7 +191,8 @@ export const WorkerProfileScreen: React.FC = () => {
               <ProgressRing value={summary?.profileStrength ?? 0} size={84} stroke={4}>
                 <Avatar name={profile.name} size={70} src={profile.photoUrl} />
               </ProgressRing>
-              <TouchableOpacity onPress={handlePickPhoto} accessibilityLabel={t('Change Profile Photo')} style={[styles.cameraBadge, { backgroundColor: colors.primary }]}>
+              <TouchableOpacity onPress={handlePickPhoto} accessibilityLabel={t('Change Profile Photo')} style={[styles.cameraBadge, { backgroundColor: 'transparent', overflow: 'hidden' }]}>
+                <GradientFill />
                 <Camera size={14} color="#FFFFFF" />
               </TouchableOpacity>
             </View>
@@ -403,8 +405,9 @@ export const WorkerProfileScreen: React.FC = () => {
               <TouchableOpacity
                 onPress={handleUploadDocument}
                 disabled={uploadDocMutation.isPending}
-                style={[styles.uploadBtn, { backgroundColor: colors.primary }]}
+                style={[styles.uploadBtn, { backgroundColor: 'transparent', overflow: 'hidden' }]}
               >
+                <GradientFill />
                 {uploadDocMutation.isPending ? (
                   <ActivityIndicator color="#FFF" />
                 ) : (

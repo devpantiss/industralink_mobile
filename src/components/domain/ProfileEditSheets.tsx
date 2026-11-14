@@ -1,4 +1,6 @@
 import { errorText } from '../../lib/errors';
+import { GradientFill } from '../ui/GradientFill';
+import { Chip } from '../ui/Chip';
 import React, { useEffect, useRef, useState } from 'react';
 import { View, StyleSheet, Pressable, Alert } from 'react-native';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
@@ -412,28 +414,11 @@ function ChipRow({
   selected: string[];
   onToggle: (key: string) => void;
 }) {
-  const colors = useUiStore((s) => s.colors);
   return (
     <View style={styles.chips}>
       {options.map((o) => {
         const on = selected.includes(o.key);
-        return (
-          <Pressable
-            key={o.key}
-            onPress={() => {
-              Haptics.selectionAsync().catch(() => {});
-              onToggle(o.key);
-            }}
-            accessibilityRole="button"
-            accessibilityState={{ selected: on }}
-            style={[
-              styles.chip,
-              { backgroundColor: on ? colors.primarySoft : colors.surface, borderColor: on ? colors.primary : colors.border },
-            ]}
-          >
-            <Text style={[styles.chipText, { color: on ? colors.primary : colors.ink, fontWeight: on ? '700' : '500' }]}>{o.label}</Text>
-          </Pressable>
-        );
+        return <Chip key={o.key} label={o.label} selected={on} onPress={() => onToggle(o.key)} />;
       })}
     </View>
   );
@@ -472,7 +457,8 @@ const SkillsEditor: React.FC<{ skills: string[]; onChange: (s: string[]) => void
           returnKeyType="done"
           placeholder={t('Add a skill, like TIG welding')}
         />
-        <Pressable onPress={add} accessibilityLabel={t('Add')} style={[styles.addBtn, { backgroundColor: colors.primary }]}>
+        <Pressable onPress={add} accessibilityLabel={t('Add')} style={[styles.addBtn, { backgroundColor: 'transparent', overflow: 'hidden' }]}>
+          <GradientFill />
           <Plus size={20} color="#FFFFFF" />
         </Pressable>
       </View>

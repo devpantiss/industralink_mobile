@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { GradientFill } from '../ui/GradientFill';
 import { View, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { Text, TextInput } from '../../components/ui/Text';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -97,12 +98,13 @@ export const ApplyModal: React.FC<ApplyModalProps> = ({
               <View style={styles.successActions}>
                 {onTrackApplication && (
                   <TouchableOpacity
-                    style={[styles.primaryBtn, { backgroundColor: colors.primary }]}
+                    style={[styles.primaryBtn, { backgroundColor: 'transparent', overflow: 'hidden' }]}
                     onPress={() => {
                       handleClose();
                       onTrackApplication(doneId);
                     }}
                   >
+                    <GradientFill />
                     <Text style={styles.primaryBtnText}>{t('Track application')}</Text>
                   </TouchableOpacity>
                 )}
@@ -197,10 +199,11 @@ export const ApplyModal: React.FC<ApplyModalProps> = ({
               ) : null}
 
               <TouchableOpacity
-                style={[styles.primaryBtn, { backgroundColor: colors.primary, marginTop: 20 }]}
+                style={[styles.primaryBtn, { backgroundColor: 'transparent', overflow: 'hidden', marginTop: 20 }]}
                 disabled={applyMutation.isPending}
                 onPress={() => applyMutation.mutate()}
               >
+                <GradientFill />
                 {applyMutation.isPending ? (
                   <ActivityIndicator color="#FFFFFF" />
                 ) : (

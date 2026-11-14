@@ -1,4 +1,5 @@
 import React from 'react';
+import { GradientFill } from '../../components/ui/GradientFill';
 import { HeaderButton } from '../../components/layout/AppHeader';
 import {
   View,
@@ -69,7 +70,8 @@ export const CompanyDetailScreen: React.FC = () => {
       <Screen edges={['top', 'bottom']}>
         <View style={styles.centerContainer}>
           <Text style={[styles.errorText, { color: colors.ink }]}>{t('Company not found')}</Text>
-          <TouchableOpacity onPress={() => refetch()} style={[styles.retryBtn, { backgroundColor: colors.primary }]}>
+          <TouchableOpacity onPress={() => refetch()} style={[styles.retryBtn, { backgroundColor: 'transparent', overflow: 'hidden' }]}>
+            <GradientFill />
             <Text style={styles.retryBtnText}>{t('Retry')}</Text>
           </TouchableOpacity>
         </View>

@@ -1,4 +1,7 @@
 import { VerificationBanner } from '../../components/domain/VerificationBanner';
+import { LinearGradient } from 'expo-linear-gradient';
+import { gradients } from '../../theme/effects';
+import { ChartBar } from '../../components/ui/ChartBar';
 import { ProgressBar } from '../../components/ui/Progress';
 import { useTabBarSpace } from '../../components/layout/TabBar';
 import React from 'react';
@@ -39,7 +42,7 @@ import { shadows } from '../../theme/shadows';
 
 export const EmployerHomeScreen: React.FC = () => {
   const navigation = useNavigation<any>();
-  const { colors } = useUiStore();
+  const { colors, theme } = useUiStore();
   const tabSpace = useTabBarSpace();
   const { user } = useAuthStore();
 
@@ -91,6 +94,7 @@ export const EmployerHomeScreen: React.FC = () => {
         }
       >
         <Hero
+          style={{ marginBottom: 0 }}
           eyebrow={companyQuery.data?.verification === 'approved' ? t('Verified employer') : t('Employer')}
           title={`${greeting()}, ${firstName}`}
           subtitle={`Hiring at ${user?.companyName || 'your company'}${
@@ -107,17 +111,17 @@ export const EmployerHomeScreen: React.FC = () => {
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => navigation.navigate('PostJobWizard')}
-              style={[styles.primaryBtn, { backgroundColor: colors.primary }]}
+              style={[styles.primaryBtn, { backgroundColor: 'transparent', overflow: 'hidden' }]}
             >
-              <Plus size={16} color="#FFF" />
+              <LinearGradient colors={gradients[theme].brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
+              <Plus size={16} color="#FFF" weight="bold" />
               <Text style={styles.primaryBtnText}>{t('Post a job')}</Text>
             </TouchableOpacity>
           </View>
         </Hero>
 
-        <View style={{ paddingHorizontal: 16, marginTop: 12 }}>
-          <VerificationBanner />
-        </View>
+        {/* Renders nothing once the company is approved, so no empty gap. */}
+        <VerificationBanner />
 
         {/* 4 Pastel Stat Cards (2x2 Grid) */}
         <View style={styles.statsGrid}>
@@ -150,15 +154,7 @@ export const EmployerHomeScreen: React.FC = () => {
                 return (
                   <View key={i} style={styles.chartCol}>
                     <Text style={[styles.barCountText, { color: colors.ink }]}>{d.count || ''}</Text>
-                    <View
-                      style={[
-                        styles.chartBar,
-                        {
-                          height: barHeight,
-                          backgroundColor: d.count > 0 ? colors.primary : colors.surfaceStrong,
-                        },
-                      ]}
-                    />
+                    <ChartBar height={barHeight} filled={d.count > 0} index={i} style={styles.chartBar} />
                     <Text style={[styles.barDayText, { color: colors.inkSecondary }]}>
                       {d.day}
                     </Text>

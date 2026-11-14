@@ -1,4 +1,6 @@
 import React from 'react';
+import { GradientFill } from '../../components/ui/GradientFill';
+import { gradients } from '../../theme/effects';
 import { View, StyleSheet, ScrollView, RefreshControl, Pressable } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useQuery } from '@tanstack/react-query';
@@ -22,6 +24,7 @@ import { shadows } from '../../theme/shadows';
 export const AdminHomeScreen: React.FC = () => {
   const navigation = useNavigation<any>();
   const colors = useUiStore((s) => s.colors);
+  const theme = useUiStore((s) => s.theme);
   const q = useQuery({ queryKey: queryKeys.admin.summary, queryFn: () => adminApi.getSummary() });
   const s = q.data;
   const go = (screen: keyof AdminDrawerParamList) => navigation.navigate(screen);
@@ -46,12 +49,13 @@ export const AdminHomeScreen: React.FC = () => {
             <Pressable
               onPress={() => go('VerificationsQueue')}
               accessibilityRole="button"
-              style={({ pressed }) => [styles.cta, { backgroundColor: colors.accent, opacity: pressed ? 0.85 : 1 }]}
+              style={({ pressed }) => [styles.cta, { overflow: 'hidden', opacity: pressed ? 0.85 : 1 }]}
             >
+              <GradientFill colors={gradients[theme].sunrise} />
               <Text style={[styles.ctaText, { color: colors.onAccent }]}>
                 Review {s.pendingVerifications} {s.pendingVerifications === 1 ? 'company' : 'companies'}
               </Text>
-              <ArrowRight size={18} color={colors.onAccent} />
+              <ArrowRight size={18} color={colors.onAccent} weight="bold" />
             </Pressable>
           ) : null}
         </Hero>

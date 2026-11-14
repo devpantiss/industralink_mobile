@@ -1,4 +1,5 @@
 import React from 'react';
+import { ChartBar } from '../../components/ui/ChartBar';
 import { ProgressBar } from '../../components/ui/Progress';
 import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -71,15 +72,7 @@ export const AnalyticsScreen: React.FC = () => {
             {a.applicantsPerWeek.map((w, i) => (
               <View key={w.week} style={styles.barCol}>
                 <Text style={[styles.barNum, { color: colors.inkSecondary }]}>{w.count || ''}</Text>
-                <View
-                  style={[
-                    styles.bar,
-                    {
-                      height: Math.max(3, (w.count / maxWeek) * 110),
-                      backgroundColor: w.count ? colors.primary : colors.surfaceStrong,
-                    },
-                  ]}
-                />
+                <ChartBar height={Math.max(3, (w.count / maxWeek) * 110)} filled={!!w.count} index={i} style={styles.bar} />
                 <Text style={[styles.barLabel, { color: colors.inkMuted }]} numberOfLines={1}>
                   {i % 2 === 1 || i === a.applicantsPerWeek.length - 1 ? w.week : ''}
                 </Text>
@@ -220,7 +213,7 @@ const styles = StyleSheet.create({
   cardCaption: { fontSize: 12 },
   chart: { flexDirection: 'row', alignItems: 'flex-end', gap: 6, height: 150 },
   barCol: { flex: 1, alignItems: 'center', justifyContent: 'flex-end', gap: 4 },
-  bar: { width: '70%', maxWidth: 26, borderTopLeftRadius: 4, borderTopRightRadius: 4 },
+  bar: { width: '70%', maxWidth: 26, borderTopLeftRadius: 8, borderTopRightRadius: 8 },
   barNum: { fontSize: 11, fontWeight: '700' },
   barLabel: { fontSize: 11, height: 14 },
   states: { gap: 12 },

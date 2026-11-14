@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Chip as UiChip } from '../ui/Chip';
 import { Toggle } from '../ui/Toggle';
 import { View, StyleSheet, Pressable } from 'react-native';
 import { Text } from '../ui/Text';
@@ -235,19 +236,9 @@ export const JoinedSheet: React.FC<BaseProps & { name: string; defaultDate?: str
   );
 };
 
-const Chip: React.FC<{ on: boolean; label: string; onPress: () => void }> = ({ on, label, onPress }) => {
-  const colors = useUiStore((s) => s.colors);
-  return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityState={{ selected: on }}
-      style={[styles.chip, { backgroundColor: on ? colors.primarySoft : colors.surface, borderColor: on ? colors.primary : colors.border }]}
-    >
-      <Text style={{ color: on ? colors.primary : colors.ink, fontWeight: on ? '700' : '500', fontSize: 14 }}>{label}</Text>
-    </Pressable>
-  );
-};
+const Chip: React.FC<{ on: boolean; label: string; onPress: () => void }> = ({ on, label, onPress }) => (
+  <UiChip label={label} selected={on} onPress={onPress} />
+);
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },

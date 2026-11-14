@@ -1,4 +1,6 @@
 import { isValidPhone, errorText } from '../../lib/errors';
+import { LinearGradient } from 'expo-linear-gradient';
+import { gradients } from '../../theme/effects';
 import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import React, { useState, useEffect, useRef } from 'react';
@@ -589,9 +591,10 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
                         activeOpacity={0.88}
                         style={[
                           styles.primaryActionBtn,
-                          { backgroundColor: colors.primary },
+                          { backgroundColor: 'transparent' },
                         ]}
                       >
+                        <LinearGradient colors={gradients[theme].brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
                         {loading ? (
                           <ActivityIndicator size="small" color="#FFFFFF" />
                         ) : (
@@ -665,9 +668,10 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
                         activeOpacity={0.88}
                         style={[
                           styles.primaryActionBtn,
-                          { backgroundColor: colors.primary },
+                          { backgroundColor: 'transparent' },
                         ]}
                       >
+                        <LinearGradient colors={gradients[theme].brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
                         {loading ? (
                           <ActivityIndicator size="small" color="#FFFFFF" />
                         ) : (
@@ -877,9 +881,10 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
                     activeOpacity={0.88}
                     style={[
                       styles.primaryActionBtn,
-                      { backgroundColor: colors.primary },
+                      { backgroundColor: 'transparent' },
                     ]}
                   >
+                    <LinearGradient colors={gradients[theme].brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
                     {loading ? (
                       <ActivityIndicator size="small" color="#FFFFFF" />
                     ) : (
@@ -1289,6 +1294,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   primaryActionBtn: {
+    overflow: 'hidden',
     height: 48,
     borderRadius: 12,
     justifyContent: 'center',

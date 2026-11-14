@@ -1,4 +1,5 @@
 import { errorText } from '../../lib/errors';
+import { Chip } from '../../components/ui/Chip';
 import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
 import React, { useMemo, useState } from 'react';
 import { View, StyleSheet, RefreshControl, Linking, Pressable } from 'react-native';
@@ -278,18 +279,7 @@ export const VerificationsQueueScreen: React.FC = () => {
             <View style={styles.quick}>
               {QUICK_REASONS.map((r) => {
                 const on = reason === r;
-                return (
-                  <Pressable
-                    key={r}
-                    onPress={() => setReason(r)}
-                    style={[
-                      styles.quickChip,
-                      { borderColor: on ? colors.primary : colors.border, backgroundColor: on ? colors.primarySoft : colors.surface },
-                    ]}
-                  >
-                    <Text style={[styles.quickText, { color: on ? colors.primary : colors.ink }]}>{r}</Text>
-                  </Pressable>
-                );
+                return <Chip key={r} label={r} selected={on} onPress={() => setReason(r)} />;
               })}
             </View>
             <Text style={[styles.label, { color: colors.inkSecondary }]}>Reason (required)</Text>

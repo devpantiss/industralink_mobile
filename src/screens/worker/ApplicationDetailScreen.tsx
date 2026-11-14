@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { GradientFill } from '../../components/ui/GradientFill';
 import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
 import {
   View,
@@ -106,7 +107,8 @@ export const ApplicationDetailScreen: React.FC = () => {
       <Screen edges={['top', 'bottom']}>
         <View style={styles.centerContainer}>
           <Text style={[styles.errorText, { color: colors.ink }]}>{t('Application not found')}</Text>
-          <TouchableOpacity onPress={() => refetch()} style={[styles.retryBtn, { backgroundColor: colors.primary }]}>
+          <TouchableOpacity onPress={() => refetch()} style={[styles.retryBtn, { backgroundColor: 'transparent', overflow: 'hidden' }]}>
+            <GradientFill />
             <Text style={styles.retryBtnText}>{t('Retry')}</Text>
           </TouchableOpacity>
         </View>
@@ -191,8 +193,9 @@ export const ApplicationDetailScreen: React.FC = () => {
                   offerReplyMutation.mutate('accepted');
                 }}
                 disabled={offerReplyMutation.isPending}
-                style={[styles.offerAcceptBtn, { backgroundColor: colors.primary }]}
+                style={[styles.offerAcceptBtn, { backgroundColor: 'transparent', overflow: 'hidden' }]}
               >
+                <GradientFill />
                 <Text style={styles.offerAcceptText}>{t('Accept offer')}</Text>
               </TouchableOpacity>
 
@@ -269,8 +272,9 @@ export const ApplicationDetailScreen: React.FC = () => {
                     <TouchableOpacity
                       onPress={() => interviewReplyMutation.mutate('attending')}
                       disabled={interviewReplyMutation.isPending}
-                      style={[styles.rsvpBtnPrimary, { backgroundColor: colors.primary }]}
+                      style={[styles.rsvpBtnPrimary, { backgroundColor: 'transparent', overflow: 'hidden' }]}
                     >
+                      <GradientFill />
                       <CheckCircle2 size={15} color="#FFFFFF" />
                       <Text style={styles.rsvpBtnPrimaryText}>{t("Yes, I'll attend")}</Text>
                     </TouchableOpacity>
@@ -340,7 +344,8 @@ export const ApplicationDetailScreen: React.FC = () => {
                   {t('Ask HR a question about this job.')}
                 </Text>
               </View>
-              <View style={[styles.messageHrBtn, { backgroundColor: colors.primary }]}>
+              <View style={[styles.messageHrBtn, { backgroundColor: 'transparent', overflow: 'hidden' }]}>
+                <GradientFill />
                 <MessageSquare size={14} color="#FFF" />
                 <Text style={{ color: '#FFF', fontWeight: '700', fontSize: 12.5 }}>
                   {t('Message HR')}
@@ -358,8 +363,9 @@ export const ApplicationDetailScreen: React.FC = () => {
               <View style={styles.contactButtonsRow}>
                 <TouchableOpacity
                   onPress={() => openContact('call', a.contact!.phone)}
-                  style={[styles.dialBtn, { backgroundColor: colors.primary }]}
+                  style={[styles.dialBtn, { backgroundColor: 'transparent', overflow: 'hidden' }]}
                 >
+                  <GradientFill />
                   <Phone size={15} color="#FFF" />
                   <Text style={styles.dialBtnText}>{t('Call HR')}</Text>
                 </TouchableOpacity>

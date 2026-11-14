@@ -1,4 +1,5 @@
 import { errorText } from '../../lib/errors';
+import { GradientFill } from '../../components/ui/GradientFill';
 import { useTabBarSpace } from '../../components/layout/TabBar';
 import React, { useState } from 'react';
 import { View, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Alert } from 'react-native';
@@ -116,8 +117,9 @@ export const EmployerJobsScreen: React.FC = () => {
           </View>
           <TouchableOpacity
             onPress={() => navigation.navigate('PostJobWizard')}
-            style={[styles.postJobBtn, { backgroundColor: colors.primary }]}
+            style={[styles.postJobBtn, { backgroundColor: 'transparent', overflow: 'hidden' }]}
           >
+            <GradientFill />
             <Plus size={16} color="#FFF" />
             <Text style={styles.postJobBtnText}>{t('Post job')}</Text>
           </TouchableOpacity>
@@ -146,8 +148,9 @@ export const EmployerJobsScreen: React.FC = () => {
             {tab === 'active' && (
               <TouchableOpacity
                 onPress={() => navigation.navigate('PostJobWizard')}
-                style={[styles.emptyPostBtn, { backgroundColor: colors.primary }]}
+                style={[styles.emptyPostBtn, { backgroundColor: 'transparent', overflow: 'hidden' }]}
               >
+                <GradientFill />
                 <Text style={{ color: '#FFF', fontWeight: '700', fontSize: 13.5 }}>
                   {t('Post your first job')}
                 </Text>

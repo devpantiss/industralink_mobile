@@ -1,4 +1,9 @@
 import React, { useState } from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
+import { gradients } from '../../theme/effects';
+import { Chip } from '../../components/ui/Chip';
+import { TRADE_ICON } from '../../lib/tradeIcons';
+import type { AppIcon } from '../../components/ui/icons';
 import { Toggle } from '../../components/ui/Toggle';
 import { HeaderButton } from '../../components/layout/AppHeader';
 import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
@@ -160,6 +165,7 @@ export const PostJobWizardScreen: React.FC = () => {
   const jobId = (useRoute().params as { jobId?: string } | undefined)?.jobId;
   const editing = !!jobId;
   const colors = useUiStore((s) => s.colors);
+  const theme = useUiStore((s) => s.theme);
   const showToast = useUiStore((s) => s.showToast);
   const { user } = useAuthStore();
   const qc = useQueryClient();
@@ -446,16 +452,17 @@ export const PostJobWizardScreen: React.FC = () => {
                 style={[
                   styles.stepBadge,
                   {
-                    backgroundColor: done ? colors.primary : active ? colors.primarySoft : colors.surfaceMuted,
-                    borderColor: active ? colors.primary : 'transparent',
-                    borderWidth: active ? 1.5 : 0,
+                    backgroundColor: colors.surfaceMuted,
                   },
                 ]}
               >
+                {(done || active) && (
+                  <LinearGradient colors={gradients[theme].brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
+                )}
                 {done ? (
                   <Check size={12} color="#FFF" strokeWidth={3} />
                 ) : (
-                  <Text style={{ color: active ? colors.primary : colors.inkMuted, fontSize: 12, fontWeight: '700' }}>{i + 1}</Text>
+                  <Text style={{ color: active ? '#FFFFFF' : colors.inkMuted, fontSize: 12, fontWeight: '700' }}>{i + 1}</Text>
                 )}
               </View>
               <Text numberOfLines={1} style={[styles.stepHeaderText, { color: active ? colors.ink : colors.inkMuted, fontWeight: active ? '700' : '500' }]}>
@@ -481,7 +488,7 @@ export const PostJobWizardScreen: React.FC = () => {
                 </Pressable>
                 {showTemplates ? (
                   <Chips
-                    options={(Object.keys(TEMPLATES) as Trade[]).map((k) => ({ key: k, label: t(TRADE_LABEL[k]) }))}
+                    options={(Object.keys(TEMPLATES) as Trade[]).map((k) => ({ key: k, label: t(TRADE_LABEL[k]), icon: TRADE_ICON[k] }))}
                     value={undefined}
                     onPick={(k) => applyTemplate(k as Trade)}
                   />
@@ -492,7 +499,7 @@ export const PostJobWizardScreen: React.FC = () => {
             <Input label={`${t('Job title')} *`} value={f.title} onChangeText={(title) => set({ title })} placeholder="Welder (ITI)" error={errors.title} />
             <Label text={`${t('Trade')} *`} />
             <Chips
-              options={(Object.keys(TRADE_LABEL) as Trade[]).map((k) => ({ key: k, label: t(TRADE_LABEL[k]) }))}
+              options={(Object.keys(TRADE_LABEL) as Trade[]).map((k) => ({ key: k, label: t(TRADE_LABEL[k]), icon: TRADE_ICON[k] }))}
               value={f.trade}
               onPick={(k) => set({ trade: k as Trade })}
               error={errors.trade}
@@ -766,7 +773,7 @@ const Label: React.FC<{ text: string }> = ({ text }) => {
 };
 
 const Chips: React.FC<{
-  options: { key: string; label: string }[];
+  options: { key: string; label: string; icon?: AppIcon }[];
   value?: string;
   values?: string[];
   multi?: boolean;
@@ -779,20 +786,7 @@ const Chips: React.FC<{
       <View style={styles.chips}>
         {options.map((o) => {
           const on = multi ? !!values?.includes(o.key) : value === o.key;
-          return (
-            <Pressable
-              key={o.key}
-              onPress={() => {
-                Haptics.selectionAsync().catch(() => {});
-                onPick(o.key);
-              }}
-              accessibilityRole="button"
-              accessibilityState={{ selected: on }}
-              style={[styles.chip, { backgroundColor: on ? colors.primarySoft : colors.surface, borderColor: on ? colors.primary : colors.border }]}
-            >
-              <Text style={{ color: on ? colors.primary : colors.ink, fontWeight: on ? '700' : '500', fontSize: 14 }}>{o.label}</Text>
-            </Pressable>
-          );
+          return <Chip key={o.key} label={o.label} icon={o.icon} selected={on} onPress={() => onPick(o.key)} />;
         })}
       </View>
       {error ? <Text style={{ color: colors.dangerFg, fontSize: 13, marginTop: 4 }}>{error}</Text> : null}
@@ -806,7 +800,7 @@ const styles = StyleSheet.create({
   topBarTitle: { fontSize: 17, fontWeight: '700', flex: 1 },
   stepperWrap: { flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 10, paddingHorizontal: 4, borderBottomWidth: StyleSheet.hairlineWidth },
   stepHeaderItem: { alignItems: 'center', gap: 4, flex: 1 },
-  stepBadge: { width: 24, height: 24, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  stepBadge: { width: 26, height: 26, borderRadius: 13, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   stepHeaderText: { fontSize: 11 },
   scrollContent: { padding: 16, paddingBottom: 40 },
   templateWrap: { marginBottom: 12 },

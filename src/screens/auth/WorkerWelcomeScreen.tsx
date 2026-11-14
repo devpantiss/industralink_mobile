@@ -1,4 +1,9 @@
 import { errorText } from '../../lib/errors';
+import { LinearGradient } from 'expo-linear-gradient';
+import { gradients } from '../../theme/effects';
+import { Chip } from '../../components/ui/Chip';
+import { TRADE_ICON } from '../../lib/tradeIcons';
+import type { AppIcon } from '../../components/ui/icons';
 import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
 import React, { useState } from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
@@ -23,6 +28,7 @@ const STEPS = 3;
 /** Three short screens. Nothing is pre-selected; every answer is saved to the worker profile. */
 export const WorkerWelcomeScreen: React.FC = () => {
   const colors = useUiStore((s) => s.colors);
+  const theme = useUiStore((s) => s.theme);
   const showToast = useUiStore((s) => s.showToast);
   const completeOnboarding = useAuthStore((s) => s.completeOnboarding);
   const qc = useQueryClient();
@@ -108,7 +114,11 @@ export const WorkerWelcomeScreen: React.FC = () => {
         )}
         <View style={styles.dots} accessibilityLabel={`${t('Step')} ${step + 1} / ${STEPS}`}>
           {Array.from({ length: STEPS }).map((_, i) => (
-            <View key={i} style={[styles.dot, { backgroundColor: i <= step ? colors.primary : colors.border }]} />
+            <View key={i} style={[styles.dot, { backgroundColor: colors.border }]}>
+              {i <= step && (
+                <LinearGradient colors={gradients[theme].brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={StyleSheet.absoluteFill} />
+              )}
+            </View>
           ))}
         </View>
         <View style={styles.back} />
@@ -122,7 +132,7 @@ export const WorkerWelcomeScreen: React.FC = () => {
           <>
             <Label text={t('Your trade')} />
             <Chips
-              options={(Object.keys(TRADE_LABEL) as Trade[]).map((k) => ({ key: k, label: t(TRADE_LABEL[k]) }))}
+              options={(Object.keys(TRADE_LABEL) as Trade[]).map((k) => ({ key: k, label: t(TRADE_LABEL[k]), icon: TRADE_ICON[k] }))}
               value={trade}
               onPick={(k) => setTrade(k as Trade)}
             />
@@ -210,39 +220,23 @@ const Label: React.FC<{ text: string }> = ({ text }) => {
 };
 
 const Chips: React.FC<{
-  options: { key: string; label: string }[];
+  options: { key: string; label: string; icon?: AppIcon }[];
   value?: string;
   onPick: (key: string) => void;
-}> = ({ options, value, onPick }) => {
-  const colors = useUiStore((s) => s.colors);
-  return (
-    <View style={styles.chips}>
-      {options.map((o) => {
-        const on = value === o.key;
-        return (
-          <Pressable
-            key={o.key}
-            onPress={() => {
-              Haptics.selectionAsync().catch(() => {});
-              onPick(o.key);
-            }}
-            accessibilityRole="button"
-            accessibilityState={{ selected: on }}
-            style={[styles.chip, { backgroundColor: on ? colors.primarySoft : colors.surface, borderColor: on ? colors.primary : colors.border }]}
-          >
-            <Text style={{ color: on ? colors.primary : colors.ink, fontWeight: on ? '700' : '500', fontSize: 15 }}>{o.label}</Text>
-          </Pressable>
-        );
-      })}
-    </View>
-  );
-};
+}> = ({ options, value, onPick }) => (
+  <View style={styles.chips}>
+    {options.map((o) => (
+      <Chip key={o.key} label={o.label} icon={o.icon} selected={value === o.key} onPress={() => onPick(o.key)} style={styles.chipBig} />
+    ))}
+  </View>
+);
 
 const styles = StyleSheet.create({
   top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 8 },
   back: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
   dots: { flexDirection: 'row', gap: 8 },
-  dot: { width: 28, height: 4, borderRadius: 2 },
+  dot: { width: 28, height: 5, borderRadius: 3, overflow: 'hidden' },
+  chipBig: { minHeight: 44, paddingHorizontal: 16 },
   scroll: { paddingHorizontal: 20, paddingTop: 16, paddingBottom: 24 },
   title: { fontSize: 26, fontWeight: '700', marginBottom: 6 },
   hint: { fontSize: 15, lineHeight: 22, marginBottom: 20 },

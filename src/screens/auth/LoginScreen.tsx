@@ -1,4 +1,6 @@
 import { isValidPhone, errorText } from '../../lib/errors';
+import { LinearGradient } from 'expo-linear-gradient';
+import { gradients } from '../../theme/effects';
 import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
 import React, { useState, useEffect, useRef } from 'react';
 import {
@@ -72,6 +74,8 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [countdown, setCountdown] = useState(30);
 
   const codeInputs = useRef<any[]>([]);
+
+  const [focusIdx, setFocusIdx] = useState(-1);
 
   // Animation values
   const [roleSlideAnim] = useState(() => new Animated.Value(0));
@@ -490,11 +494,12 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
                         disabled={loading}
                         style={[
                           styles.primaryBtn,
-                          { backgroundColor: colors.primary },
+                          { backgroundColor: 'transparent' },
                           loading && { opacity: 0.7 },
                         ]}
                         activeOpacity={0.85}
                       >
+                        <LinearGradient colors={gradients[theme].brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
                         {loading ? (
                           <ActivityIndicator size="small" color="#FFFFFF" />
                         ) : (
@@ -545,12 +550,16 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
                             style={[
                               styles.codeBox,
                               {
-                                backgroundColor: colors.surfaceMuted,
-                                borderColor: digit ? colors.primary : colors.border,
+                                // Typing box: cobalt ring; filled boxes: soft blue.
+                                backgroundColor: focusIdx === idx ? colors.surface : digit ? colors.primarySoft : colors.surfaceMuted,
+                                borderColor: focusIdx === idx ? colors.primary : digit ? colors.primarySoft : colors.border,
+                                borderWidth: focusIdx === idx ? 2 : 1,
                                 color: colors.ink,
                               },
                             ]}
                             selectTextOnFocus
+                            onFocus={() => setFocusIdx(idx)}
+                            onBlur={() => setFocusIdx((f) => (f === idx ? -1 : f))}
                           />
                         ))}
                       </View>
@@ -581,11 +590,12 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
                         disabled={loading || code.some((d) => !d)}
                         style={[
                           styles.primaryBtn,
-                          { backgroundColor: colors.primary, marginTop: 16 },
+                          { backgroundColor: 'transparent', marginTop: 16 },
                           (loading || code.some((d) => !d)) && { opacity: 0.6 },
                         ]}
                         activeOpacity={0.85}
                       >
+                        <LinearGradient colors={gradients[theme].brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
                         {loading ? (
                           <ActivityIndicator size="small" color="#FFFFFF" />
                         ) : (
@@ -688,11 +698,12 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
                     disabled={loading}
                     style={[
                       styles.primaryBtn,
-                      { backgroundColor: colors.primary, marginTop: 14 },
+                      { backgroundColor: 'transparent', marginTop: 14 },
                       loading && { opacity: 0.7 },
                     ]}
                     activeOpacity={0.85}
                   >
+                    <LinearGradient colors={gradients[theme].brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
                     {loading ? (
                       <ActivityIndicator size="small" color="#FFFFFF" />
                     ) : (
@@ -1178,6 +1189,7 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   primaryBtn: {
+    overflow: 'hidden',
     height: 48,
     borderRadius: 12,
     justifyContent: 'center',

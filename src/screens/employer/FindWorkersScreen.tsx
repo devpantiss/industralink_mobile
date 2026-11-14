@@ -1,4 +1,5 @@
 import { errorText } from '../../lib/errors';
+import { GradientFill } from '../../components/ui/GradientFill';
 import { useTabBarSpace } from '../../components/layout/TabBar';
 import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
 import { VerificationBanner } from '../../components/domain/VerificationBanner';
@@ -241,8 +242,9 @@ export const FindWorkersScreen: React.FC = () => {
                 ) : (
                   <TouchableOpacity
                     onPress={() => openInvite(w)}
-                    style={[styles.inviteBtn, { backgroundColor: colors.primary }]}
+                    style={[styles.inviteBtn, { backgroundColor: 'transparent', overflow: 'hidden' }]}
                   >
+                    <GradientFill />
                     <Send size={14} color="#FFF" />
                     <Text style={styles.inviteBtnText}>{t('Invite to apply')}</Text>
                   </TouchableOpacity>

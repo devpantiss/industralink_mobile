@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { GradientFill } from '../../components/ui/GradientFill';
 import { LinearGradient } from 'expo-linear-gradient';
 import { gradients } from '../../theme/effects';
 import { TRADE_ICON } from '../../lib/tradeIcons';
@@ -364,8 +365,9 @@ export const FindJobsScreen: React.FC = () => {
             </Text>
             <TouchableOpacity
               onPress={handleClearAll}
-              style={[styles.clearAllBtn, { backgroundColor: colors.primary }]}
+              style={[styles.clearAllBtn, { backgroundColor: 'transparent', overflow: 'hidden' }]}
             >
+              <GradientFill />
               <Text style={styles.clearAllBtnText}>{t('Clear filters')}</Text>
             </TouchableOpacity>
           </View>
