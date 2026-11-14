@@ -459,7 +459,7 @@ export const CandidateDossierScreen: React.FC<Props> = ({ route, navigation }) =
             multiline
             maxLength={500}
             placeholder={t('e.g. Good welding test, call back on Monday')}
-            placeholderTextColor={colors.inkMuted}
+            placeholderTextColor={colors.placeholder}
             style={[styles.modalInput, { borderColor: colors.border, color: colors.ink, minHeight: 72, textAlignVertical: 'top' }]}
           />
           {note !== undefined && note !== (candidate.hrNote ?? '') ? (

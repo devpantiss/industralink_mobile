@@ -87,7 +87,7 @@ export const UsersManagementScreen: React.FC = () => {
             value={q}
             onChangeText={setQ}
             placeholder="Name, phone or city"
-            placeholderTextColor={colors.inkMuted}
+            placeholderTextColor={colors.placeholder}
             style={[styles.searchInput, { color: colors.ink }]}
             returnKeyType="search"
           />
@@ -225,7 +225,7 @@ export const UsersManagementScreen: React.FC = () => {
           onChangeText={setDetail}
           multiline
           placeholder="What happened?"
-          placeholderTextColor={colors.inkMuted}
+          placeholderTextColor={colors.placeholder}
           style={[styles.detailInput, { borderColor: colors.border, color: colors.ink, backgroundColor: colors.surface }]}
         />
         <Text style={[styles.detailLabel, { color: colors.inkMuted, marginTop: 8 }]}>

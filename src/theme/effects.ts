@@ -59,8 +59,8 @@ export function identityGradient(name: string): Gradient {
 
 /** Translucent "glass" chrome (tab bar, scrolled top bar, sheet handle). */
 export const glass = {
-  light: { bg: 'rgba(255,255,255,0.86)', border: 'rgba(15,23,42,0.08)', tint: 'light' as const, solid: 'rgba(255,255,255,0.96)' },
-  dark: { bg: 'rgba(23,26,34,0.8)', border: 'rgba(255,255,255,0.08)', tint: 'dark' as const, solid: 'rgba(23,26,34,0.97)' },
+  light: { bg: 'rgba(255,255,255,0.86)', border: 'rgba(15,23,42,0.12)', tint: 'light' as const, solid: 'rgba(255,255,255,0.96)' },
+  dark: { bg: 'rgba(23,26,34,0.8)', border: 'rgba(255,255,255,0.12)', tint: 'dark' as const, solid: 'rgba(23,26,34,0.97)' },
 };
 
 /** Live blur is costly on low-end Android (most of our users); Android uses a near-solid fill instead. */

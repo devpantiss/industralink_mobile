@@ -202,7 +202,7 @@ const styles = StyleSheet.create({
   title: { fontSize: 22, fontWeight: '700', letterSpacing: -0.3 },
   subtitle: { fontSize: 13, marginTop: 2, marginBottom: 14 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 12 },
-  stat: { flexGrow: 1, flexBasis: '45%', borderRadius: 16, padding: 14, minHeight: 104 },
+  stat: { flexGrow: 1, flexBasis: '45%', borderRadius: 16, padding: 12, minHeight: 92 },
   statHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 6 },
   statLabel: { fontSize: 13, fontWeight: '600', flexShrink: 1 },
   statValue: { fontSize: 24, fontWeight: '700', marginTop: 8, letterSpacing: -0.5 },

@@ -112,9 +112,9 @@ const styles = StyleSheet.create({
   pill: { position: 'absolute', top: 4, bottom: 4, left: 0, borderRadius: 10 },
   line: { position: 'absolute', bottom: -1, left: 0, height: 3, borderRadius: 3, overflow: 'hidden' },
   seg: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 },
-  pillSeg: { minHeight: 44, paddingHorizontal: 8 },
+  pillSeg: { minHeight: 40, paddingHorizontal: 8 },
   lineSeg: { minHeight: 44, paddingHorizontal: 4 },
-  label: { fontSize: 14 },
+  label: { fontSize: 12.5, letterSpacing: 0.1 },
   count: { minWidth: 20, height: 20, borderRadius: 10, paddingHorizontal: 6, alignItems: 'center', justifyContent: 'center' },
   countText: { fontSize: 11, fontWeight: '700' },
 });

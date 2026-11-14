@@ -131,7 +131,7 @@ export const RoundButton: React.FC<{ label: string; onPress: () => void; childre
 
 const styles = StyleSheet.create({
   bar: {
-    height: 60,
+    height: 56,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -144,11 +144,11 @@ const styles = StyleSheet.create({
   title: { fontSize: 17, fontWeight: '700', letterSpacing: -0.2, flexShrink: 1 },
   badge: { position: 'absolute', top: -3, right: -3, minWidth: 18, height: 18, borderRadius: 9, paddingHorizontal: 4, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
   badgeText: { color: '#FFFFFF', fontSize: 11, fontWeight: '700', lineHeight: 13 },
-  roundWrap: { borderRadius: 22 },
+  roundWrap: { borderRadius: 20 },
   round: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },

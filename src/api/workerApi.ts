@@ -167,7 +167,7 @@ export const workerApi = {
     return res.data;
   },
 
-  async uploadDocument(doc: { name: string; type: DocType; fileUrl: string }): Promise<WorkerDocument> {
+  async uploadDocument(doc: { name: string; type: DocType; fileUrl: string; mimeType?: string; sizeBytes?: number }): Promise<WorkerDocument> {
     if (USE_MOCKS) {
       await delay(120);
       return mockDb.uploadDocument(doc);

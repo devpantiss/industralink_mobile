@@ -2,10 +2,10 @@ import React, { useMemo, useState } from 'react';
 import { Toggle } from '../../components/ui/Toggle';
 import { useTabBarSpace } from '../../components/layout/TabBar';
 import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
-import { View, StyleSheet, TouchableOpacity, RefreshControl } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, RefreshControl, Pressable } from 'react-native';
 import { Text, TextInput } from '../../components/ui/Text';
 import { useTileStyle, TileIcon } from '../../components/ui/tileStyle';
-import { ProgressBar, ProgressRing } from '../../components/ui/Progress';
+import { ProgressBar } from '../../components/ui/Progress';
 import { Stagger } from '../../components/ui/Stagger';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -28,7 +28,6 @@ import { ListSkeleton, Skeleton } from '../../components/ui/Skeleton';
 import { Screen } from '../../components/layout/Screen';
 import { AppHeader } from '../../components/layout/AppHeader';
 import { JobCard } from '../../components/domain/JobCard';
-import { Avatar } from '../../components/ui/Avatar';
 import { Hero } from '../../components/ui/Hero';
 import { PressableScale } from '../../components/ui/PressableScale';
 import { workerApi } from '../../api/workerApi';
@@ -148,7 +147,7 @@ export const WorkerHomeScreen: React.FC = () => {
                 value={q}
                 onChangeText={setQ}
                 placeholder={t('Trade, company or city')}
-                placeholderTextColor={colors.inkMuted}
+                placeholderTextColor={colors.placeholder}
                 returnKeyType="search"
                 accessibilityLabel={t('Search jobs')}
                 style={[styles.searchInput, { color: colors.ink }]}
@@ -224,7 +223,7 @@ export const WorkerHomeScreen: React.FC = () => {
                 icon={<Bookmark size={16} color={colors.tiles.green.text} />}
                 value={summary.saved}
                 label={t('Saved')}
-                onPress={() => goTab('SavedJobs')}
+                onPress={() => navigation.navigate('SavedJobs')}
               />
             </>
           ) : (
@@ -232,30 +231,27 @@ export const WorkerHomeScreen: React.FC = () => {
           )}
         </View>
 
-        {/* Profile progress (hidden once complete) */}
+        {/* Profile progress: one slim line, hidden once the profile is complete. */}
         {summary && summary.profileStrength < 100 && (
-          <PressableScale
+          <Pressable
             onPress={() => goTab('WorkerProfile')}
-            style={[styles.profileCard, { backgroundColor: colors.surface, borderColor: colors.border }]}
+            accessibilityRole="button"
+            accessibilityLabel={t('Profile {n}% complete', { n: summary.profileStrength })}
+            style={({ pressed }) => [styles.profileStrip, pressed && { opacity: 0.6 }]}
           >
             <View style={styles.profileTop}>
-              <ProgressRing value={summary.profileStrength} size={54} stroke={3.5}>
-                <Avatar name={user?.name || profile?.name || 'Worker'} size={42} />
-              </ProgressRing>
-              <View style={styles.flex}>
-                <Text style={[styles.profileTitle, { color: colors.ink }]}>
-                  {t('Profile {n}% complete', { n: summary.profileStrength })}
+              <Text style={[styles.profileTitle, { color: colors.ink }]}>
+                {t('Profile {n}%', { n: summary.profileStrength })}
+              </Text>
+              {summary.profileHint ? (
+                <Text style={[styles.profileHint, { color: colors.inkSecondary }]} numberOfLines={1}>
+                  {'· '}{t(summary.profileHint)}
                 </Text>
-                {summary.profileHint && (
-                  <Text style={[styles.profileHint, { color: colors.inkSecondary }]} numberOfLines={2}>
-                    {t('Next: {item}', { item: t(summary.profileHint) })}
-                  </Text>
-                )}
-              </View>
-              <ChevronRight size={18} color={colors.inkMuted} />
+              ) : <View style={styles.flex} />}
+              <ChevronRight size={16} color={colors.primary} />
             </View>
-            <ProgressBar value={summary.profileStrength} style={styles.bar} />
-          </PressableScale>
+            <ProgressBar value={summary.profileStrength} height={3} style={styles.bar} />
+          </Pressable>
         )}
 
         {/* Jobs */}
@@ -388,15 +384,15 @@ const styles = StyleSheet.create({
   nextSub: { fontSize: 13, lineHeight: 18, marginTop: 2, opacity: 0.9 },
 
   stats: { flexDirection: 'row', gap: 10, marginBottom: 14 },
-  stat: { flex: 1, borderRadius: 14, paddingVertical: 12, paddingHorizontal: 12, minHeight: 86 },
-  statValue: { fontSize: 24, lineHeight: 30, fontWeight: '700', marginTop: 6, fontVariant: ['tabular-nums'] },
+  stat: { flex: 1, borderRadius: 16, paddingVertical: 12, paddingHorizontal: 12, minHeight: 80 },
+  statValue: { fontSize: 24, lineHeight: 30, fontWeight: '700', marginTop: 4, fontVariant: ['tabular-nums'] },
   statLabel: { fontSize: 12.5, fontWeight: '600' },
 
-  profileCard: { borderRadius: 16, borderWidth: 1, padding: 14, marginBottom: 20, ...shadows.card },
-  profileTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  profileTitle: { fontSize: 15, fontWeight: '700' },
-  profileHint: { fontSize: 13, lineHeight: 18, marginTop: 2 },
-  bar: { marginTop: 12 },
+  profileStrip: { paddingVertical: 6, paddingHorizontal: 2, marginBottom: 22 },
+  profileTop: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  profileTitle: { fontSize: 13, fontWeight: '700' },
+  profileHint: { flex: 1, fontSize: 13 },
+  bar: { marginTop: 8 },
 
   sectionHead: { flexDirection: 'row', alignItems: 'flex-end', marginBottom: 12 },
   sectionTitle: { fontSize: 20, lineHeight: 26, fontWeight: '700', letterSpacing: -0.3 },

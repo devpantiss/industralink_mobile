@@ -109,7 +109,7 @@ export const FindWorkersScreen: React.FC = () => {
             value={q}
             onChangeText={setQ}
             placeholder={t('Skill, licence or name (e.g. MIG, DGMS)')}
-            placeholderTextColor={colors.inkMuted}
+            placeholderTextColor={colors.placeholder}
             style={[styles.searchInput, { color: colors.ink }]}
           />
           {q.length > 0 && (

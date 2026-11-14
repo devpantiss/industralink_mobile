@@ -500,7 +500,7 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
                             value={workerName}
                             onChangeText={setWorkerName}
                             placeholder="e.g. Ramesh Kumar"
-                            placeholderTextColor={colors.inkMuted}
+                            placeholderTextColor={colors.placeholder}
                             onFocus={() => setWorkerNameFocused(true)}
                             onBlur={() => setWorkerNameFocused(false)}
                             style={[styles.textInput, { color: colors.ink }]}
@@ -551,7 +551,7 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
                             value={workerPhone}
                             onChangeText={setWorkerPhone}
                             placeholder="9876543210"
-                            placeholderTextColor={colors.inkMuted}
+                            placeholderTextColor={colors.placeholder}
                             keyboardType="phone-pad"
                             maxLength={10}
                             onFocus={() => setWorkerPhoneFocused(true)}
@@ -736,7 +736,7 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
                         value={employerName}
                         onChangeText={setEmployerName}
                         placeholder="e.g. Pradeep Mohanty (Plant HR)"
-                        placeholderTextColor={colors.inkMuted}
+                        placeholderTextColor={colors.placeholder}
                         onFocus={() => setEmpNameFocused(true)}
                         onBlur={() => setEmpNameFocused(false)}
                         style={[styles.textInput, { color: colors.ink }]}
@@ -770,7 +770,7 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
                         value={companyName}
                         onChangeText={setCompanyName}
                         placeholder="e.g. National Heavy Engineering"
-                        placeholderTextColor={colors.inkMuted}
+                        placeholderTextColor={colors.placeholder}
                         onFocus={() => setCompanyFocused(true)}
                         onBlur={() => setCompanyFocused(false)}
                         style={[styles.textInput, { color: colors.ink }]}
@@ -803,7 +803,7 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
                         value={email}
                         onChangeText={setEmail}
                         placeholder="recruiter@nationaleng.demo"
-                        placeholderTextColor={colors.inkMuted}
+                        placeholderTextColor={colors.placeholder}
                         keyboardType="email-address"
                         autoCapitalize="none"
                         onFocus={() => setEmailFocused(true)}
@@ -838,7 +838,7 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
                         value={password}
                         onChangeText={setPassword}
                         placeholder="At least 8 characters"
-                        placeholderTextColor={colors.inkMuted}
+                        placeholderTextColor={colors.placeholder}
                         secureTextEntry={!showPassword}
                         onFocus={() => setPasswordFocused(true)}
                         onBlur={() => setPasswordFocused(false)}

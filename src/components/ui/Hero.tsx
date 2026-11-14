@@ -22,7 +22,7 @@ interface HeroProps {
  * Page banner, phone version of the web Hero: the cobalt / ink / safety-yellow art
  * as a full-colour band on top, heading and content below on the grey card.
  */
-export const Hero: React.FC<HeroProps> = ({ eyebrow, title, subtitle, artHeight = 96, children, style }) => {
+export const Hero: React.FC<HeroProps> = ({ eyebrow, title, subtitle, artHeight = 80, children, style }) => {
   const colors = useUiStore((s) => s.colors);
   const theme = useUiStore((s) => s.theme);
   const dark = theme === 'dark';
@@ -62,8 +62,8 @@ const styles = StyleSheet.create({
   eyebrow: { alignSelf: 'flex-start', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4, borderWidth: StyleSheet.hairlineWidth, borderColor: 'rgba(16,24,40,0.08)' },
   eyebrowDark: { borderColor: 'rgba(255,255,255,0.10)' },
   eyebrowText: { fontSize: 12, fontWeight: '700' },
-  body: { paddingHorizontal: 16, paddingTop: 4, paddingBottom: 16 },
+  body: { paddingHorizontal: 16, paddingTop: 2, paddingBottom: 14 },
   title: { fontSize: 22, lineHeight: 28, fontWeight: '700', letterSpacing: -0.4 },
-  subtitle: { fontSize: 14, lineHeight: 21, marginTop: 6 },
-  children: { marginTop: 14 },
+  subtitle: { fontSize: 13.5, lineHeight: 19, marginTop: 4 },
+  children: { marginTop: 12 },
 });

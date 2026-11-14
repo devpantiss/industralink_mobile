@@ -19,6 +19,8 @@ export interface ThemeColors {
   ink: string;
   inkSecondary: string;
   inkMuted: string;
+  /** Hint text inside empty inputs: clearly lighter than typed text. */
+  placeholder: string;
   inkFill: string;
   onInk: string;
   successFg: string;
@@ -66,6 +68,7 @@ export const colors: { light: ThemeColors; dark: ThemeColors } = {
     ink: '#0E1525',           // Titles and primary text
     inkSecondary: '#475467',  // Subtext
     inkMuted: '#667085',      // Timestamps & metadata
+    placeholder: '#A3ACBA',
     inkFill: '#141A26',       // Dark pill button
     onInk: '#FFFFFF',
 
@@ -118,6 +121,7 @@ export const colors: { light: ThemeColors; dark: ThemeColors } = {
     ink: '#F4F6FA',
     inkSecondary: '#B6BFCC',
     inkMuted: '#8D97A8',
+    placeholder: '#636C7B',
     inkFill: '#323949',       // Dark pill buttons, banner chevrons
     onInk: '#FFFFFF',
 

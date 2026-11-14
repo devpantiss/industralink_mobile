@@ -3,6 +3,13 @@
  * Keep the same plain style: short words people use every day.
  */
 export const EXTRA_HI: Record<string, string> = {
+  'Profile {n}%': 'प्रोफ़ाइल {n}%',
+  'View document': 'दस्तावेज़ देखें',
+  'Tap “View document” to open it.': 'खोलने के लिए “दस्तावेज़ देखें” दबाएँ।',
+  'Allow location to see jobs near you.': 'पास की नौकरियाँ देखने के लिए लोकेशन की अनुमति दें।',
+  'Turn on location on your phone to see jobs near you.': 'पास की नौकरियाँ देखने के लिए फ़ोन में लोकेशन चालू करें।',
+  'Could not find your location. Try again.': 'आपकी लोकेशन नहीं मिली। फिर से कोशिश करें।',
+  'Showing jobs in {city}.': '{city} की नौकरियाँ दिखा रहे हैं।',
   'Account created successfully!': 'खाता बन गया!',
   'Add your certificate or resume': 'अपना सर्टिफिकेट या बायोडाटा जोड़ें',
   'Adding your certificates helps employers shortlist you faster.': 'सर्टिफिकेट जोड़ने से नियोक्ता आपको जल्दी चुनते हैं।',
@@ -179,6 +186,13 @@ export const EXTRA_HI: Record<string, string> = {
 };
 
 export const EXTRA_OR: Record<string, string> = {
+  'Profile {n}%': 'ପ୍ରୋଫାଇଲ୍ {n}%',
+  'View document': 'ଦଲିଲ ଦେଖନ୍ତୁ',
+  'Tap “View document” to open it.': 'ଖୋଲିବା ପାଇଁ “ଦଲିଲ ଦେଖନ୍ତୁ” ଦବାନ୍ତୁ।',
+  'Allow location to see jobs near you.': 'ପାଖ ଚାକିରି ଦେଖିବା ପାଇଁ ଲୋକେସନ୍ ଅନୁମତି ଦିଅନ୍ତୁ।',
+  'Turn on location on your phone to see jobs near you.': 'ପାଖ ଚାକିରି ଦେଖିବା ପାଇଁ ଫୋନ୍\u200cରେ ଲୋକେସନ୍ ଚାଲୁ କରନ୍ତୁ।',
+  'Could not find your location. Try again.': 'ଆପଣଙ୍କ ଲୋକେସନ୍ ମିଳିଲା ନାହିଁ। ପୁଣି ଚେଷ୍ଟା କରନ୍ତୁ।',
+  'Showing jobs in {city}.': '{city}ର ଚାକିରି ଦେଖାଉଛୁ।',
   'Account created successfully!': 'ଖାତା ତିଆରି ହେଲା!',
   'Add your certificate or resume': 'ଆପଣଙ୍କ ସାର୍ଟିଫିକେଟ୍ କିମ୍ବା ବାୟୋଡାଟା ଯୋଡ଼ନ୍ତୁ',
   'Adding your certificates helps employers shortlist you faster.': 'ସାର୍ଟିଫିକେଟ୍ ଯୋଡ଼ିଲେ ନିଯୁକ୍ତିଦାତା ଆପଣଙ୍କୁ ଶୀଘ୍ର ବାଛନ୍ତି।',

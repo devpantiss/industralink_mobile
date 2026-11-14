@@ -52,7 +52,7 @@ export const Button: React.FC<ButtonProps> = ({
     onPress();
   };
 
-  const height = size === 'sm' ? 38 : size === 'lg' ? 54 : layout.buttonHeight;
+  const height = size === 'sm' ? 38 : size === 'lg' ? 50 : layout.buttonHeight;
   const paddingHorizontal = size === 'sm' ? 14 : size === 'lg' ? 22 : 18;
   const radius = size === 'sm' ? 10 : 14;
   const filled = variant === 'primary' || variant === 'danger';

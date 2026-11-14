@@ -1,6 +1,7 @@
 import { errorText } from '../../lib/errors';
 import { Chip } from '../../components/ui/Chip';
 import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
+import { openDocument, openErrorText } from '../../lib/openDocument';
 import React, { useMemo, useState } from 'react';
 import { View, StyleSheet, RefreshControl, Linking, Pressable } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -229,7 +230,7 @@ export const VerificationsQueueScreen: React.FC = () => {
                 <Pressable
                   key={d.id}
                   disabled={!d.url}
-                  onPress={() => d.url && Linking.openURL(d.url).catch(() => {})}
+                  onPress={() => d.url && openDocument(d.url, d.mimeType, d.name).catch((e) => showToast(openErrorText(e), 'error'))}
                   style={[styles.doc, { backgroundColor: colors.surfaceMuted, borderColor: colors.border }]}
                 >
                   <FileText size={20} color={colors.primary} />
@@ -288,7 +289,7 @@ export const VerificationsQueueScreen: React.FC = () => {
               onChangeText={setReason}
               multiline
               placeholder="What should they fix?"
-              placeholderTextColor={colors.inkMuted}
+              placeholderTextColor={colors.placeholder}
               style={[styles.textarea, { borderColor: colors.border, color: colors.ink, backgroundColor: colors.surface }]}
             />
           </View>

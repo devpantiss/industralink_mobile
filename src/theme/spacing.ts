@@ -22,8 +22,8 @@ export const radii = {
 export const layout = {
   screenPadding: 16,
   cardGap: 12,
-  buttonHeight: 48,
-  inputHeight: 50,
+  buttonHeight: 46,
+  inputHeight: 48,
   factTileHeight: 28,
   minTouchTarget: 48,
 } as const;

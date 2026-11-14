@@ -19,14 +19,22 @@ import { timeAgo } from '../../lib/format';
 import { t } from '../../lib/i18n';
 import type { AppNotification, MessageThread } from '../../types';
 import { shadows } from '../../theme/shadows';
+import { useTabBarSpace } from '../../components/layout/TabBar';
 
-/** Updates and messages in one place. Opened from the bell in the top bar. */
-export const InboxScreen: React.FC = () => {
+/** Messages tab on the bottom bar. */
+export const MessagesTabScreen: React.FC = () => <InboxScreen asTab />;
+
+/**
+ * Updates and messages in one place. Opened from the bell in the top bar.
+ * With `asTab` it is the Messages tab on the bottom bar: chats only, no back button.
+ */
+export const InboxScreen: React.FC<{ asTab?: boolean }> = ({ asTab = false }) => {
   const navigation = useNavigation<any>();
   const colors = useUiStore((s) => s.colors);
   const role = useAuthStore((s) => s.role) as InboxRole;
   const qc = useQueryClient();
-  const [tab, setTab] = useState<'updates' | 'messages'>('updates');
+  const [tab, setTab] = useState<'updates' | 'messages'>(asTab ? 'messages' : 'updates');
+  const tabSpace = useTabBarSpace();
 
   const notes = useQuery({ queryKey: [...queryKeys.notifications, role], queryFn: () => inboxApi.notifications(role) });
   const threads = useQuery({ queryKey: [...queryKeys.messages.threads, role], queryFn: () => inboxApi.threads(role) });
@@ -57,9 +65,11 @@ export const InboxScreen: React.FC = () => {
     navigation.navigate('ChatThread', { threadId: th.applicationId, recipientName: th.otherName });
 
   return (
-    <Screen edges={['top', 'bottom']}>
-      <AppHeader title={t('Inbox')} showBack />
-      {role === 'admin' ? null : <SegmentedTabs
+    <Screen edges={asTab ? ['top'] : ['top', 'bottom']}>
+      {asTab ? <AppHeader /> : <AppHeader title={t('Inbox')} showBack />}
+      {asTab ? (
+        <Text style={[styles.screenTitle, { color: colors.ink }]}>{t('Messages')}</Text>
+      ) : role === 'admin' ? null : <SegmentedTabs
         style={styles.tabs}
         value={tab}
         onChange={setTab}
@@ -107,7 +117,7 @@ export const InboxScreen: React.FC = () => {
         <FlatList<MessageThread>
           data={threads.data ?? []}
           keyExtractor={(th) => th.applicationId}
-          contentContainerStyle={styles.list}
+          contentContainerStyle={[styles.list, asTab && { paddingBottom: tabSpace }]}
           refreshControl={<RefreshControl refreshing={threads.isRefetching} onRefresh={() => void threads.refetch()} tintColor={colors.primary} />}
           renderItem={({ item: th }) => (
             <Pressable
@@ -180,6 +190,7 @@ const styles = StyleSheet.create({
   noteIcon: { width: 42, height: 42, borderRadius: 14, alignItems: 'center', justifyContent: 'center' },
   flex: { flex: 1 },
   tabs: { marginHorizontal: 16, marginBottom: 8 },
+  screenTitle: { fontSize: 24, fontWeight: '800', letterSpacing: -0.4, marginHorizontal: 16, marginTop: 4, marginBottom: 12 },
   list: { paddingHorizontal: 16, paddingBottom: 24, gap: 10 },
   markAll: { alignSelf: 'flex-end', minHeight: 36, justifyContent: 'center' },
   markAllText: { fontSize: 13.5, fontWeight: '700' },

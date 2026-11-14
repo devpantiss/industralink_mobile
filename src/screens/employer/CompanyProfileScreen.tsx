@@ -1,6 +1,7 @@
 import { errorText } from '../../lib/errors';
 import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
 import { VerificationBanner } from '../../components/domain/VerificationBanner';
+import { openDocument, openErrorText, keepPickedFile } from '../../lib/openDocument';
 import React, { useState } from 'react';
 import { View, StyleSheet, Pressable, Alert } from 'react-native';
 import * as DocumentPicker from 'expo-document-picker';
@@ -86,7 +87,7 @@ export const CompanyProfileScreen: React.FC = () => {
       const a = !res.canceled ? res.assets[0] : undefined;
       if (!a) return;
       if ((a.size ?? 0) > 5 * 1024 * 1024) return showToast('This file is too big. Choose a file under 5 MB.', 'warning');
-      uploadDoc.mutate({ name: a.name, type, fileUrl: a.uri, sizeBytes: a.size, mimeType: a.mimeType });
+      uploadDoc.mutate({ name: a.name, type, fileUrl: keepPickedFile(a.uri, a.name), sizeBytes: a.size, mimeType: a.mimeType });
     } catch {
       showToast('Could not open that file. Try again.', 'error');
     }
@@ -199,7 +200,7 @@ export const CompanyProfileScreen: React.FC = () => {
               multiline
               style={styles.multiline}
               placeholder="What you make, and who you hire"
-              placeholderTextColor={colors.inkMuted}
+              placeholderTextColor={colors.placeholder}
             />
             <Input
               label="Website"
@@ -240,7 +241,7 @@ export const CompanyProfileScreen: React.FC = () => {
               label="Address"
               value={c.address ?? ''}
               placeholder="Area, road or plant gate"
-              placeholderTextColor={colors.inkMuted}
+              placeholderTextColor={colors.placeholder}
               onChangeText={(address) => set({ address: address || undefined })}
             />
             <Input
@@ -257,7 +258,7 @@ export const CompanyProfileScreen: React.FC = () => {
               multiline
               style={styles.multiline}
               placeholder={'One per line, e.g.\nSmelter Plant 2'}
-              placeholderTextColor={colors.inkMuted}
+              placeholderTextColor={colors.placeholder}
               onChangeText={(v) => set({ sites: v.split('\n') })}
             />
             <Text style={[styles.hint, { color: colors.inkMuted }]}>You can pick these when posting a job.</Text>
@@ -276,7 +277,7 @@ export const CompanyProfileScreen: React.FC = () => {
               label="Designation"
               value={c.hrDesignation ?? ''}
               placeholder="e.g. HR Manager"
-              placeholderTextColor={colors.inkMuted}
+              placeholderTextColor={colors.placeholder}
               onChangeText={(d) => set({ hrDesignation: d || undefined })}
             />
             <Input
@@ -298,12 +299,19 @@ export const CompanyProfileScreen: React.FC = () => {
             {(docsQuery.data ?? []).map((d) => (
               <View key={d.id} style={[styles.docRow, { borderColor: colors.border }]}>
                 <FileText size={20} color={colors.primary} />
-                <View style={styles.flex}>
+                <Pressable
+                  style={styles.flex}
+                  disabled={!d.url}
+                  accessibilityRole="button"
+                  accessibilityLabel={`View ${d.name}`}
+                  onPress={() => d.url && openDocument(d.url, d.mimeType, d.name).catch((e) => showToast(openErrorText(e), 'error'))}
+                >
                   <Text style={[styles.docName, { color: colors.ink }]} numberOfLines={1}>{d.name}</Text>
                   <Text style={[styles.hint, { color: colors.inkMuted }]}>
                     {COMPANY_DOC_LABEL[d.type]} · {formatDate(d.uploadedAt)}
                   </Text>
-                </View>
+                  {d.url ? <Text style={[styles.hint, { color: colors.primary, fontWeight: '700', marginTop: 2 }]}>View document</Text> : null}
+                </Pressable>
                 {!approved && <Pressable
                   onPress={() =>
                     Alert.alert('Delete this document?', d.name, [

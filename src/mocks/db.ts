@@ -47,6 +47,9 @@ import {
   SEED_AUDIT,
 } from './seed';
 
+/** A small public PDF so demo documents actually open. */
+const SAMPLE_PDF = 'https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf';
+
 const FLOW: ApplicationStage[] = ['applied', 'shortlisted', 'interview', 'offer', 'hired'];
 const DAY = 86400000;
 const NOW = Date.now();
@@ -112,6 +115,7 @@ class MockDatabase {
       type: 'iti_diploma',
       sizeBytes: 1024 * 450,
       mimeType: 'application/pdf',
+      url: SAMPLE_PDF,
       uploadedAt: '2026-11-01T10:00:00Z',
     },
     {
@@ -121,6 +125,7 @@ class MockDatabase {
       type: 'id_proof',
       sizeBytes: 1024 * 320,
       mimeType: 'application/pdf',
+      url: SAMPLE_PDF,
       uploadedAt: '2026-11-01T10:05:00Z',
     },
     {
@@ -130,6 +135,7 @@ class MockDatabase {
       type: 'resume',
       sizeBytes: 1024 * 180,
       mimeType: 'application/pdf',
+      url: SAMPLE_PDF,
       uploadedAt: '2026-11-02T12:00:00Z',
       isDefaultResume: true,
     },
@@ -805,14 +811,14 @@ class MockDatabase {
     return this.documents;
   }
 
-  async uploadDocument(doc: { name: string; type: any; fileUrl: string }): Promise<WorkerDocument> {
+  async uploadDocument(doc: { name: string; type: any; fileUrl: string; mimeType?: string; sizeBytes?: number }): Promise<WorkerDocument> {
     const newDoc: WorkerDocument = {
       id: this.uid('doc'),
       ownerId: this.workerId,
       name: doc.name,
       type: doc.type,
-      sizeBytes: 1024 * 350,
-      mimeType: 'application/pdf',
+      sizeBytes: doc.sizeBytes ?? 1024 * 350,
+      mimeType: doc.mimeType ?? 'application/pdf',
       uploadedAt: new Date().toISOString(),
       url: doc.fileUrl,
     };

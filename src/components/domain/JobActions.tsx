@@ -294,7 +294,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({ visible, onClose, jobI
                 value={details}
                 onChangeText={setDetails}
                 placeholder={t('What happened? (optional)')}
-                placeholderTextColor={colors.inkMuted}
+                placeholderTextColor={colors.placeholder}
                 multiline
                 numberOfLines={3}
                 style={[

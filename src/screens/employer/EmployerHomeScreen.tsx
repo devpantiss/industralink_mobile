@@ -375,7 +375,7 @@ const styles = StyleSheet.create({
   statTile: {
     flexGrow: 1,
     flexBasis: '45%',
-    padding: 14,
+    padding: 12,
     borderRadius: 14,
   },
   statTileHeader: {

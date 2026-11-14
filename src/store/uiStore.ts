@@ -6,7 +6,7 @@ import { setLang, type Lang } from '../lib/i18n';
 import { useToastStore, ToastMessage } from './toastStore';
 
 const PREFS_KEY = 'industrialink_ui_prefs';
-/** What the user picked. "system" follows the phone; light is the default, like the web. */
+/** What the user picked. "system" follows the phone; dark is the default. */
 export type ThemePref = 'light' | 'dark' | 'system';
 
 const resolve = (pref: ThemePref): ThemeMode =>
@@ -33,9 +33,9 @@ interface UiState {
 let appearanceListening = false;
 
 export const useUiStore = create<UiState>((set, get) => ({
-  theme: 'light',
-  themePref: 'light',
-  colors: colors.light,
+  theme: 'dark',
+  themePref: 'dark',
+  colors: colors.dark,
   toggleTheme: () => get().setThemePref(get().theme === 'light' ? 'dark' : 'light'),
   setTheme: (theme) => get().setThemePref(theme),
   setThemePref: (themePref) => {

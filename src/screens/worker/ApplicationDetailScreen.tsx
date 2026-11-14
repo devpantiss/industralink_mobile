@@ -295,7 +295,7 @@ export const ApplicationDetailScreen: React.FC = () => {
                         value={interviewNote}
                         onChangeText={setInterviewNote}
                         placeholder={t('Tell HR why, or a better time (optional)')}
-                        placeholderTextColor={colors.inkMuted}
+                        placeholderTextColor={colors.placeholder}
                         style={[styles.askingInput, { borderColor: colors.border, color: colors.ink }]}
                       />
                       <TouchableOpacity
@@ -460,7 +460,7 @@ export const ApplicationDetailScreen: React.FC = () => {
           value={declineReason}
           onChangeText={setDeclineReason}
           placeholder={t('Reason (optional), e.g. Got a job closer to home')}
-          placeholderTextColor={colors.inkMuted}
+          placeholderTextColor={colors.placeholder}
           style={[styles.askingInput, { borderColor: colors.border, color: colors.ink, marginVertical: 12 }]}
         />
       </Dialog>

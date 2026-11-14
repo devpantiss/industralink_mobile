@@ -1,6 +1,5 @@
 import React from 'react';
 import { GradientFill } from '../../components/ui/GradientFill';
-import { useTabBarSpace } from '../../components/layout/TabBar';
 import { View, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
 import { Text } from '../../components/ui/Text';
 import { useNavigation } from '@react-navigation/native';
@@ -24,7 +23,6 @@ type NavigationProp = NativeStackNavigationProp<WorkerStackParamList>;
 export const SavedJobsScreen: React.FC = () => {
   const navigation = useNavigation<NavigationProp>();
   const { colors } = useUiStore();
-  const tabSpace = useTabBarSpace();
   const qc = useQueryClient();
 
   const { data: jobs, isLoading, isRefetching, refetch } = useQuery({
@@ -44,11 +42,11 @@ export const SavedJobsScreen: React.FC = () => {
   );
 
   return (
-    <Screen edges={['top']}>
-      <AppHeader />
+    <Screen edges={['top', 'bottom']}>
+      <AppHeader showBack />
 
       <ScrollView
-        contentContainerStyle={[styles.scrollContent, { paddingBottom: tabSpace }]}
+        contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl

@@ -109,7 +109,7 @@ export const CandidatesScreen: React.FC = () => {
             value={q}
             onChangeText={setQ}
             placeholder={t('Name, city, skill, licence…')}
-            placeholderTextColor={colors.inkMuted}
+            placeholderTextColor={colors.placeholder}
             style={[styles.searchInput, { color: colors.ink }]}
           />
           {q.length > 0 && (

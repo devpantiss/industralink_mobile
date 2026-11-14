@@ -6,6 +6,8 @@ import { MutationCache, QueryClient, QueryClientProvider } from '@tanstack/react
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import { RootNavigator } from './src/navigation/RootNavigator';
+import { AnimatedSplash } from './src/components/layout/AnimatedSplash';
+import { useAuthStore } from './src/store/authStore';
 import { ErrorBoundary } from './src/components/layout/ErrorBoundary';
 import { fontFamilies } from './src/theme/fonts';
 import { USE_MOCKS } from './src/api/client';
@@ -29,12 +31,12 @@ const queryClient = new QueryClient({
 
 export default function App() {
   const [fontsLoaded, fontError] = useFonts(fontFamilies);
+  const authLoading = useAuthStore((s) => s.isLoading);
+  const [showIntro, setShowIntro] = React.useState(true);
 
-  React.useEffect(() => {
-    if (fontsLoaded || fontError) SplashScreen.hideAsync().catch(() => {});
-  }, [fontsLoaded, fontError]);
-
-  // Keep the splash screen up until the font is ready (falls back to the system font on error).
+  // Keep the native splash up until the font is ready (falls back to the system font on error).
+  // Then the animated intro takes over (it hides the native splash once it is drawn) and plays
+  // while the app loads underneath.
   if (!fontsLoaded && !fontError) return null;
 
   return (
@@ -45,6 +47,13 @@ export default function App() {
             <RootNavigator />
           </QueryClientProvider>
         </ErrorBoundary>
+        {showIntro && (
+          <AnimatedSplash
+            ready={!authLoading}
+            onShown={() => SplashScreen.hideAsync().catch(() => {})}
+            onDone={() => setShowIntro(false)}
+          />
+        )}
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

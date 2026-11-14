@@ -2,7 +2,10 @@ import { LegalScreen } from '../screens/shared/LegalScreen';
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { Home, Search, FileCheck2, Bookmark, User } from '../components/ui/icons';
+import { Home, Search, FileCheck2, MessageCircle, User } from '../components/ui/icons';
+import { useQuery } from '@tanstack/react-query';
+import { inboxApi } from '../api/inboxApi';
+import { queryKeys } from '../api/keys';
 import { WorkerTabParamList, WorkerStackParamList } from './types';
 import { WorkerHomeScreen } from '../screens/worker/WorkerHomeScreen';
 import { FindJobsScreen } from '../screens/worker/FindJobsScreen';
@@ -14,7 +17,7 @@ import { ApplicationDetailScreen } from '../screens/worker/ApplicationDetailScre
 import { CompaniesScreen } from '../screens/worker/CompaniesScreen';
 import { CompanyDetailScreen } from '../screens/worker/CompanyDetailScreen';
 import { HelpScreen } from '../screens/shared/HelpScreen';
-import { InboxScreen } from '../screens/shared/InboxScreen';
+import { InboxScreen, MessagesTabScreen } from '../screens/shared/InboxScreen';
 import { ChatScreen } from '../screens/shared/ChatScreen';
 import { SettingsScreen } from '../screens/shared/SettingsScreen';
 import { TabBar } from '../components/layout/TabBar';
@@ -23,6 +26,9 @@ const Tab = createBottomTabNavigator<WorkerTabParamList>();
 const Stack = createNativeStackNavigator<WorkerStackParamList>();
 
 const WorkerTabs: React.FC = () => {
+  // Unread chat messages show as a badge on the Messages tab.
+  const threads = useQuery({ queryKey: [...queryKeys.messages.threads, 'worker'], queryFn: () => inboxApi.threads('worker') });
+  const unread = (threads.data ?? []).reduce((sum, th) => sum + th.unread, 0);
 
   return (
     <Tab.Navigator
@@ -54,11 +60,12 @@ const WorkerTabs: React.FC = () => {
         }}
       />
       <Tab.Screen
-        name="SavedJobs"
-        component={SavedJobsScreen}
+        name="Messages"
+        component={MessagesTabScreen}
         options={{
-          tabBarLabel: 'Saved',
-          tabBarIcon: ({ color, focused }) => <Bookmark size={22} color={color} weight={focused ? 'fill' : 'regular'} />,
+          tabBarLabel: 'Messages',
+          tabBarBadge: unread || undefined,
+          tabBarIcon: ({ color, focused }) => <MessageCircle size={22} color={color} weight={focused ? 'fill' : 'regular'} />,
         }}
       />
       <Tab.Screen
@@ -79,6 +86,7 @@ export const WorkerNavigator: React.FC = () => {
       <Stack.Screen name="WorkerTabs" component={WorkerTabs} />
       <Stack.Screen name="JobDetail" component={JobDetailScreen} />
       <Stack.Screen name="ApplicationDetail" component={ApplicationDetailScreen} />
+      <Stack.Screen name="SavedJobs" component={SavedJobsScreen} />
       <Stack.Screen name="Companies" component={CompaniesScreen} />
       <Stack.Screen name="CompanyDetail" component={CompanyDetailScreen} />
       <Stack.Screen name="ChatThread" component={ChatScreen} />

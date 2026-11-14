@@ -25,6 +25,7 @@ import {
   Briefcase,
   Users,
   UserSearch,
+  MessageCircle,
   PlusCircle,
   Building,
   Building2,
@@ -41,7 +42,8 @@ import { PostJobWizardScreen } from '../screens/employer/PostJobWizardScreen';
 import { CandidateDossierScreen } from '../screens/employer/CandidateDossierScreen';
 import { JobApplicantsScreen } from '../screens/employer/JobApplicantsScreen';
 import { HelpScreen } from '../screens/shared/HelpScreen';
-import { InboxScreen } from '../screens/shared/InboxScreen';
+import { InboxScreen, MessagesTabScreen } from '../screens/shared/InboxScreen';
+import { inboxApi } from '../api/inboxApi';
 import { ChatScreen } from '../screens/shared/ChatScreen';
 import { SettingsScreen } from '../screens/shared/SettingsScreen';
 import { CompanyProfileScreen } from '../screens/employer/CompanyProfileScreen';
@@ -60,6 +62,8 @@ const Stack = createNativeStackNavigator<EmployerStackParamList>();
 const EmployerTabs: React.FC = () => {
   // New applicants show as a badge on the Candidates tab.
   const summary = useQuery({ queryKey: queryKeys.employer.summary, queryFn: () => employerApi.getSummary() });
+  const threads = useQuery({ queryKey: [...queryKeys.messages.threads, 'employer'], queryFn: () => inboxApi.threads('employer') });
+  const unread = (threads.data ?? []).reduce((sum, th) => sum + th.unread, 0);
 
   return (
     <Tab.Navigator
@@ -89,6 +93,15 @@ const EmployerTabs: React.FC = () => {
           tabBarLabel: 'Candidates',
           tabBarBadge: summary.data?.newApplicants || undefined,
           tabBarIcon: ({ color, focused }) => <Users size={22} color={color} weight={focused ? 'fill' : 'regular'} />,
+        }}
+      />
+      <Tab.Screen
+        name="Messages"
+        component={MessagesTabScreen}
+        options={{
+          tabBarLabel: 'Messages',
+          tabBarBadge: unread || undefined,
+          tabBarIcon: ({ color, focused }) => <MessageCircle size={22} color={color} weight={focused ? 'fill' : 'regular'} />,
         }}
       />
       <Tab.Screen

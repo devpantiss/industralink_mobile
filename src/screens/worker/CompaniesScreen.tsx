@@ -53,7 +53,7 @@ export const CompaniesScreen: React.FC = () => {
                 value={q}
                 onChangeText={setQ}
                 placeholder={t('Company name or city')}
-                placeholderTextColor={colors.inkMuted}
+                placeholderTextColor={colors.placeholder}
                 style={[styles.searchInput, { color: colors.ink }]}
                 returnKeyType="search"
               />

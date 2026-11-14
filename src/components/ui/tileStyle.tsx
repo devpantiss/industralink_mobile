@@ -2,7 +2,6 @@ import React from 'react';
 import { View, StyleSheet, ViewStyle } from 'react-native';
 import { useUiStore } from '../../store/uiStore';
 import type { TileColors } from '../../theme/colors';
-import { shadows } from '../../theme/shadows';
 
 export interface TileStyle {
   /** Background (and border on dark) for the tile itself. */
@@ -15,30 +14,32 @@ export interface TileStyle {
 }
 
 /**
- * Stat tile look: a card with a tinted icon chip, a bold ink number and a coloured label.
- * Large tinted fills read as washed-out on light and muddy on dark, so colour is kept to the
- * chip and the label. Light cards get the soft card shadow; dark relies on the lighter surface.
+ * Stat tile look: the tile is filled with its colour (pastel on light, deep tint on dark), the
+ * number and label use the tile's ink, and the icon sits in a small surface-coloured chip.
  */
 export function useTileStyle(tone: TileColors): TileStyle {
-  const colors = useUiStore((s) => s.colors);
   const dark = useUiStore((s) => s.theme) === 'dark';
   return {
-    box: { backgroundColor: colors.surface, borderColor: colors.border, borderWidth: 1, ...(dark ? null : shadows.card) },
-    value: colors.ink,
+    box: { backgroundColor: tone.bg, borderWidth: 0 },
+    value: tone.text,
     label: tone.text,
     dark,
   };
 }
 
-/** Wraps a tile icon in a tinted rounded square; icons default to the two-tone (duotone) weight. */
-export const TileIcon: React.FC<{ tone: TileColors; children: React.ReactNode }> = ({ tone, children }) => (
-  <View style={[styles.chip, { backgroundColor: tone.bg }]}>
-    {React.isValidElement<{ weight?: string; duotoneOpacity?: number }>(children)
-      ? React.cloneElement(children, { weight: children.props.weight ?? 'duotone', duotoneOpacity: 0.3 })
-      : children}
-  </View>
-);
+/** Icon chip inside a coloured tile; icons default to the two-tone (duotone) weight. */
+export const TileIcon: React.FC<{ tone: TileColors; children: React.ReactNode }> = ({ tone, children }) => {
+  const colors = useUiStore((s) => s.colors);
+  const dark = useUiStore((s) => s.theme) === 'dark';
+  return (
+    <View style={[styles.chip, { backgroundColor: dark ? 'rgba(255,255,255,0.08)' : colors.surface }]}>
+      {React.isValidElement<{ weight?: string; duotoneOpacity?: number; color?: string }>(children)
+        ? React.cloneElement(children, { weight: children.props.weight ?? 'duotone', duotoneOpacity: 0.3, color: tone.text })
+        : children}
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
-  chip: { width: 34, height: 34, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  chip: { width: 30, height: 30, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
 });

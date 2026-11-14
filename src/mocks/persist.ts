@@ -5,7 +5,7 @@ import { mockDb } from './db';
  * Keeps demo data across app reloads: what you apply to, shortlist or approve stays done.
  * Bump VERSION when the seed data changes so old saved data is thrown away.
  */
-const VERSION = 2;
+const VERSION = 3; // 3: demo documents now have a file link
 const file = () => new File(Paths.document, 'industrialink-demo-data.json');
 
 export function loadDemoData() {

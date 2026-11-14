@@ -222,7 +222,7 @@ export const JobApplicantsScreen: React.FC = () => {
               value={q}
               onChangeText={setQ}
               placeholder="Search name, city, licence"
-              placeholderTextColor={colors.inkMuted}
+              placeholderTextColor={colors.placeholder}
               style={[styles.searchInput, { color: colors.ink }]}
               returnKeyType="search"
             />

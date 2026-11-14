@@ -12,13 +12,14 @@ export type WorkerTabParamList = {
   WorkerHome: undefined;
   FindJobs: undefined;
   Applications: undefined;
-  SavedJobs: undefined;
+  Messages: undefined;
   WorkerProfile: undefined;
 };
 
 export type WorkerStackParamList = {
   WorkerTabs: NavigatorScreenParams<WorkerTabParamList>;
   JobDetail: { jobId: string };
+  SavedJobs: undefined;
   Companies: undefined;
   CompanyDetail: { companyId: string };
   ApplicationDetail: { applicationId: string };
@@ -33,6 +34,7 @@ export type EmployerTabParamList = {
   EmployerDashboard: undefined;
   EmployerJobs: undefined;
   Candidates: undefined;
+  Messages: undefined;
   FindWorkers: undefined;
 };
 

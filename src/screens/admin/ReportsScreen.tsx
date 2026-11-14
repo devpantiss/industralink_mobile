@@ -219,7 +219,7 @@ function JobReports({ status }: { status: string }) {
           onChangeText={setNote}
           multiline
           placeholder={target ? REPORT_REASON_LABEL[target.reason] : ''}
-          placeholderTextColor={colors.inkMuted}
+          placeholderTextColor={colors.placeholder}
           style={[styles.textarea, { borderColor: colors.border, color: colors.ink, backgroundColor: colors.surface }]}
         />
       </Sheet>

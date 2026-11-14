@@ -80,7 +80,7 @@ export const AdminJobsScreen: React.FC = () => {
             value={q}
             onChangeText={setQ}
             placeholder="Job title, company, city"
-            placeholderTextColor={colors.inkMuted}
+            placeholderTextColor={colors.placeholder}
             style={[styles.searchInput, { color: colors.ink }]}
             returnKeyType="search"
           />
@@ -197,7 +197,7 @@ export const AdminJobsScreen: React.FC = () => {
           onChangeText={setNote}
           multiline
           placeholder="What did you find?"
-          placeholderTextColor={colors.inkMuted}
+          placeholderTextColor={colors.placeholder}
           style={[styles.textarea, { borderColor: colors.border, color: colors.ink, backgroundColor: colors.surface }]}
         />
       </Sheet>

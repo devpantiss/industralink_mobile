@@ -18,7 +18,7 @@ import { Text } from '../../components/ui/Text';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
-import { BadgeCheck, Camera, FileText, Upload, Star, LogOut, Plus, Pencil, Trash2, Image as ImageIcon } from '../../components/ui/icons';
+import { Bookmark, Building2, LifeBuoy, Settings as SettingsIcon, BadgeCheck, Camera, FileText, Upload, Star, LogOut, Plus, Pencil, Trash2, Image as ImageIcon } from '../../components/ui/icons';
 import { SegmentedTabs } from '../../components/ui/SegmentedTabs';
 import { Screen } from '../../components/layout/Screen';
 import { AppHeader } from '../../components/layout/AppHeader';
@@ -41,6 +41,9 @@ import { formatDate, formatNumber, formatPhone } from '../../lib/format';
 import { t } from '../../lib/i18n';
 import type { DocType, WorkerDocument } from '../../types';
 import { shadows } from '../../theme/shadows';
+import { keepPickedFile } from '../../lib/openDocument';
+import { QuickLinks } from '../../components/domain/QuickLinks';
+import { useNavigation } from '@react-navigation/native';
 
 type Tab = 'profile' | 'documents';
 
@@ -48,6 +51,7 @@ type Tab = 'profile' | 'documents';
 export const WorkerProfileScreen: React.FC = () => {
   const { colors, theme, showToast } = useUiStore();
   const tabSpace = useTabBarSpace();
+  const navigation = useNavigation<any>();
   const { logout } = useAuthStore();
   const qc = useQueryClient();
   const [tab, setTab] = useState<Tab>('profile');
@@ -82,7 +86,7 @@ export const WorkerProfileScreen: React.FC = () => {
 
   // Document Upload Mutation
   const uploadDocMutation = useMutation({
-    mutationFn: (doc: { name: string; type: DocType; fileUrl: string }) =>
+    mutationFn: (doc: { name: string; type: DocType; fileUrl: string; mimeType?: string; sizeBytes?: number }) =>
       workerApi.uploadDocument(doc),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.worker.all });
@@ -154,7 +158,9 @@ export const WorkerProfileScreen: React.FC = () => {
         uploadDocMutation.mutate({
           name: res.assets[0].name,
           type,
-          fileUrl: res.assets[0].uri,
+          fileUrl: keepPickedFile(res.assets[0].uri, res.assets[0].name),
+          mimeType: res.assets[0].mimeType,
+          sizeBytes: res.assets[0].size,
         });
       }
     } catch {
@@ -242,6 +248,17 @@ export const WorkerProfileScreen: React.FC = () => {
             </View>
           )}
         </View>
+
+        {/* Screens that are not on the bottom bar. */}
+        <QuickLinks
+          style={{ marginTop: 14 }}
+          items={[
+            { label: t('Saved'), icon: Bookmark, tone: 'blue', onPress: () => navigation.navigate('SavedJobs') },
+            { label: t('Companies'), icon: Building2, tone: 'purple', onPress: () => navigation.navigate('Companies') },
+            { label: t('Help'), icon: LifeBuoy, tone: 'green', onPress: () => navigation.navigate('Help') },
+            { label: t('Settings'), icon: SettingsIcon, tone: 'orange', onPress: () => navigation.navigate('Settings') },
+          ]}
+        />
 
         <SegmentedTabs
           style={styles.tabSwitcher}
@@ -639,7 +656,7 @@ const styles = StyleSheet.create({
     fontSize: 11.5,
     marginTop: 2,
   },
-  tabSwitcher: {},
+  tabSwitcher: { marginTop: 16 },
   tabButton: {
     flex: 1,
     height: 44,

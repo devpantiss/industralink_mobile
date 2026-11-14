@@ -468,7 +468,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
                           onFocus={() => setPhoneFocused(true)}
                           onBlur={() => setPhoneFocused(false)}
                           placeholder="98765 43210"
-                          placeholderTextColor={colors.inkMuted}
+                          placeholderTextColor={colors.placeholder}
                           keyboardType="phone-pad"
                           maxLength={10}
                           style={[styles.phoneTextInput, { color: colors.ink }]}
@@ -641,7 +641,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
                       onFocus={() => setEmailFocused(true)}
                       onBlur={() => setEmailFocused(false)}
                       placeholder="name@company.com"
-                      placeholderTextColor={colors.inkMuted}
+                      placeholderTextColor={colors.placeholder}
                       autoCapitalize="none"
                       keyboardType="email-address"
                       style={[styles.standardInput, { color: colors.ink }]}
@@ -668,7 +668,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
                       onFocus={() => setPasswordFocused(true)}
                       onBlur={() => setPasswordFocused(false)}
                       placeholder="Enter password"
-                      placeholderTextColor={colors.inkMuted}
+                      placeholderTextColor={colors.placeholder}
                       secureTextEntry={!showPassword}
                       style={[styles.standardInput, { color: colors.ink }]}
                     />

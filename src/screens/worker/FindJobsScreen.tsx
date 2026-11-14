@@ -16,6 +16,7 @@ import {
 } from 'react-native';
 import { Text, TextInput } from '../../components/ui/Text';
 import { useNavigation } from '@react-navigation/native';
+import { getCurrentCity } from '../../lib/location';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -87,6 +88,33 @@ export const FindJobsScreen: React.FC = () => {
     queryFn: () => workerApi.getProfile(),
   });
   const homeCity = profileQuery.data?.location?.city;
+  const showToast = useUiStore((st) => st.showToast);
+  const [locating, setLocating] = useState(false);
+  const [nearCity, setNearCity] = useState<string | null>(null);
+
+  // "Near me": the phone's current city; if location is off or refused, the profile city.
+  const useMyLocation = async () => {
+    setLocating(true);
+    const res = await getCurrentCity();
+    setLocating(false);
+    if (res.ok) {
+      setNearCity(res.city);
+      setCity(res.city);
+      return;
+    }
+    const msg =
+      res.reason === 'denied'
+        ? t('Allow location to see jobs near you.')
+        : res.reason === 'off'
+          ? t('Turn on location on your phone to see jobs near you.')
+          : t('Could not find your location. Try again.');
+    if (homeCity) {
+      setCity(homeCity);
+      showToast(`${msg} ${t('Showing jobs in {city}.', { city: homeCity })}`, 'warning');
+    } else {
+      showToast(msg, 'warning');
+    }
+  };
 
   const currentFilters: JobSearchParams = useMemo(
     () => ({
@@ -219,7 +247,7 @@ export const FindJobsScreen: React.FC = () => {
               value={q}
               onChangeText={setQ}
               placeholder={t('Job title, trade or company')}
-              placeholderTextColor={colors.inkMuted}
+              placeholderTextColor={colors.placeholder}
               style={[styles.searchInput, { color: colors.ink }]}
             />
           </View>
@@ -233,15 +261,25 @@ export const FindJobsScreen: React.FC = () => {
               value={city}
               onChangeText={setCity}
               placeholder={t('City, district or state')}
-              placeholderTextColor={colors.inkMuted}
+              placeholderTextColor={colors.placeholder}
               style={[styles.searchInput, { color: colors.ink }]}
             />
-            {homeCity && city !== homeCity && (
+            {(!city || city !== nearCity) && (
               <TouchableOpacity
-                onPress={() => setCity(homeCity)}
+                onPress={useMyLocation}
+                disabled={locating}
+                accessibilityRole="button"
+                accessibilityLabel={t('Near me')}
                 style={[styles.nearMeBtn, { backgroundColor: colors.primarySoft }]}
               >
-                <Text style={[styles.nearMeBtnText, { color: colors.primary }]}>{t('Near me')}</Text>
+                {locating ? (
+                  <ActivityIndicator size="small" color={colors.primary} />
+                ) : (
+                  <>
+                    <MapPin size={13} color={colors.primary} weight="fill" />
+                    <Text style={[styles.nearMeBtnText, { color: colors.primary }]}>{t('Near me')}</Text>
+                  </>
+                )}
               </TouchableOpacity>
             )}
           </View>
@@ -685,6 +723,12 @@ const styles = StyleSheet.create({
     marginHorizontal: 12,
   },
   nearMeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    minWidth: 84,
+    minHeight: 28,
+    justifyContent: 'center',
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 999,

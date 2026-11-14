@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Image, StyleSheet, Linking, ActivityIndicator } from 'react-native';
+import { View, Image, StyleSheet, ActivityIndicator } from 'react-native';
+import { openDocument, openErrorText } from '../../lib/openDocument';
 import { FileText } from '../ui/icons';
 import { Sheet } from '../ui/Sheet';
 import { Button } from '../ui/Button';
@@ -34,12 +35,16 @@ export const DocumentViewer: React.FC<Props> = ({ doc, onClose, audience, visibi
   const [failed, setFailed] = useState(false);
   const isImage = !!doc?.mimeType?.startsWith('image/') && !!doc.url;
 
+  const [opening, setOpening] = useState(false);
   const open = async () => {
     try {
       if (!doc?.url) throw new Error('no url');
-      await Linking.openURL(doc.url);
-    } catch {
-      showToast(t('This file cannot be opened right now.'), 'error');
+      setOpening(true);
+      await openDocument(doc.url, doc.mimeType, doc.name);
+    } catch (e) {
+      showToast(t(openErrorText(e)), 'error');
+    } finally {
+      setOpening(false);
     }
   };
 
@@ -70,7 +75,7 @@ export const DocumentViewer: React.FC<Props> = ({ doc, onClose, audience, visibi
             <View style={[styles.preview, styles.center, { backgroundColor: colors.surfaceMuted }]}>
               <FileText size={40} color={colors.inkMuted} />
               <Text style={[styles.hint, { color: colors.inkSecondary }]}>
-                {doc.url ? t('This file opens in your phone’s viewer.') : t('No preview available for this file.')}
+                {doc.url ? t('Tap “View document” to open it.') : t('No preview available for this file.')}
               </Text>
             </View>
           )}
@@ -85,9 +90,10 @@ export const DocumentViewer: React.FC<Props> = ({ doc, onClose, audience, visibi
 
           {doc.url ? (
             <Button
-              label={isImage ? t('Open full size') : t('Open file')}
-              variant="outline"
+              label={isImage ? t('Open full size') : t('View document')}
+              variant={isImage ? 'outline' : 'primary'}
               onPress={open}
+              loading={opening}
               style={{ marginTop: 16 }}
             />
           ) : null}

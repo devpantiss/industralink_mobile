@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 20,
     borderWidth: 1,
-    padding: 16,
+    padding: 14,
     marginBottom: spacing.md,
     ...shadows.card,
   },
