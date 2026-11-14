@@ -1,4 +1,6 @@
 import { LegalScreen } from '../screens/shared/LegalScreen';
+import { LinearGradient } from 'expo-linear-gradient';
+import { gradients } from '../theme/effects';
 import React from 'react';
 import {
   View,
@@ -102,15 +104,17 @@ const EmployerTabs: React.FC = () => {
 };
 
 const CustomDrawer: React.FC<DrawerContentComponentProps> = (props) => {
-  const { colors } = useUiStore();
+  const { colors, theme } = useUiStore();
   const { user, logout } = useAuthStore();
   const insets = useSafeAreaInsets();
 
   return (
     <View style={[styles.drawerContainer, { backgroundColor: colors.surface }]}>
       <View style={[styles.drawerHeader, { borderBottomColor: colors.border, paddingTop: insets.top + spacing.lg }]}>
-        <View style={[styles.companyAvatar, { backgroundColor: colors.primarySoft }]}>
-          <Building size={22} color={colors.primary} />
+        <LinearGradient colors={gradients[theme].night} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
+        <View style={styles.companyAvatar}>
+          <LinearGradient colors={gradients[theme].brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
+          <Building size={22} color="#FFFFFF" weight="fill" />
         </View>
         <Text style={[typography.h3, { color: colors.ink, fontWeight: '700' }]}>
           {user?.companyName || 'Your company'}
@@ -157,6 +161,7 @@ const EmployerDrawer: React.FC = () => {
         drawerActiveTintColor: colors.primary,
         drawerInactiveTintColor: colors.ink,
         drawerActiveBackgroundColor: colors.primarySoft,
+        drawerItemStyle: { borderRadius: 14, marginHorizontal: 10 },
         drawerLabelStyle: {
           fontSize: 14,
           fontWeight: '600',
@@ -168,7 +173,7 @@ const EmployerDrawer: React.FC = () => {
         component={EmployerTabs}
         options={{
           drawerLabel: 'Overview',
-          drawerIcon: ({ color, size }) => <LayoutDashboard size={size - 2} color={color} />,
+          drawerIcon: ({ color, size, focused }) => <LayoutDashboard size={size - 2} color={color} weight={focused ? 'fill' : 'regular'} />,
         }}
       />
       <Drawer.Screen
@@ -176,7 +181,7 @@ const EmployerDrawer: React.FC = () => {
         component={CompanyProfileScreen}
         options={{
           drawerLabel: 'Company profile',
-          drawerIcon: ({ color, size }) => <Building2 size={size - 2} color={color} />,
+          drawerIcon: ({ color, size, focused }) => <Building2 size={size - 2} color={color} weight={focused ? 'fill' : 'regular'} />,
         }}
       />
       <Drawer.Screen
@@ -184,7 +189,7 @@ const EmployerDrawer: React.FC = () => {
         component={AnalyticsScreen}
         options={{
           drawerLabel: 'Analytics',
-          drawerIcon: ({ color, size }) => <BarChart3 size={size - 2} color={color} />,
+          drawerIcon: ({ color, size, focused }) => <BarChart3 size={size - 2} color={color} weight={focused ? 'fill' : 'regular'} />,
         }}
       />
       <Drawer.Screen
@@ -192,7 +197,7 @@ const EmployerDrawer: React.FC = () => {
         component={SettingsScreen}
         options={{
           drawerLabel: 'App Settings',
-          drawerIcon: ({ color, size }) => <Settings size={size - 2} color={color} />,
+          drawerIcon: ({ color, size, focused }) => <Settings size={size - 2} color={color} weight={focused ? 'fill' : 'regular'} />,
         }}
       />
     </Drawer.Navigator>
@@ -221,6 +226,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   drawerHeader: {
+    overflow: 'hidden',
     padding: spacing.lg,
     paddingTop: spacing.xl + 20,
     borderBottomWidth: 1,
@@ -228,10 +234,11 @@ const styles = StyleSheet.create({
   companyAvatar: {
     width: 44,
     height: 44,
-    borderRadius: 10,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.sm,
+    overflow: 'hidden',
   },
   drawerItems: {
     paddingTop: spacing.sm,

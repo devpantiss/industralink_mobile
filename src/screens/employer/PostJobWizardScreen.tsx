@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
+import { Toggle } from '../../components/ui/Toggle';
+import { HeaderButton } from '../../components/layout/AppHeader';
 import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
-import { View, StyleSheet, Pressable, Switch, Alert } from 'react-native';
+import { View, StyleSheet, Pressable, Alert } from 'react-native';
 import { Text } from '../../components/ui/Text';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Check, ChevronLeft, ArrowRight, Sparkles, AlertTriangle } from '../../components/ui/icons';
+import { Check, ArrowLeft, ArrowRight, Sparkles, AlertTriangle } from '../../components/ui/icons';
 import * as Haptics from 'expo-haptics';
 import { Screen } from '../../components/layout/Screen';
 import { JobCard } from '../../components/domain/JobCard';
@@ -424,10 +426,10 @@ export const PostJobWizardScreen: React.FC = () => {
 
   return (
     <Screen edges={['top', 'bottom']}>
-      <View style={[styles.topBar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-        <Pressable onPress={back} accessibilityRole="button" accessibilityLabel={t('Back')} style={styles.backBtn} hitSlop={8}>
-          <ChevronLeft size={24} color={colors.ink} />
-        </Pressable>
+      <View style={[styles.topBar, { backgroundColor: colors.canvas, borderBottomColor: colors.border }]}>
+        <HeaderButton label={t('Back')} onPress={back}>
+          <ArrowLeft size={20} color={colors.ink} weight="bold" />
+        </HeaderButton>
         <Text style={[styles.topBarTitle, { color: colors.ink }]}>{editing ? t('Edit job') : t('Post a job')}</Text>
         <Text style={{ color: colors.inkMuted, fontSize: 13 }}>
           {step + 1} / {STEPS.length}
@@ -672,7 +674,7 @@ export const PostJobWizardScreen: React.FC = () => {
                 <Text style={{ color: colors.ink, fontSize: 15, fontWeight: '600' }}>{t('Allow calls from workers')}</Text>
                 <Text style={{ color: colors.inkSecondary, fontSize: 13, marginTop: 2 }}>{t('Shortlisted workers can call this number.')}</Text>
               </View>
-              <Switch value={f.allowCalls} onValueChange={(allowCalls) => set({ allowCalls })} />
+              <Toggle value={f.allowCalls} onValueChange={(allowCalls) => set({ allowCalls })} />
             </View>
             {f.allowCalls && (
               <Input label={t('Best time to call')} value={f.callHours} onChangeText={(callHours) => set({ callHours })} placeholder={t('e.g. 10 AM to 5 PM')} />
@@ -801,7 +803,6 @@ const Chips: React.FC<{
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   topBar: { height: 52, flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, borderBottomWidth: StyleSheet.hairlineWidth, gap: 8 },
-  backBtn: { padding: 6 },
   topBarTitle: { fontSize: 17, fontWeight: '700', flex: 1 },
   stepperWrap: { flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 10, paddingHorizontal: 4, borderBottomWidth: StyleSheet.hairlineWidth },
   stepHeaderItem: { alignItems: 'center', gap: 4, flex: 1 },

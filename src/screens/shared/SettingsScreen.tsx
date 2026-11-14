@@ -1,7 +1,8 @@
 import { errorText } from '../../lib/errors';
+import { Toggle } from '../../components/ui/Toggle';
 import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
 import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Switch, Alert } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Alert } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Text } from '../../components/ui/Text';
 import { Moon, Sun, Globe, LogOut, Check, Smartphone, Lock, Trash2, LifeBuoy, ChevronRight } from '../../components/ui/icons';
@@ -336,7 +337,7 @@ const SettingSwitch: React.FC<{ label: string; hint?: string; value: boolean; on
         <Text style={[typography.body, { color: colors.ink, fontWeight: '600' }]}>{label}</Text>
         {hint ? <Text style={[typography.caption, { color: colors.inkSecondary, marginTop: 2 }]}>{hint}</Text> : null}
       </View>
-      <Switch
+      <Toggle
         value={value}
         onValueChange={onChange}
         accessibilityLabel={label}

@@ -1,4 +1,5 @@
 import React from 'react';
+import { HeaderButton } from '../../components/layout/AppHeader';
 import {
   View,
   StyleSheet,
@@ -13,7 +14,7 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   Briefcase,
-  ChevronLeft,
+  ArrowLeft,
   Globe,
   MapPin,
   ShieldCheck,
@@ -80,14 +81,10 @@ export const CompanyDetailScreen: React.FC = () => {
 
   return (
     <Screen edges={['top', 'bottom']}>
-      <View style={[styles.topBar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={[styles.backBtn, { backgroundColor: colors.surfaceMuted }]}
-          accessibilityLabel={t('Back')}
-        >
-          <ChevronLeft size={22} color={colors.ink} />
-        </TouchableOpacity>
+      <View style={[styles.topBar, { backgroundColor: colors.canvas }]}>
+        <HeaderButton label={t('Back')} onPress={() => navigation.goBack()}>
+          <ArrowLeft size={20} color={colors.ink} weight="bold" />
+        </HeaderButton>
         <Text style={[styles.topBarTitle, { color: colors.ink }]} numberOfLines={1}>
           {c.name}
         </Text>
@@ -225,16 +222,8 @@ const styles = StyleSheet.create({
     height: 56,
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    gap: 10,
-  },
-  backBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
+    paddingHorizontal: 16,
+    gap: 12,
   },
   topBarTitle: {
     fontSize: 16,

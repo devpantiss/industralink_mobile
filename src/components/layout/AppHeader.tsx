@@ -109,7 +109,8 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ title, showBack = false, r
   );
 };
 
-const RoundButton: React.FC<{ label: string; onPress: () => void; children: React.ReactNode }> = ({
+/** Glass round header button. Exported so screens with their own top bar match the app header. */
+export const RoundButton: React.FC<{ label: string; onPress: () => void; children: React.ReactNode }> = ({
   label,
   onPress,
   children,
@@ -152,3 +153,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 });
+
+export { RoundButton as HeaderButton };

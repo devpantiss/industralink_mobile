@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { HeaderButton } from '../../components/layout/AppHeader';
 import { View, StyleSheet, TouchableOpacity, Linking, Share, ActivityIndicator } from 'react-native';
 import { Text } from '../../components/ui/Text';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
@@ -16,7 +17,7 @@ import {
   Flag,
   CheckCircle2,
   ArrowRight,
-  ChevronLeft,
+  ArrowLeft,
   MessageCircle,
 } from '../../components/ui/icons';
 import * as Haptics from 'expo-haptics';
@@ -132,35 +133,19 @@ export const JobDetailScreen: React.FC = () => {
       {/* Top Navigation Bar */}
       <View style={[styles.topBar, { backgroundColor: colors.canvas }]}>
         <Animated.View style={[styles.topBarLine, { backgroundColor: colors.border }, barLineStyle]} />
-        <TouchableOpacity
-          onPress={() => navigation.goBack()}
-          style={[styles.navBackBtn, { backgroundColor: colors.surfaceMuted }]}
-          accessibilityLabel={t('Back')}
-        >
-          <ChevronLeft size={22} color={colors.ink} />
-        </TouchableOpacity>
+        <HeaderButton label={t('Back')} onPress={() => navigation.goBack()}>
+          <ArrowLeft size={20} color={colors.ink} weight="bold" />
+        </HeaderButton>
         <Animated.Text style={[styles.navBarTitle, { color: colors.ink }, barTitleStyle]} numberOfLines={1}>
           {job.title}
         </Animated.Text>
         <View style={styles.navActions}>
-          <TouchableOpacity
-            onPress={handleShare}
-            style={[styles.navActionBtn, { backgroundColor: colors.surfaceMuted }]}
-            accessibilityLabel={t('Share job')}
-          >
-            <Share2 size={18} color={colors.inkSecondary} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={handleToggleSave}
-            style={[styles.navActionBtn, { backgroundColor: colors.surfaceMuted }]}
-            accessibilityLabel={job.saved ? t('Remove from saved') : t('Save job')}
-          >
-            <Bookmark
-              size={18}
-              color={job.saved ? colors.primary : colors.inkSecondary}
-              fill={job.saved ? colors.primary : 'transparent'}
-            />
-          </TouchableOpacity>
+          <HeaderButton label={t('Share job')} onPress={handleShare}>
+            <Share2 size={19} color={colors.ink} />
+          </HeaderButton>
+          <HeaderButton label={job.saved ? t('Remove from saved') : t('Save job')} onPress={handleToggleSave}>
+            <Bookmark size={19} color={job.saved ? colors.primary : colors.ink} weight={job.saved ? 'fill' : 'regular'} />
+          </HeaderButton>
         </View>
       </View>
 
@@ -588,13 +573,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     height: StyleSheet.hairlineWidth,
   },
-  navBackBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   navBarTitle: {
     flex: 1,
     fontFamily: FONT,
@@ -604,13 +582,6 @@ const styles = StyleSheet.create({
   navActions: {
     flexDirection: 'row',
     gap: 8,
-  },
-  navActionBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
   scrollContent: {
     padding: 16,

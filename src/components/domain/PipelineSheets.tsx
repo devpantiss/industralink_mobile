@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, Pressable, Switch } from 'react-native';
+import { Toggle } from '../ui/Toggle';
+import { View, StyleSheet, Pressable } from 'react-native';
 import { Text } from '../ui/Text';
 import { Sheet } from '../ui/Sheet';
 import { Input } from '../ui/Input';
@@ -198,7 +199,7 @@ export const RejectSheet: React.FC<
         <Input label={t('More detail (private)')} value={more} onChangeText={setMore} />
         <View style={styles.switchRow}>
           <Text style={{ color: colors.ink, fontSize: 15, flex: 1 }}>{t('Tell the worker')}</Text>
-          <Switch value={notify} onValueChange={setNotify} />
+          <Toggle value={notify} onValueChange={setNotify} />
         </View>
       </View>
     </Sheet>

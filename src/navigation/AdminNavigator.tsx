@@ -1,4 +1,6 @@
 import { InboxScreen } from '../screens/shared/InboxScreen';
+import { LinearGradient } from 'expo-linear-gradient';
+import { gradients } from '../theme/effects';
 import React from 'react';
 import {
   View,
@@ -30,15 +32,17 @@ import { typography } from '../theme/typography';
 const Drawer = createDrawerNavigator<AdminDrawerParamList>();
 
 const CustomAdminDrawer: React.FC<DrawerContentComponentProps> = (props) => {
-  const { colors } = useUiStore();
+  const { colors, theme } = useUiStore();
   const { logout } = useAuthStore();
   const insets = useSafeAreaInsets();
 
   return (
     <View style={[styles.drawerContainer, { backgroundColor: colors.surface }]}>
       <View style={[styles.drawerHeader, { borderBottomColor: colors.border, paddingTop: insets.top + spacing.lg }]}>
-        <View style={[styles.shieldBox, { backgroundColor: colors.primarySoft }]}>
-          <Shield size={24} color={colors.primary} />
+        <LinearGradient colors={gradients[theme].night} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
+        <View style={styles.shieldBox}>
+          <LinearGradient colors={gradients[theme].brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
+          <Shield size={24} color="#FFFFFF" weight="fill" />
         </View>
         <Text style={[typography.h2, { color: colors.ink, fontWeight: '700' }]}>
           Admin
@@ -76,6 +80,7 @@ export const AdminNavigator: React.FC = () => {
         drawerActiveTintColor: colors.primary,
         drawerInactiveTintColor: colors.ink,
         drawerActiveBackgroundColor: colors.primarySoft,
+        drawerItemStyle: { borderRadius: 14, marginHorizontal: 10 },
         drawerLabelStyle: {
           fontSize: 14,
           fontWeight: '600',
@@ -87,7 +92,7 @@ export const AdminNavigator: React.FC = () => {
         component={AdminHomeScreen}
         options={{
           drawerLabel: 'Dashboard',
-          drawerIcon: ({ color, size }) => <LayoutGrid size={size - 2} color={color} />,
+          drawerIcon: ({ color, size, focused }) => <LayoutGrid size={size - 2} color={color} weight={focused ? 'fill' : 'regular'} />,
         }}
       />
       <Drawer.Screen
@@ -95,7 +100,7 @@ export const AdminNavigator: React.FC = () => {
         component={VerificationsQueueScreen}
         options={{
           drawerLabel: 'Company approvals',
-          drawerIcon: ({ color, size }) => <BadgeCheck size={size - 2} color={color} />,
+          drawerIcon: ({ color, size, focused }) => <BadgeCheck size={size - 2} color={color} weight={focused ? 'fill' : 'regular'} />,
         }}
       />
       <Drawer.Screen
@@ -103,7 +108,7 @@ export const AdminNavigator: React.FC = () => {
         component={ReportsScreen}
         options={{
           drawerLabel: 'Reports & help',
-          drawerIcon: ({ color, size }) => <Flag size={size - 2} color={color} />,
+          drawerIcon: ({ color, size, focused }) => <Flag size={size - 2} color={color} weight={focused ? 'fill' : 'regular'} />,
         }}
       />
       <Drawer.Screen
@@ -111,7 +116,7 @@ export const AdminNavigator: React.FC = () => {
         component={UsersManagementScreen}
         options={{
           drawerLabel: 'Users',
-          drawerIcon: ({ color, size }) => <Users size={size - 2} color={color} />,
+          drawerIcon: ({ color, size, focused }) => <Users size={size - 2} color={color} weight={focused ? 'fill' : 'regular'} />,
         }}
       />
       <Drawer.Screen
@@ -119,7 +124,7 @@ export const AdminNavigator: React.FC = () => {
         component={AdminJobsScreen}
         options={{
           drawerLabel: 'Jobs',
-          drawerIcon: ({ color, size }) => <Briefcase size={size - 2} color={color} />,
+          drawerIcon: ({ color, size, focused }) => <Briefcase size={size - 2} color={color} weight={focused ? 'fill' : 'regular'} />,
         }}
       />
       <Drawer.Screen
@@ -127,7 +132,7 @@ export const AdminNavigator: React.FC = () => {
         component={ActivityLogScreen}
         options={{
           drawerLabel: 'Activity log',
-          drawerIcon: ({ color, size }) => <ScrollText size={size - 2} color={color} />,
+          drawerIcon: ({ color, size, focused }) => <ScrollText size={size - 2} color={color} weight={focused ? 'fill' : 'regular'} />,
         }}
       />
       <Drawer.Screen
@@ -140,7 +145,7 @@ export const AdminNavigator: React.FC = () => {
         component={SettingsScreen}
         options={{
           drawerLabel: 'Settings',
-          drawerIcon: ({ color, size }) => <Settings size={size - 2} color={color} />,
+          drawerIcon: ({ color, size, focused }) => <Settings size={size - 2} color={color} weight={focused ? 'fill' : 'regular'} />,
         }}
       />
     </Drawer.Navigator>
@@ -152,6 +157,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   drawerHeader: {
+    overflow: 'hidden',
     padding: spacing.lg,
     paddingTop: spacing.xl + 20,
     borderBottomWidth: 1,
@@ -159,10 +165,11 @@ const styles = StyleSheet.create({
   shieldBox: {
     width: 44,
     height: 44,
-    borderRadius: 10,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.sm,
+    overflow: 'hidden',
   },
   drawerItems: {
     paddingTop: spacing.sm,

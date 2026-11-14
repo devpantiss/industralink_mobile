@@ -9,6 +9,7 @@ import Animated, {
   ReduceMotion,
 } from 'react-native-reanimated';
 import { useUiStore } from '../../store/uiStore';
+import { LinearGradient } from 'expo-linear-gradient';
 
 /** Grey placeholder block with a slow, soft fade while data loads. Still if the phone asks for reduced motion. */
 export const Skeleton: React.FC<{ width?: DimensionValue; height?: number; radius?: number; style?: ViewStyle }> = ({
@@ -18,6 +19,7 @@ export const Skeleton: React.FC<{ width?: DimensionValue; height?: number; radiu
   style,
 }) => {
   const colors = useUiStore((s) => s.colors);
+  const theme = useUiStore((s) => s.theme);
   const o = useSharedValue(1);
   useEffect(() => {
     o.set(
@@ -29,10 +31,29 @@ export const Skeleton: React.FC<{ width?: DimensionValue; height?: number; radiu
     );
   }, [o]);
   const anim = useAnimatedStyle(() => ({ opacity: o.get() }));
+  // A soft light band sweeps across once per cycle (skipped with reduced motion).
+  const [w, setW] = React.useState(0);
+  const x = useSharedValue(-1);
+  useEffect(() => {
+    x.set(withRepeat(withTiming(1, { duration: 1300, easing: Easing.inOut(Easing.quad), reduceMotion: ReduceMotion.System }), -1, false));
+  }, [x]);
+  const sweep = useAnimatedStyle(() => ({ transform: [{ translateX: x.get() * w }] }));
   return (
     <Animated.View
-      style={[{ width, height, borderRadius: radius, backgroundColor: colors.surfaceStrong }, anim, style]}
-    />
+      onLayout={(e) => setW(e.nativeEvent.layout.width)}
+      style={[{ width, height, borderRadius: radius, backgroundColor: colors.surfaceStrong, overflow: 'hidden' }, anim, style]}
+    >
+      {w > 0 && (
+        <Animated.View style={[StyleSheet.absoluteFill, sweep]}>
+          <LinearGradient
+            colors={['transparent', theme === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.6)', 'transparent']}
+            start={{ x: 0, y: 0.5 }}
+            end={{ x: 1, y: 0.5 }}
+            style={StyleSheet.absoluteFill}
+          />
+        </Animated.View>
+      )}
+    </Animated.View>
   );
 };
 

@@ -1,7 +1,8 @@
 import React, { useMemo, useState } from 'react';
+import { Toggle } from '../../components/ui/Toggle';
 import { useTabBarSpace } from '../../components/layout/TabBar';
 import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
-import { View, StyleSheet, TouchableOpacity, RefreshControl, Switch } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, RefreshControl } from 'react-native';
 import { Text, TextInput } from '../../components/ui/Text';
 import { useTileStyle, TileIcon } from '../../components/ui/tileStyle';
 import { useNavigation } from '@react-navigation/native';
@@ -313,7 +314,7 @@ export const WorkerHomeScreen: React.FC = () => {
             <Text style={[styles.waTitle, { color: colors.ink }]}>{t('Job alerts on WhatsApp')}</Text>
             <Text style={[styles.waDesc, { color: colors.inkSecondary }]}>{t('New jobs for your trade, near you')}</Text>
           </View>
-          <Switch
+          <Toggle
             value={waAlerts}
             onValueChange={(v) => {
               Haptics.selectionAsync().catch(() => {});
