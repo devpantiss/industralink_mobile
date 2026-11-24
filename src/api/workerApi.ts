@@ -1,4 +1,4 @@
-import { apiClient, USE_MOCKS, delay } from './client';
+import { apiClient, USE_MOCKS, delay, fileForUpload } from './client';
 import { mockDb } from '../mocks/db';
 import type {
   JobForWorker,
@@ -30,8 +30,9 @@ export const workerApi = {
       await delay(60);
       return mockDb.getJobs(params);
     }
-    const res = await apiClient.get('/worker/jobs', { params });
-    return res.data;
+    // Same search as Find jobs, first page only.
+    const res = await apiClient.get('/jobs', { params: { q: params?.search, trade: params?.trade } });
+    return res.data.items;
   },
 
   async searchJobs(params?: JobSearchParams): Promise<Paginated<JobForWorker>> {
@@ -39,7 +40,7 @@ export const workerApi = {
       await delay(80);
       return mockDb.searchJobs(params);
     }
-    const res = await apiClient.get('/worker/jobs/search', { params });
+    const res = await apiClient.get('/jobs', { params });
     return res.data;
   },
 
@@ -50,7 +51,7 @@ export const workerApi = {
       if (!j) throw new Error('Job not found');
       return j;
     }
-    const res = await apiClient.get(`/worker/jobs/${id}`);
+    const res = await apiClient.get(`/jobs/${id}`);
     return res.data;
   },
 
@@ -72,7 +73,9 @@ export const workerApi = {
       await delay(60);
       return mockDb.toggleSaveJob(id, forceState);
     }
-    const res = await apiClient.post(`/worker/jobs/${id}/save`, { forceState });
+    // Without forceState, look up the current state and flip it.
+    const save = forceState ?? !(await apiClient.get(`/jobs/${id}`)).data.saved;
+    const res = save ? await apiClient.post(`/jobs/${id}/save`) : await apiClient.delete(`/jobs/${id}/save`);
     return res.data.saved;
   },
 
@@ -84,7 +87,7 @@ export const workerApi = {
       await delay(120);
       return mockDb.applyJob(jobId, payload);
     }
-    const res = await apiClient.post(`/worker/jobs/${jobId}/apply`, payload);
+    const res = await apiClient.post(`/jobs/${jobId}/apply`, { sentWith: payload?.sentWith ?? 'profile', documentId: payload?.documentId });
     return res.data;
   },
 
@@ -125,7 +128,7 @@ export const workerApi = {
       await delay(60);
       return mockDb.replyInterview(id, response, note);
     }
-    await apiClient.post(`/worker/applications/${id}/interview/reply`, { response, note });
+    await apiClient.post(`/worker/applications/${id}/interview-response`, { response, note });
   },
 
   async replyOffer(
@@ -137,7 +140,7 @@ export const workerApi = {
       await delay(60);
       return mockDb.replyOffer(id, response, note);
     }
-    await apiClient.post(`/worker/applications/${id}/offer/reply`, { response, note });
+    await apiClient.post(`/worker/applications/${id}/offer-response`, { response, note });
   },
 
   async getProfile(): Promise<WorkerProfile> {
@@ -172,7 +175,11 @@ export const workerApi = {
       await delay(120);
       return mockDb.uploadDocument(doc);
     }
-    const res = await apiClient.post('/worker/documents', doc);
+    // A real file upload: the file picked on the phone plus its type.
+    const form = new FormData();
+    form.append('file', fileForUpload(doc.fileUrl, doc.name, doc.mimeType));
+    form.append('type', doc.type);
+    const res = await apiClient.post('/worker/documents', form, { headers: { 'Content-Type': 'multipart/form-data' } });
     return res.data;
   },
 
@@ -197,7 +204,7 @@ export const workerApi = {
       await delay(80);
       return mockDb.listCompanies(params);
     }
-    const res = await apiClient.get('/worker/companies', { params });
+    const res = await apiClient.get('/companies', { params });
     return res.data;
   },
 
@@ -216,7 +223,7 @@ export const workerApi = {
       if (!res) throw new Error('Company not found');
       return res;
     }
-    const res = await apiClient.get(`/worker/companies/${id}`);
+    const res = await apiClient.get(`/companies/${id}`);
     return res.data;
   },
 };

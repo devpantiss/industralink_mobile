@@ -40,7 +40,6 @@ export const InterviewSheet: React.FC<
   const [place, setPlace] = useState(defaultPlace ?? '');
   const [ask, setAsk] = useState('');
   const [bring, setBring] = useState('ID proof, certificates, 2 photos');
-  const [note, setNote] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const submit = () => {
@@ -51,7 +50,7 @@ export const InterviewSheet: React.FC<
     if (place.trim().length < 3) e.place = t('Enter where the worker should come.');
     setErrors(e);
     if (Object.keys(e).length) return;
-    onSubmit({ at: at(day!, time!), place: place.trim(), contactPerson: ask.trim(), bring: bring.trim(), note: note.trim() });
+    onSubmit({ at: at(day!, time!), place: place.trim(), contactPerson: ask.trim(), bring: bring.trim() });
   };
 
   return (
@@ -85,7 +84,6 @@ export const InterviewSheet: React.FC<
         )}
         <Input label={t('Ask for')} value={ask} onChangeText={setAsk} placeholder={t('Name of the person at the gate')} />
         <Input label={t('What to bring')} value={bring} onChangeText={setBring} />
-        <Input label={t('Note for the worker')} value={note} onChangeText={setNote} placeholder={t('e.g. Come through gate 3')} />
       </View>
     </Sheet>
   );
@@ -102,7 +100,6 @@ export const OfferSheet: React.FC<
   const [payType, setPayType] = useState<PayType>('in_hand');
   const [joining, setJoining] = useState<string | undefined>();
   const [place, setPlace] = useState(defaultPlace ?? '');
-  const [replyBy, setReplyBy] = useState<string | undefined>();
   const [note, setNote] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -113,12 +110,10 @@ export const OfferSheet: React.FC<
     if (!p || p < lo || p > hi) e.pay = t('Enter the pay in rupees.');
     if (!joining) e.joining = t('Choose the joining date.');
     else if (joining < todayIso()) e.joining = t('The joining date cannot be in the past.');
-    if (replyBy && replyBy < todayIso()) e.replyBy = t('The reply date cannot be in the past.');
-    else if (replyBy && joining && replyBy > joining) e.replyBy = t('The reply date should be before the joining date.');
     if (place.trim().length < 3) e.place = t('Enter where the worker will work.');
     setErrors(e);
     if (Object.keys(e).length) return;
-    onSubmit({ pay: p, payPeriod: period, payType, joiningDate: joining, place: place.trim(), replyBy, note: note.trim() });
+    onSubmit({ pay: p, payPeriod: period, payType, joiningDate: joining, place: place.trim(), note: note.trim() });
   };
 
   return (
@@ -150,7 +145,6 @@ export const OfferSheet: React.FC<
         </View>
         <DateField label={t('Joining date')} value={joining} onChange={setJoining} minimumDate={new Date()} error={errors.joining} />
         <Input label={t('Place of work')} value={place} onChangeText={setPlace} multiline error={errors.place} />
-        <DateField label={t('Please reply by (optional)')} value={replyBy} onChange={setReplyBy} minimumDate={new Date()} error={errors.replyBy} />
         <Input label={t('Note for the worker')} value={note} onChangeText={setNote} placeholder={t('e.g. Bring your original certificates on day one')} />
       </View>
     </Sheet>
@@ -203,35 +197,6 @@ export const RejectSheet: React.FC<
           <Toggle value={notify} onValueChange={setNotify} />
         </View>
       </View>
-    </Sheet>
-  );
-};
-
-/* ---------- Mark joined ---------- */
-
-export const JoinedSheet: React.FC<BaseProps & { name: string; defaultDate?: string; onSubmit: (joinedAt: string) => void }> = ({
-  visible,
-  onClose,
-  loading,
-  name,
-  defaultDate,
-  onSubmit,
-}) => {
-  const [day, setDay] = useState<string | undefined>(defaultDate || todayIso());
-  return (
-    <Sheet
-      visible={visible}
-      onClose={onClose}
-      title={t('Mark as joined')}
-      subtitle={t('Confirm that {name} has joined.', { name })}
-      footer={
-        <View style={styles.footer}>
-          <Button label={t('Cancel')} variant="ghost" onPress={onClose} />
-          <Button label={t('Confirm joining')} onPress={() => day && onSubmit(day)} loading={loading} style={styles.flex} />
-        </View>
-      }
-    >
-      <DateField label={t('Date joined')} value={day} onChange={setDay} />
     </Sheet>
   );
 };

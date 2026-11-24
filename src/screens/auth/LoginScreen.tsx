@@ -726,8 +726,8 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
               )}
             </Animated.View>
 
-            {/* ================= COMPACT DEMO BAR ================= */}
-            {USE_MOCKS && (
+            {/* ================= COMPACT DEMO BAR (demo data, or the backend test login in dev builds) ================= */}
+            {(USE_MOCKS || __DEV__) && (
             <View style={styles.demoBarWrapper}>
               <View style={styles.demoDividerRow}>
                 <View style={[styles.demoLine, { backgroundColor: colors.border }]} />
@@ -787,7 +787,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
                       <Building2 size={14} color="#0284C7" />
                       <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} style={styles.demoPillLine}>
                         <Text style={[styles.demoPillTitle, { color: colors.ink }]}>HR</Text>
-                        <Text style={[styles.demoPillWho, { color: colors.inkMuted }]}> · National Eng</Text>
+                        <Text style={[styles.demoPillWho, { color: colors.inkMuted }]}>{USE_MOCKS ? ' · National Eng' : ' · Konark'}</Text>
                       </Text>
                     </>
                   )}

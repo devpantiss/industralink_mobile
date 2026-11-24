@@ -104,6 +104,8 @@ export const useAuthStore = create<AuthStoreState>((set, get) => ({
   },
 
   logout: async () => {
+    // Best effort: log out on the phone even if the server can't be reached.
+    await authApi.logout().catch(() => {});
     await storage.clearAll();
     set({
       user: null,
@@ -169,7 +171,16 @@ export const useAuthStore = create<AuthStoreState>((set, get) => ({
   },
 
   loginAsDemo: async (role: Role) => {
-    get().switchRole(role);
+    if (USE_MOCKS) return get().switchRole(role);
+    // Real backend: its test login with the demo accounts from the backend's demo data.
+    const body =
+      role === 'worker'
+        ? { phone: '9876543210' }
+        : { email: role === 'employer' ? 'hr@konark.demo' : 'admin@industrialink.demo' };
+    const { token, user } = await authApi.devLogin(body);
+    await storage.setToken(token);
+    await storage.setUser(user);
+    set({ token, user, isAuthenticated: true, role: user.role });
   },
 
   updateUser: (partial: Partial<User>) => {

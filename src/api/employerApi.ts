@@ -1,6 +1,23 @@
-import { apiClient, USE_MOCKS, delay } from './client';
+import { apiClient, USE_MOCKS, delay, fileForUpload } from './client';
 import { mockDb } from '../mocks/db';
 import { Job, Candidate, ApplicationStage, EmployerSummary, TalentProfile, Company, EmployerAnalytics, CompanyDocument, CompanyDocType } from '../types';
+
+/**
+ * The screens' stage payload → the API body: { stage, note?, notify?, interview?, offer? }.
+ * The reject reason goes in `note` (HR only, never shown to the worker).
+ */
+function toStageBody(stage: ApplicationStage, payload?: any) {
+  if (stage === 'interview' && payload) {
+    const { at, place, contactPerson, bring } = payload;
+    return { stage, interview: { at, place, contactPerson, bring } };
+  }
+  if (stage === 'offer' && payload) {
+    const { pay, payPeriod, payType, joiningDate, place, note } = payload;
+    return { stage, offer: { pay: Number(pay), payPeriod, payType, joiningDate, place, note } };
+  }
+  if (stage === 'rejected') return { stage, note: payload?.reason, notify: payload?.notify ?? true };
+  return { stage };
+}
 
 export const employerApi = {
   async getSummary(): Promise<EmployerSummary> {
@@ -52,7 +69,10 @@ export const employerApi = {
       await delay();
       return mockDb.getCandidates(jobId);
     }
-    const res = await apiClient.get('/employer/candidates', { params: { jobId } });
+    // One job's list also clears that job's "new applicants" count.
+    const res = jobId
+      ? await apiClient.get(`/employer/jobs/${jobId}/candidates`)
+      : await apiClient.get('/employer/candidates');
     return res.data;
   },
 
@@ -72,15 +92,7 @@ export const employerApi = {
       await delay(120);
       return mockDb.updateCandidateStage(appId, stage, payload);
     }
-    await apiClient.patch(`/employer/applications/${appId}/stage`, { stage, payload });
-  },
-
-  async saveNote(appId: string, note: string): Promise<void> {
-    if (USE_MOCKS) {
-      await delay(80);
-      return mockDb.saveCandidateNote(appId, note);
-    }
-    await apiClient.patch(`/employer/applications/${appId}/note`, { note });
+    await apiClient.patch(`/employer/applications/${appId}`, toStageBody(stage, payload));
   },
 
   async searchTalent(params?: any): Promise<TalentProfile[]> {
@@ -97,7 +109,7 @@ export const employerApi = {
       await delay(120);
       return mockDb.inviteTalent(workerId, jobId);
     }
-    await apiClient.post('/employer/invites', { workerId, jobId });
+    await apiClient.post(`/employer/talent/${workerId}/invite`, { jobId });
   },
 
   async getJob(id: string): Promise<Job | null> {
@@ -147,7 +159,10 @@ export const employerApi = {
       await delay(150);
       return mockDb.uploadCompanyDocument(doc);
     }
-    const res = await apiClient.post('/employer/company/documents', doc);
+    const form = new FormData();
+    form.append('file', fileForUpload(doc.fileUrl, doc.name, doc.mimeType));
+    form.append('type', doc.type);
+    const res = await apiClient.post('/employer/company/documents', form, { headers: { 'Content-Type': 'multipart/form-data' } });
     return res.data;
   },
 

@@ -27,7 +27,7 @@ type RoleKey = 'all' | 'worker' | 'employer';
 const SUSPEND_REASONS = ['Asked workers for money', 'Fake or false details', 'Abusive behaviour', 'Repeated policy breaks', 'Other'];
 const VERIFY_LABEL = { approved: 'Approved', pending: 'Waiting for approval', rejected: 'Not approved' } as const;
 
-/** Worker and company accounts; suspend anyone abusing the platform (web: Users). */
+/** Worker and company accounts; block anyone abusing the platform (web: Users). */
 export const UsersManagementScreen: React.FC = () => {
   const colors = useUiStore((s) => s.colors);
   const showToast = useUiStore((s) => s.showToast);
@@ -45,12 +45,12 @@ export const UsersManagementScreen: React.FC = () => {
     mutationFn: (u: AdminUserRow) =>
       adminApi.setUserStatus(
         u.id,
-        u.status === 'suspended' ? 'active' : 'suspended',
-        u.status === 'suspended' ? undefined : reason === 'Other' ? detail.trim() : `${reason}${detail.trim() ? `: ${detail.trim()}` : ''}`
+        u.status === 'blocked' ? 'active' : 'blocked',
+        u.status === 'blocked' ? undefined : reason === 'Other' ? detail.trim() : `${reason}${detail.trim() ? `: ${detail.trim()}` : ''}`
       ),
     onSuccess: (u) => {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
-      showToast(u.status === 'suspended' ? `${u.name} suspended` : `${u.name} can use IndustriaLink again`, 'success');
+      showToast(u.status === 'blocked' ? `${u.name} is blocked` : `${u.name} can use IndustriaLink again`, 'success');
       setTarget(null);
       qc.invalidateQueries({ queryKey: queryKeys.admin.all });
     },
@@ -60,10 +60,10 @@ export const UsersManagementScreen: React.FC = () => {
   const impact = useQuery({
     queryKey: ['admin', 'impact', target?.id],
     queryFn: () => adminApi.getUserImpact(target!.id),
-    enabled: !!target && target.role === 'employer' && target.status !== 'suspended',
+    enabled: !!target && target.role === 'employer' && target.status !== 'blocked',
   });
 
-  const suspending = target?.status !== 'suspended';
+  const blocking = target?.status !== 'blocked';
 
   return (
     <Screen edges={['top', 'bottom']}>
@@ -78,7 +78,7 @@ export const UsersManagementScreen: React.FC = () => {
       >
         <Text style={[styles.title, { color: colors.ink }]}>Users</Text>
         <Text style={[styles.subtitle, { color: colors.inkSecondary }]}>
-          Worker and company accounts. Suspend anyone who cheats or asks workers for money.
+          Worker and company accounts. Block anyone who cheats or asks workers for money.
         </Text>
 
         <View style={[styles.search, { backgroundColor: colors.surface, borderColor: colors.border }]}>
@@ -118,7 +118,7 @@ export const UsersManagementScreen: React.FC = () => {
           </View>
         ) : (
           list.data.map((u) => {
-            const suspended = u.status === 'suspended';
+            const blocked = u.status === 'blocked';
             return (
               <Animated.View
                 key={u.id}
@@ -140,9 +140,9 @@ export const UsersManagementScreen: React.FC = () => {
                 <View style={[styles.foot, { borderTopColor: colors.border }]}>
                   <View style={styles.pills}>
                     <Pill
-                      text={suspended ? 'Suspended' : 'Active'}
-                      bg={suspended ? colors.dangerBg : colors.successBg}
-                      fg={suspended ? colors.dangerFg : colors.successFg}
+                      text={blocked ? 'Blocked' : 'Active'}
+                      bg={blocked ? colors.dangerBg : colors.successBg}
+                      fg={blocked ? colors.dangerFg : colors.successFg}
                     />
                     {u.verification && (
                       <Pill
@@ -162,13 +162,13 @@ export const UsersManagementScreen: React.FC = () => {
                     style={({ pressed }) => [
                       styles.action,
                       {
-                        borderColor: suspended ? colors.primary : colors.dangerFg,
-                        backgroundColor: pressed ? (suspended ? colors.primarySoft : colors.dangerBg) : 'transparent',
+                        borderColor: blocked ? colors.primary : colors.dangerFg,
+                        backgroundColor: pressed ? (blocked ? colors.primarySoft : colors.dangerBg) : 'transparent',
                       },
                     ]}
                   >
-                    <Text style={[styles.actionText, { color: suspended ? colors.primary : colors.dangerFg }]}>
-                      {suspended ? 'Reactivate' : 'Suspend'}
+                    <Text style={[styles.actionText, { color: blocked ? colors.primary : colors.dangerFg }]}>
+                      {blocked ? 'Unblock' : 'Block'}
                     </Text>
                   </Pressable>
                 </View>
@@ -179,7 +179,7 @@ export const UsersManagementScreen: React.FC = () => {
       </KeyboardScrollView>
 
       <Dialog
-        visible={!!target && !suspending}
+        visible={!!target && !blocking}
         onClose={() => setTarget(null)}
         title={target ? `Reactivate ${target.name}?` : ''}
         message="They can log in and use IndustriaLink again."
@@ -192,9 +192,9 @@ export const UsersManagementScreen: React.FC = () => {
       />
 
       <Sheet
-        visible={!!target && suspending}
+        visible={!!target && blocking}
         onClose={() => setTarget(null)}
-        title={target ? `Suspend ${target.name}?` : ''}
+        title={target ? `Block ${target.name}?` : ''}
         subtitle={
           target?.role === 'employer'
             ? impact.data
@@ -206,7 +206,7 @@ export const UsersManagementScreen: React.FC = () => {
           <View style={styles.sheetFoot}>
             <Button label="Cancel" variant="ghost" onPress={() => setTarget(null)} />
             <Button
-              label="Suspend"
+              label="Block"
               variant="danger"
               loading={toggle.isPending}
               disabled={reason === 'Other' && !detail.trim()}
@@ -229,7 +229,7 @@ export const UsersManagementScreen: React.FC = () => {
           style={[styles.detailInput, { borderColor: colors.border, color: colors.ink, backgroundColor: colors.surface }]}
         />
         <Text style={[styles.detailLabel, { color: colors.inkMuted, marginTop: 8 }]}>
-          They see this reason when they try to log in.
+          Saved in the activity log. Only admins can see it.
         </Text>
       </Sheet>
     </Screen>

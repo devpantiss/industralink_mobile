@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
 } from 'react-native';
-import { Text, TextInput } from '../../components/ui/Text';
+import { Text } from '../../components/ui/Text';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
@@ -42,7 +42,7 @@ import {
 import { formatBytes, formatPhone, timeAgo, formatDate, formatDateTime, formatNumber } from '../../lib/format';
 import { ageOf } from '../../lib/dob';
 import { errorText } from '../../lib/errors';
-import { InterviewSheet, OfferSheet, RejectSheet, JoinedSheet } from '../../components/domain/PipelineSheets';
+import { InterviewSheet, OfferSheet, RejectSheet } from '../../components/domain/PipelineSheets';
 import { openContact } from '../../lib/contact';
 import { t } from '../../lib/i18n';
 import type { ApplicationStage, WorkerDocument } from '../../types';
@@ -59,13 +59,12 @@ export const CandidateDossierScreen: React.FC<Props> = ({ route, navigation }) =
   const [viewDoc, setViewDoc] = useState<WorkerDocument | null>(null);
 
   // Sheets for stage progression. The key restarts a sheet's fields every time it opens.
-  const [sheet, setSheet] = useState<null | 'interview' | 'offer' | 'reject' | 'joined'>(null);
+  const [sheet, setSheet] = useState<null | 'interview' | 'offer' | 'reject'>(null);
   const [sheetKey, setSheetKey] = useState(0);
-  const openSheet = (k: 'interview' | 'offer' | 'reject' | 'joined') => {
+  const openSheet = (k: 'interview' | 'offer' | 'reject') => {
     setSheetKey((n) => n + 1);
     setSheet(k);
   };
-  const [note, setNote] = useState<string | undefined>();
 
   const { data: candidates, isLoading, isError, refetch } = useQuery({
     queryKey: queryKeys.employer.allCandidates({}),
@@ -95,14 +94,6 @@ export const CandidateDossierScreen: React.FC<Props> = ({ route, navigation }) =
   });
 
   const company = useQuery({ queryKey: queryKeys.employer.company, queryFn: () => employerApi.getCompany() });
-  const saveNote = useMutation({
-    mutationFn: (text: string) => employerApi.saveNote(candidate!.id, text),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: queryKeys.employer.all });
-      showToast(t('Note saved'), 'success');
-    },
-    onError: (e: Error) => showToast(errorText(e, 'Could not save the note.'), 'error'),
-  });
 
   if (isError || (!isLoading && !candidate)) {
     return (
@@ -270,9 +261,13 @@ export const CandidateDossierScreen: React.FC<Props> = ({ route, navigation }) =
             )}
 
             {candidate.stage === 'offer' && (
-              <TouchableOpacity onPress={() => openSheet('joined')} style={[styles.stageActionBtn, { backgroundColor: colors.successFg }]}>
+              <TouchableOpacity
+                onPress={() => updateStageMutation.mutate({ stage: 'hired' })}
+                disabled={updateStageMutation.isPending}
+                style={[styles.stageActionBtn, { backgroundColor: colors.successFg }]}
+              >
                 <CheckCircle2 size={15} color="#FFF" />
-                <Text style={styles.stageActionBtnText}>{t('Mark joined')}</Text>
+                <Text style={styles.stageActionBtnText}>{t('Mark hired')}</Text>
               </TouchableOpacity>
             )}
 
@@ -292,7 +287,6 @@ export const CandidateDossierScreen: React.FC<Props> = ({ route, navigation }) =
           <Fact label={t('Expected pay')} value={w.expectedPay ? `₹${formatNumber(w.expectedPay)} ${t('a month')}` : undefined} />
           <Fact label={t('Can join')} value={w.availability ? t(AVAILABILITY_LABEL[w.availability]) : undefined} />
           <Fact label={t('Languages')} value={w.languages?.length ? w.languages.join(', ') : undefined} />
-          {candidate.match !== undefined ? <Fact label={t('Fit for this job')} value={`${candidate.match}%`} /> : null}
         </View>
 
         {candidate.interview ? (
@@ -321,18 +315,11 @@ export const CandidateDossierScreen: React.FC<Props> = ({ route, navigation }) =
             <Text style={[styles.cardHeading, { color: colors.ink }]}>{t('Offer')}</Text>
             <Fact label={t('Pay')} value={`₹${formatNumber(candidate.offer.pay)} ${candidate.offer.payPeriod === 'day' ? t('a day') : t('a month')}`} />
             <Fact label={t('Joining date')} value={candidate.offer.joiningDate ? formatDate(candidate.offer.joiningDate) : undefined} />
-            <Fact label={t('Reply by')} value={candidate.offer.replyBy ? formatDate(candidate.offer.replyBy) : undefined} />
             <Fact
               label={t('Worker reply')}
               value={candidate.offerResponse === 'accepted' ? t('Accepted') : candidate.offerResponse === 'declined' ? t('Declined') : t('No reply yet')}
               tone={candidate.offerResponse === 'accepted' ? 'good' : candidate.offerResponse === 'declined' ? 'bad' : undefined}
             />
-          </View>
-        ) : null}
-
-        {candidate.stage === 'hired' && candidate.joinedAt ? (
-          <View style={[styles.infoCard, { backgroundColor: colors.tiles.green.bg, borderColor: colors.border }]}>
-            <Text style={{ color: colors.tiles.green.text, fontWeight: '700' }}>{t('Joined on {date}', { date: formatDate(candidate.joinedAt) })}</Text>
           </View>
         ) : null}
 
@@ -450,25 +437,6 @@ export const CandidateDossierScreen: React.FC<Props> = ({ route, navigation }) =
             )}
           </View>
         )}
-        <View style={[styles.infoCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <Text style={[styles.cardHeading, { color: colors.ink }]}>{t('Private note')}</Text>
-          <Text style={{ color: colors.inkMuted, fontSize: 12 }}>{t('Only you and your team can see this.')}</Text>
-          <TextInput
-            value={note ?? candidate.hrNote ?? ''}
-            onChangeText={setNote}
-            multiline
-            maxLength={500}
-            placeholder={t('e.g. Good welding test, call back on Monday')}
-            placeholderTextColor={colors.placeholder}
-            style={[styles.modalInput, { borderColor: colors.border, color: colors.ink, minHeight: 72, textAlignVertical: 'top' }]}
-          />
-          {note !== undefined && note !== (candidate.hrNote ?? '') ? (
-            <TouchableOpacity onPress={() => saveNote.mutate(note)} style={[styles.modalBtnPrimary, { backgroundColor: 'transparent', overflow: 'hidden' }]}>
-              <GradientFill />
-              <Text style={{ color: '#FFF', fontWeight: '700' }}>{t('Save note')}</Text>
-            </TouchableOpacity>
-          ) : null}
-        </View>
       </KeyboardScrollView>
 
       <DocumentViewer
@@ -504,15 +472,6 @@ export const CandidateDossierScreen: React.FC<Props> = ({ route, navigation }) =
         onClose={() => setSheet(null)}
         loading={updateStageMutation.isPending}
         onSubmit={(payload) => updateStageMutation.mutate({ stage: 'rejected', payload })}
-      />
-      <JoinedSheet
-        key={`j${sheetKey}`}
-        visible={sheet === 'joined'}
-        onClose={() => setSheet(null)}
-        loading={updateStageMutation.isPending}
-        name={w.name}
-        defaultDate={candidate.offer?.joiningDate}
-        onSubmit={(joinedAt) => updateStageMutation.mutate({ stage: 'hired', payload: { joinedAt } })}
       />
     </Screen>
   );

@@ -128,11 +128,6 @@ export const CandidateRow: React.FC<Props> = ({ candidate: c, onPress, showJob =
       <View style={[styles.foot, { borderTopColor: colors.border }]}>
         <View style={styles.footLeft}>
           <StageBadge stage={c.stage} />
-          {c.match !== undefined && c.match >= 70 ? (
-            <View style={[styles.stageBadge, { backgroundColor: colors.tiles.green.bg }]}>
-              <Text style={[styles.stageBadgeText, { color: colors.tiles.green.text }]}>{c.match}% fit</Text>
-            </View>
-          ) : null}
           {showJob && (
             <Text style={[styles.job, { color: colors.inkMuted }]} numberOfLines={1}>
               {c.jobTitle}

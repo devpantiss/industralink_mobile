@@ -8,7 +8,7 @@ export const authApi = {
       await delay();
       return { ...(await mockDb.loginWithOtp(phone)), isNewUser: !mockDb.workerExists(phone) };
     }
-    const res = await apiClient.post('/auth/otp/send', { phone });
+    const res = await apiClient.post('/auth/otp/request', { phone });
     return res.data;
   },
 
@@ -18,6 +18,12 @@ export const authApi = {
       return mockDb.verifyOtp(phone, otp, name);
     }
     const res = await apiClient.post('/auth/otp/verify', { phone, code: otp, name });
+    return res.data;
+  },
+
+  /** Backend test login (local development only, until the real login method is chosen). */
+  async devLogin(body: { phone: string } | { email: string }): Promise<{ token: string; user: User }> {
+    const res = await apiClient.post('/auth/dev-login', body);
     return res.data;
   },
 
@@ -61,6 +67,12 @@ export const authApi = {
     }
     const res = await apiClient.post('/auth/password/reset', { token, password });
     return res.data;
+  },
+
+  /** Ends this login on the server too, so the token can't be used again. */
+  async logout(): Promise<void> {
+    if (USE_MOCKS) return;
+    await apiClient.post('/auth/logout');
   },
 
   async completeOnboarding(userId: string): Promise<void> {

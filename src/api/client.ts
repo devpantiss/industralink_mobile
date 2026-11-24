@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { storage } from '../lib/storage';
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:5000/api/v1';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
 export const USE_MOCKS = process.env.EXPO_PUBLIC_USE_MOCKS !== 'false';
 
 export const apiClient = axios.create({
@@ -19,6 +19,13 @@ apiClient.interceptors.request.use(async (config) => {
   }
   return config;
 });
+
+/**
+ * A picked file (local uri) in the form React Native's FormData sends as a real file.
+ * The backend checks the real content, so the type here only helps the upload.
+ */
+export const fileForUpload = (uri: string, name: string, mimeType?: string) =>
+  ({ uri, name, type: mimeType ?? 'application/octet-stream' }) as unknown as Blob;
 
 // Helper for simulated network delay when in mock mode
 export const delay = (ms = 150) => new Promise((resolve) => setTimeout(resolve, ms));

@@ -36,26 +36,13 @@ export const adminApi = {
     id: string,
     decision: 'approve' | 'reject',
     reason?: string
-  ): Promise<VerificationItem> {
+  ): Promise<void> {
     if (USE_MOCKS) {
       await delay(150);
-      return mockDb.decideVerification(kind || 'company', id, decision, reason);
+      await mockDb.decideVerification(kind || 'company', id, decision, reason);
+      return;
     }
-    const res = await apiClient.post(`/admin/verifications/${id}/decide`, { kind, decision, reason });
-    return res.data;
-  },
-
-  async updateVerification(
-    id: string,
-    decision: 'approved' | 'rejected',
-    reason?: string
-  ): Promise<VerificationItem> {
-    if (USE_MOCKS) {
-      await delay(120);
-      return mockDb.updateVerification(id, decision, reason);
-    }
-    const res = await apiClient.patch(`/admin/verifications/${id}`, { status: decision, reason });
-    return res.data;
+    await apiClient.post(`/admin/verifications/${kind || 'company'}/${id}`, { decision, reason });
   },
 
   async getUsers(params?: { role?: string; q?: string }): Promise<AdminUserRow[]> {
@@ -63,7 +50,14 @@ export const adminApi = {
       await delay();
       return mockDb.getAdminUsers(params);
     }
-    return (await apiClient.get('/admin/users', { params })).data;
+    // The API lists one role at a time; "All" asks for both and merges them, newest first.
+    if (params?.role === 'worker' || params?.role === 'employer') {
+      return (await apiClient.get('/admin/users', { params })).data;
+    }
+    const [workers, employers] = await Promise.all(
+      (['worker', 'employer'] as const).map(async (role) => (await apiClient.get('/admin/users', { params: { ...params, role } })).data as AdminUserRow[])
+    );
+    return [...workers, ...employers].sort((a, b) => b.joinedAt.localeCompare(a.joinedAt));
   },
 
   async setUserStatus(id: string, status: AccountStatus, reason?: string): Promise<AdminUserRow> {
@@ -79,7 +73,7 @@ export const adminApi = {
       await delay(60);
       return mockDb.getUserImpact(id);
     }
-    return (await apiClient.get(`/admin/users/${id}/impact`)).data;
+    return (await apiClient.get(`/admin/user-impact/${id}`)).data;
   },
 
   async getJobs(params?: { q?: string; status?: string }): Promise<AdminJobRow[]> {
@@ -111,7 +105,7 @@ export const adminApi = {
       await delay(150);
       return mockDb.resolveReport(id, action, note);
     }
-    await apiClient.post(`/admin/reports/${id}/resolve`, { action, note });
+    await apiClient.post(`/admin/reports/${id}`, { action, note });
   },
 
   async getTickets(status: string): Promise<SupportTicket[]> {

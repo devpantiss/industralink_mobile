@@ -328,7 +328,7 @@ class MockDatabase {
   }
   private isSuspended(id?: string) {
     const r = this.adminUsers.find((u) => u.id === id);
-    return !!r && (r.status === 'suspended' || r.status === 'blocked');
+    return !!r && r.status === 'blocked';
   }
   /** A job workers can see and apply to. */
   private jobOpen(j: Job) {
@@ -479,7 +479,7 @@ class MockDatabase {
       if (!name?.trim()) this.fail('No account found for this number. Create one to continue.', 'NOT_FOUND');
       p = this.createWorker(name.trim(), d);
     }
-    if (this.isSuspended(p.userId)) this.fail(`Your account is suspended${this.suspendReasonOf(p.userId)}. Please contact help.`, 'BLOCKED');
+    if (this.isSuspended(p.userId)) this.fail('Your account is blocked. Please contact help.', 'BLOCKED');
     this.workerId = p.userId;
     return { token: 'mock-jwt-token-worker', user: this.workerUser(p) };
   }
@@ -500,7 +500,7 @@ class MockDatabase {
     }
     const acc = this.employerAccounts.find((a) => a.email === e);
     if (!acc || acc.password !== password) this.fail('The email or password is not right.', 'INVALID_CREDENTIALS');
-    if (this.isSuspended(acc.companyId)) this.fail(`Your account is suspended${this.suspendReasonOf(acc.companyId)}. Please contact help.`, 'BLOCKED');
+    if (this.isSuspended(acc.companyId)) this.fail('Your account is blocked. Please contact help.', 'BLOCKED');
     this.companyId = acc.companyId;
     return { token: 'mock-jwt-token-employer', user: this.employerUser(acc) };
   }
@@ -730,7 +730,7 @@ class MockDatabase {
   private forWorker(a: Application): WorkerApplication | null {
     const job = this.jobs.find((j) => j.id === a.jobId);
     if (!job) return null;
-    const { rejectionNote: _hidden, hrNote: _private, ...rest } = a;
+    const { rejectionNote: _hidden, ...rest } = a;
     return {
       ...rest,
       timeline: a.timeline.map((e) => (e.stage === 'rejected' ? { stage: e.stage, at: e.at } : e)),
@@ -1276,7 +1276,6 @@ class MockDatabase {
         place: payload?.place || 'The plant gate',
         contactPerson: payload?.contactPerson || undefined,
         bring: payload?.bring || undefined,
-        note: payload?.note || undefined,
       };
     }
     if (stage === 'offer') {
@@ -1287,14 +1286,12 @@ class MockDatabase {
         joiningDate: payload?.joiningDate || '',
         place: payload?.place || this.myCompany.address || this.myCompany.location.city,
         note: payload?.note || undefined,
-        replyBy: payload?.replyBy || undefined,
         sentAt: at,
       };
       app.offerResponse = undefined;
     }
     if (stage === 'rejected') app.rejectionNote = payload?.reason ? String(payload.reason) : undefined;
     if (stage === 'hired') {
-      app.joinedAt = payload?.joinedAt || at.slice(0, 10);
       // Count the people hired for this job; at zero openings left, tell HR to close it.
       if (job) {
         const hired = [...this.applications, ...this.pool].filter((x) => x.jobId === job.id && x.stage === 'hired').length;
@@ -1314,11 +1311,6 @@ class MockDatabase {
     if (stage === 'rejected' && payload?.notify !== false) {
       tell('Update on your application', `${company} has chosen other candidates for ${title} for now. Keep applying: more jobs are waiting.`);
     }
-  }
-  async saveCandidateNote(appId: string, note: string): Promise<void> {
-    const app = this.findApplication(appId);
-    if (!app) this.fail('This application is not available.', 'NOT_FOUND');
-    app.hrNote = note.trim().slice(0, 500) || undefined;
   }
   async searchTalent(params?: { trade?: string; city?: string }): Promise<TalentProfile[]> {
     if (!this.platformSettings.talentSearchEnabled) this.fail('Find workers is turned off for now.', 'DISABLED');
@@ -1382,18 +1374,12 @@ class MockDatabase {
     );
   }
 
-  private suspendReasonOf(id: string): string {
-    const r = this.adminUsers.find((u) => u.id === id)?.suspendReason;
-    return r ? ` (${r})` : '';
-  }
   async setUserStatus(id: string, status: AccountStatus, reason?: string): Promise<AdminUserRow> {
     const u = this.adminUsers.find((x) => x.id === id);
     if (!u) this.fail('User not found', 'NOT_FOUND');
-    if ((u.role as string) === 'admin') this.fail('You cannot suspend an admin account.', 'NOT_ALLOWED');
-    if (status === 'suspended' && (reason?.trim().length ?? 0) < 3) this.fail('Write the reason for the suspension.', 'VALIDATION');
+    if ((u.role as string) === 'admin') this.fail('You cannot block an admin account.', 'NOT_ALLOWED');
     u.status = status;
-    u.suspendReason = status === 'suspended' ? reason!.trim() : undefined;
-    this.log(status === 'suspended' ? `Suspended (${reason!.trim()})` : 'Reactivated', u.name);
+    this.log(status === 'blocked' ? `Blocked${reason?.trim() ? ` (${reason.trim()})` : ''}` : 'Unblocked', u.name);
     return u;
   }
 

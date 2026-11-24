@@ -33,7 +33,6 @@ export const CandidatesScreen: React.FC = () => {
 
   const [q, setQ] = useState('');
   const [stageFilter, setStageFilter] = useState<ApplicationStage | ''>('');
-  const [sort, setSort] = useState<'new' | 'match'>('new');
   const [selecting, setSelecting] = useState(false);
   const [picked, setPicked] = useState<string[]>([]);
   const [rejecting, setRejecting] = useState(false);
@@ -48,14 +47,13 @@ export const CandidatesScreen: React.FC = () => {
   const filtered = useMemo(() => {
     const list = candidates ?? [];
     const search = q.trim().toLowerCase();
-    const sorted = sort === 'match' ? [...list].sort((a, b) => (b.match ?? 0) - (a.match ?? 0)) : list;
-    if (!search) return sorted;
-    return sorted.filter((c) =>
+    if (!search) return list;
+    return list.filter((c) =>
       `${c.worker.name} ${c.worker.location?.city ?? ''} ${c.worker.skills.join(' ')} ${c.worker.licences.join(' ')} ${c.jobTitle}`
         .toLowerCase()
         .includes(search)
     );
-  }, [candidates, q, sort]);
+  }, [candidates, q]);
 
   const byId = new Map((candidates ?? []).map((c) => [c.id, c]));
   const canShortlist = picked.filter((id) => byId.get(id)?.stage === 'applied');
@@ -122,12 +120,7 @@ export const CandidatesScreen: React.FC = () => {
         {/* Stage filter */}
         <FilterChips<'' | ApplicationStage> options={stages} value={stageFilter} onChange={setStageFilter} style={styles.stageChipsRow} />
         <View style={styles.toolRow}>
-          <FilterChips<'new' | 'match'>
-            options={[{ key: 'new', label: t('Newest') }, { key: 'match', label: t('Best fit') }]}
-            value={sort}
-            onChange={setSort}
-            style={styles.stageChipsRow}
-          />
+          <Text style={[styles.sortNote, { color: colors.inkMuted }]}>{t('Newest first')}</Text>
           <TouchableOpacity
             onPress={() => {
               setSelecting(!selecting);
@@ -212,6 +205,7 @@ export const CandidatesScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
+  sortNote: { fontSize: 13, fontWeight: '600', flex: 1 },
   topContainer: {
     paddingHorizontal: 16,
     paddingTop: 12,

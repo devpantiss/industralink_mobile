@@ -4,7 +4,7 @@
  */
 
 export type Role = 'worker' | 'employer' | 'admin';
-export type AccountStatus = 'active' | 'pending' | 'blocked' | 'suspended';
+export type AccountStatus = 'active' | 'pending' | 'blocked';
 export type VerificationStatus = 'pending' | 'approved' | 'rejected';
 
 export type Sector = 'mining' | 'metals' | 'shipping' | 'petroleum' | 'logistics' | 'automotive';
@@ -91,8 +91,6 @@ export interface WorkerProfile {
   safetyTrainingHours?: number;
   employmentType?: 'permanent' | 'contract' | 'any';
   photoUrl?: string;
-  verifiedAadhaar?: boolean;
-  verifiedIti?: boolean;
   workHistory?: WorkHistoryItem[];
 }
 
@@ -208,8 +206,6 @@ export interface Interview {
   place: string;
   contactPerson?: string;
   bring?: string;
-  /** Extra words from HR, e.g. "Come through gate 3". */
-  note?: string;
   response?: 'attending' | 'cant_attend';
   responseNote?: string;
   respondedAt?: string;
@@ -227,17 +223,11 @@ export interface Application {
   sentWith: 'profile' | 'document';
   documentId?: string;
   rejectionNote?: string;
-  /** HR's private note about this candidate. Never shown to the worker. */
-  hrNote?: string;
-  /** The date the worker actually joined (set when HR marks hired). */
-  joinedAt?: string;
   offer?: Offer;
   offerResponse?: 'accepted' | 'declined';
 }
 
 export interface Offer {
-  /** Last day the worker should answer (optional). */
-  replyBy?: string;
   pay: number;
   payPeriod: PayPeriod;
   payType?: PayType;
@@ -253,8 +243,6 @@ export interface WorkerApplication extends Application {
 }
 
 export interface Candidate extends Application {
-  /** How well the worker fits the job, 0 to 100 (trade, experience, education, city). */
-  match?: number;
   worker: WorkerProfile;
   jobTitle: string;
   documents: WorkerDocument[];
@@ -312,8 +300,6 @@ export interface AdminUserRow {
   status: AccountStatus;
   verification?: VerificationStatus;
   joinedAt: string;
-  /** Why the account was suspended (shown to the person when they try to log in). */
-  suspendReason?: string;
 }
 
 export interface CompanyForWorker {

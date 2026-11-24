@@ -133,9 +133,12 @@ export const WorkerProfileScreen: React.FC = () => {
       }
       const res =
         source === 'camera'
-          ? await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], quality: 0.7 })
-          : await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], quality: 0.7 });
-      if (!res.canceled && res.assets[0]?.uri) updatePhotoMutation.mutate(res.assets[0].uri);
+          ? await ImagePicker.launchCameraAsync({ mediaTypes: ['images'], allowsEditing: true, aspect: [1, 1], quality: 0.3, base64: true })
+          : await ImagePicker.launchImageLibraryAsync({ mediaTypes: ['images'], allowsEditing: true, aspect: [1, 1], quality: 0.3, base64: true });
+      const asset = !res.canceled ? res.assets[0] : undefined;
+      // The backend saves a photo sent as image data (a data URL); the JPEG data comes from the picker.
+      if (asset?.base64) updatePhotoMutation.mutate(`data:image/jpeg;base64,${asset.base64}`);
+      else if (asset?.uri) updatePhotoMutation.mutate(asset.uri);
     } catch {
       showToast(t('Could not open the camera or photos. Try again.'), 'error');
     }
