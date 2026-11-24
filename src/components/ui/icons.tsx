@@ -86,6 +86,7 @@ export const CalendarClock = make(P.CalendarCheck, 'CalendarClock');
 export const Camera = make(P.Camera, 'Camera');
 export const Car = make(P.Car, 'Car');
 export const Check = make(P.Check, 'Check');
+export const CheckCheck = make(P.Checks, 'CheckCheck');
 export const CheckCircle2 = make(P.CheckCircle, 'CheckCircle2');
 export const ChevronDown = make(P.CaretDown, 'ChevronDown');
 export const ChevronLeft = make(P.CaretLeft, 'ChevronLeft');

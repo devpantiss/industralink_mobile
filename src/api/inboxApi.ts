@@ -42,12 +42,13 @@ export const inboxApi = {
     return res.data;
   },
 
-  async send(role: InboxRole, applicationId: string, text: string): Promise<Message> {
+  /** clientId: made once per message, so a retry after a network error is saved only once. */
+  async send(role: InboxRole, applicationId: string, text: string, clientId?: string): Promise<Message> {
     if (USE_MOCKS) {
       await delay(80);
       return mockDb.sendMessage(role === 'admin' ? 'employer' : role, applicationId, text);
     }
-    const res = await apiClient.post(`/messages/${applicationId}`, { text });
+    const res = await apiClient.post(`/messages/${applicationId}`, { text, clientId });
     return res.data;
   },
 };

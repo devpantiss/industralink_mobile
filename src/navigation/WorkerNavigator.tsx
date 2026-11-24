@@ -21,11 +21,14 @@ import { InboxScreen, MessagesTabScreen } from '../screens/shared/InboxScreen';
 import { ChatScreen } from '../screens/shared/ChatScreen';
 import { SettingsScreen } from '../screens/shared/SettingsScreen';
 import { TabBar } from '../components/layout/TabBar';
+import { useLiveChat } from '../api/liveChat';
 
 const Tab = createBottomTabNavigator<WorkerTabParamList>();
 const Stack = createNativeStackNavigator<WorkerStackParamList>();
 
 const WorkerTabs: React.FC = () => {
+  // Live chat updates while logged in (new messages, typing, seen ticks).
+  useLiveChat();
   // Unread chat messages show as a badge on the Messages tab.
   const threads = useQuery({ queryKey: [...queryKeys.messages.threads, 'worker'], queryFn: () => inboxApi.threads('worker') });
   const unread = (threads.data ?? []).reduce((sum, th) => sum + th.unread, 0);

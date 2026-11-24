@@ -5,7 +5,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, StyleSheet, FlatList, Pressable } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Send } from '../../components/ui/icons';
+import { Check, CheckCheck, Send } from '../../components/ui/icons';
 import * as Haptics from 'expo-haptics';
 import { Text } from '../../components/ui/Text';
 import { Screen } from '../../components/layout/Screen';
@@ -13,6 +13,7 @@ import { AppHeader } from '../../components/layout/AppHeader';
 import { Input } from '../../components/ui/Input';
 import { ErrorState } from '../../components/ui/ErrorState';
 import { inboxApi, type InboxRole } from '../../api/inboxApi';
+import { sendTyping, useIsTyping, useLiveConnected } from '../../api/liveChat';
 import { queryKeys } from '../../api/keys';
 import { useUiStore } from '../../store/uiStore';
 import { useAuthStore } from '../../store/authStore';
@@ -26,6 +27,18 @@ import { shadows } from '../../theme/shadows';
 const WORKER_QUICK = ['I will be there on time', 'Please share the exact location', 'What time should I report?', 'I have all my documents ready'];
 const HR_QUICK = ['Please bring your original documents', 'Can you join this week?', 'Please confirm you will attend', 'Thank you for your reply'];
 
+/** A message being sent. The clientId is made once, so retries are saved only once. */
+interface Draft {
+  body: string;
+  clientId: string;
+}
+
+/** A unique id for a message (only needs to be unique for this user). */
+const newClientId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 12)}`;
+
+/** No answer from the server at all (bad network), as opposed to an error it sent back. */
+const isNetworkError = (error: unknown) => !(error as { response?: unknown })?.response;
+
 /** One conversation between a worker and HR about an application. */
 export const ChatScreen: React.FC = () => {
   const colors = useUiStore((s) => s.colors);
@@ -37,14 +50,19 @@ export const ChatScreen: React.FC = () => {
   const listRef = useRef<FlatList<Message>>(null);
   const [text, setText] = useState('');
 
+  const live = useLiveConnected();
+  const typing = useIsTyping(threadId);
+  // New messages come live; the timer is only a fallback, slower while connected.
   const q = useQuery({
     queryKey: [...queryKeys.messages.thread(threadId), role],
     queryFn: () => inboxApi.thread(role, threadId),
-    refetchInterval: 8000,
+    refetchInterval: live ? 60_000 : 8_000,
   });
 
   const send = useMutation({
-    mutationFn: (msg: string) => inboxApi.send(role, threadId, msg),
+    mutationFn: ({ body, clientId }: Draft) => inboxApi.send(role, threadId, body, clientId),
+    // Retry only when the network failed. The same clientId makes sure it is saved once.
+    retry: (count, error) => count < 2 && isNetworkError(error),
     onSuccess: () => {
       setText('');
       qc.invalidateQueries({ queryKey: queryKeys.messages.thread(threadId) });
@@ -52,6 +70,11 @@ export const ChatScreen: React.FC = () => {
     },
     onError: (e) => showToast(errorText(e, 'Could not send. Check your connection and try again.'), 'error'),
   });
+
+  // Opening the chat marks it read on the server: refresh the inbox list and the tab badge.
+  useEffect(() => {
+    if (q.dataUpdatedAt) qc.invalidateQueries({ queryKey: queryKeys.messages.threads });
+  }, [q.dataUpdatedAt, qc]);
 
   const messages = q.data?.messages ?? [];
   useEffect(() => {
@@ -62,7 +85,7 @@ export const ChatScreen: React.FC = () => {
     const v = (value ?? text).trim();
     if (!v || send.isPending) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
-    send.mutate(v);
+    send.mutate({ body: v, clientId: newClientId() });
   };
 
   const quick = role === 'worker' ? WORKER_QUICK : HR_QUICK;
@@ -104,13 +127,31 @@ export const ChatScreen: React.FC = () => {
                       <LinearGradient colors={gradients[theme].brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
                     )}
                     <Text style={[typography.body, { color: isMe ? '#FFFFFF' : colors.ink }]}>{m.text}</Text>
-                    <Text style={[typography.tiny, styles.time, { color: isMe ? 'rgba(255,255,255,0.75)' : colors.inkMuted }]}>
-                      {formatDateTime(m.at)}
-                    </Text>
+                    <View style={styles.timeRow}>
+                      <Text style={[typography.tiny, { color: isMe ? 'rgba(255,255,255,0.75)' : colors.inkMuted }]}>
+                        {formatDateTime(m.at)}
+                      </Text>
+                      {isMe && m.seen !== undefined && (
+                        <View accessible accessibilityLabel={m.seen ? t('Seen') : t('Sent')}>
+                          {m.seen ? (
+                            <CheckCheck size={14} color="#FFFFFF" weight="bold" />
+                          ) : (
+                            <Check size={14} color="rgba(255,255,255,0.75)" />
+                          )}
+                        </View>
+                      )}
+                    </View>
                   </View>
                 </View>
               );
             }}
+            ListFooterComponent={
+              typing ? (
+                <Text style={[typography.caption, styles.typing, { color: colors.primary }]} accessibilityLiveRegion="polite">
+                  {t('typing…')}
+                </Text>
+              ) : undefined
+            }
             ListEmptyComponent={
               q.isLoading ? undefined : (
                 <Text style={[typography.body, styles.empty, { color: colors.inkSecondary }]}>
@@ -143,7 +184,10 @@ export const ChatScreen: React.FC = () => {
             <Input
               placeholder={t('Type a message')}
               value={text}
-              onChangeText={setText}
+              onChangeText={(value) => {
+                setText(value);
+                if (value.trim()) sendTyping(threadId);
+              }}
               onSubmitEditing={() => submit()}
               returnKeyType="send"
               containerStyle={styles.textInput}
@@ -171,7 +215,8 @@ const styles = StyleSheet.create({
   // A tighter corner on the side of the sender, like most chat apps.
   mine: { borderBottomRightRadius: 6 },
   theirs: { borderBottomLeftRadius: 6 },
-  time: { marginTop: 4, textAlign: 'right' },
+  timeRow: { marginTop: 4, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: 4 },
+  typing: { marginTop: 6, marginLeft: 4, fontStyle: 'italic' },
   quickBar: { paddingVertical: 6, borderTopWidth: 1 },
   quickScroll: { paddingHorizontal: spacing.lg, gap: 6 },
   quickChip: { minHeight: 36, justifyContent: 'center', paddingHorizontal: 12, borderRadius: 18, borderWidth: 1 },

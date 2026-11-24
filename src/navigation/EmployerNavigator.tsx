@@ -1,4 +1,5 @@
 import { LegalScreen } from '../screens/shared/LegalScreen';
+import { useLiveChat } from '../api/liveChat';
 import { LinearGradient } from 'expo-linear-gradient';
 import { gradients } from '../theme/effects';
 import React from 'react';
@@ -60,6 +61,8 @@ const Drawer = createDrawerNavigator<EmployerDrawerParamList>();
 const Stack = createNativeStackNavigator<EmployerStackParamList>();
 
 const EmployerTabs: React.FC = () => {
+  // Live chat updates while logged in (new messages, typing, seen ticks).
+  useLiveChat();
   // New applicants show as a badge on the Candidates tab.
   const summary = useQuery({ queryKey: queryKeys.employer.summary, queryFn: () => employerApi.getSummary() });
   const threads = useQuery({ queryKey: [...queryKeys.messages.threads, 'employer'], queryFn: () => inboxApi.threads('employer') });
