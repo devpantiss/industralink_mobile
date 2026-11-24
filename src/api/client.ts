@@ -43,6 +43,13 @@ apiClient.interceptors.response.use(
     // Login calls return 401 for wrong credentials; those must not log the user out.
     const url: string = error?.config?.url ?? '';
     if (error?.response?.status === 401 && !url.startsWith('/auth/')) unauthorizedHandler?.();
+    // The backend explains every error as { message, code }. Pass those on, so the screens
+    // show "Please upload a PDF..." instead of "Request failed with status code 415".
+    const body = error?.response?.data;
+    if (body && typeof body.message === 'string') {
+      error.message = body.message;
+      error.code = body.code;
+    }
     return Promise.reject(error);
   },
 );
