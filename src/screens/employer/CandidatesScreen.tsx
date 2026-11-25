@@ -9,7 +9,7 @@ import {
 import { Text, TextInput } from '../../components/ui/Text';
 import { useNavigation } from '@react-navigation/native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Search, UserSearch } from '../../components/ui/icons';
+import { Search } from '../../components/ui/icons';
 import { ErrorState } from '../../components/ui/ErrorState';
 import { ListSkeleton } from '../../components/ui/Skeleton';
 import { Screen } from '../../components/layout/Screen';
@@ -25,6 +25,7 @@ import { Button } from '../../components/ui/Button';
 import { errorText } from '../../lib/errors';
 import type { ApplicationStage } from '../../types';
 import { PullToRefresh } from '../../components/ui/PullToRefresh';
+import { EmptyState } from '../../components/ui/EmptyState';
 
 export const CandidatesScreen: React.FC = () => {
   const navigation = useNavigation<any>();
@@ -157,15 +158,11 @@ export const CandidatesScreen: React.FC = () => {
           ) : isError ? (
             <ErrorState onRetry={() => void refetch()} />
           ) : (
-            <View style={[styles.emptyBox, { backgroundColor: colors.surfaceMuted }]}>
-              <UserSearch size={36} color={colors.inkMuted} />
-              <Text style={[styles.emptyTitle, { color: colors.ink }]}>
-                {t('No candidates found')}
-              </Text>
-              <Text style={[styles.emptySubtitle, { color: colors.inkSecondary }]}>
-                {t('Try a different search, or post a job to get applicants.')}
-              </Text>
-            </View>
+            <EmptyState
+              art="people"
+              title={t('No candidates found')}
+              description={t('Try a different search, or post a job to get applicants.')}
+            />
           )
         }
       />
@@ -240,21 +237,5 @@ const styles = StyleSheet.create({
     padding: 16,
     paddingBottom: 48,
     gap: 10,
-  },
-  emptyBox: {
-    padding: 36,
-    borderRadius: 16,
-    alignItems: 'center',
-    gap: 8,
-    marginTop: 24,
-  },
-  emptyTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    marginTop: 6,
-  },
-  emptySubtitle: {
-    fontSize: 13,
-    textAlign: 'center',
   },
 });

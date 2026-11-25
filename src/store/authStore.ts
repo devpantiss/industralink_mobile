@@ -2,8 +2,6 @@ import { create } from 'zustand';
 import { User, Role } from '../types';
 import { storage } from '../lib/storage';
 import { authApi } from '../api/authApi';
-import { mockDb } from '../mocks/db';
-import { USE_MOCKS } from '../api/client';
 
 interface AuthStoreState {
   user: User | null;
@@ -18,7 +16,6 @@ interface AuthStoreState {
   completeOnboarding: (partial?: Partial<User>) => void;
   loginWithEmail: (email: string, pass: string) => Promise<void>;
   logout: () => Promise<void>;
-  switchRole: (role: Role) => void;
   loginAsDemo: (role: Role) => Promise<void>;
   updateUser: (partial: Partial<User>) => void;
 }
@@ -114,65 +111,8 @@ export const useAuthStore = create<AuthStoreState>((set, get) => ({
     });
   },
 
-  switchRole: (role: Role) => {
-    let mockUser: User;
-    if (role === 'worker') {
-      mockUser = {
-        id: 'usr_worker_1',
-        name: 'Ramesh Kumar',
-        phone: '+91 98765 43210',
-        role: 'worker',
-        verified: true,
-        onboarded: true,
-        city: 'Jamshedpur',
-        trade: 'welder',
-        status: 'active',
-        createdAt: new Date().toISOString(),
-      };
-    } else if (role === 'employer') {
-      mockUser = {
-        id: 'emp:emp_demo',
-        name: 'Pradeep Mohanty',
-        phone: '+91 98111 22334',
-        email: 'recruiter@eastline.demo',
-        role: 'employer',
-        verified: true,
-        onboarded: true,
-        companyId: 'emp_demo',
-        companyName: 'Eastline Heavy Engineering',
-        city: 'Kalinganagar',
-        status: 'active',
-        createdAt: new Date().toISOString(),
-      };
-    } else {
-      mockUser = {
-        id: 'admin',
-        name: 'IndustriaLink Admin',
-        phone: '+91 99999 88888',
-        email: 'ops@industrialink.in',
-        role: 'admin',
-        verified: true,
-        onboarded: true,
-        status: 'active',
-        createdAt: new Date().toISOString(),
-      };
-    }
-    // Demo buttons switch the demo data to that account too.
-    if (USE_MOCKS) mockDb.useDemoAccount(role);
-    const token = `mock-jwt-token-${role}`;
-    storage.setToken(token);
-    storage.setUser(mockUser);
-    set({
-      role,
-      token,
-      user: mockUser,
-      isAuthenticated: true,
-    });
-  },
-
   loginAsDemo: async (role: Role) => {
-    if (USE_MOCKS) return get().switchRole(role);
-    // Real backend: its test login with the demo accounts from the backend's demo data.
+    // The backend's test login (local development only) with its demo accounts.
     const body =
       role === 'worker'
         ? { phone: '9876543210' }

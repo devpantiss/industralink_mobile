@@ -3,7 +3,7 @@ import { View, StyleSheet, FlatList, Pressable } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useQuery } from '@tanstack/react-query';
-import { BadgeCheck, ChevronRight, Search, Building2 } from '../../components/ui/icons';
+import { BadgeCheck, ChevronRight, Search } from '../../components/ui/icons';
 import { Text, TextInput } from '../../components/ui/Text';
 import { Screen } from '../../components/layout/Screen';
 import { AppHeader } from '../../components/layout/AppHeader';
@@ -20,6 +20,7 @@ import type { WorkerStackParamList } from '../../navigation/types';
 import type { Sector } from '../../types';
 import { shadows } from '../../theme/shadows';
 import { PullToRefresh } from '../../components/ui/PullToRefresh';
+import { EmptyState } from '../../components/ui/EmptyState';
 
 type Nav = NativeStackNavigationProp<WorkerStackParamList>;
 
@@ -100,10 +101,7 @@ export const CompaniesScreen: React.FC = () => {
           ) : query.isError ? (
             <ErrorState onRetry={() => void query.refetch()} />
           ) : (
-            <View style={[styles.empty, { backgroundColor: colors.surfaceMuted }]}>
-              <Building2 size={36} color={colors.inkMuted} />
-              <Text style={[styles.emptyTitle, { color: colors.ink }]}>{t('No companies found')}</Text>
-            </View>
+            <EmptyState art="company" title={t('No companies found')} />
           )
         }
       />
@@ -123,6 +121,4 @@ const styles = StyleSheet.create({
   name: { fontSize: 15, fontWeight: '700', flexShrink: 1 },
   meta: { fontSize: 13, marginTop: 2 },
   jobs: { fontSize: 12.5, fontWeight: '700', marginTop: 4 },
-  empty: { margin: 16, padding: 28, borderRadius: 16, alignItems: 'center', gap: 10 },
-  emptyTitle: { fontSize: 15, fontWeight: '700' },
 });

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, StyleSheet, FlatList, Pressable } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Bell, MessageCircle, CalendarClock, BadgeCheck, Users, ShieldCheck, Briefcase, type AppIcon } from '../../components/ui/icons';
+import { Bell, CalendarClock, BadgeCheck, Users, ShieldCheck, Briefcase, type AppIcon } from '../../components/ui/icons';
 import type { ThemeColors, TileColors } from '../../theme/colors';
 import { Text } from '../../components/ui/Text';
 import { Screen } from '../../components/layout/Screen';
@@ -21,6 +21,7 @@ import type { AppNotification, MessageThread } from '../../types';
 import { shadows } from '../../theme/shadows';
 import { useTabBarSpace } from '../../components/layout/TabBar';
 import { PullToRefresh } from '../../components/ui/PullToRefresh';
+import { EmptyState } from '../../components/ui/EmptyState';
 
 /** Messages tab on the bottom bar. */
 export const MessagesTabScreen: React.FC = () => <InboxScreen asTab />;
@@ -110,7 +111,7 @@ export const InboxScreen: React.FC<{ asTab?: boolean }> = ({ asTab = false }) =>
           )}
           ListEmptyComponent={
             notes.isLoading ? <ListSkeleton /> : notes.isError ? <ErrorState onRetry={() => void notes.refetch()} /> : (
-              <Empty icon={<Bell size={34} color={colors.inkMuted} />} text={t('No updates yet')} />
+              <EmptyState art="notifications" title={t('No updates yet')} />
             )
           }
         />
@@ -146,27 +147,20 @@ export const InboxScreen: React.FC<{ asTab?: boolean }> = ({ asTab = false }) =>
           )}
           ListEmptyComponent={
             threads.isLoading ? <ListSkeleton /> : threads.isError ? <ErrorState onRetry={() => void threads.refetch()} /> : (
-              <Empty
-                icon={<MessageCircle size={34} color={colors.inkMuted} />}
-                text={t('No messages yet')}
-                hint={t('You can message after a worker is shortlisted.')}
+              <EmptyState
+                art="messages"
+                title={t('No messages yet')}
+                description={
+                  role === 'worker'
+                    ? t('When a company shortlists you, you can message their HR here.')
+                    : t('You can message after a worker is shortlisted.')
+                }
               />
             )
           }
         />
       )}
     </Screen>
-  );
-};
-
-const Empty: React.FC<{ icon: React.ReactNode; text: string; hint?: string }> = ({ icon, text, hint }) => {
-  const colors = useUiStore((s) => s.colors);
-  return (
-    <View style={[styles.empty, { backgroundColor: colors.surfaceMuted }]}>
-      {icon}
-      <Text style={[styles.title, { color: colors.ink }]}>{text}</Text>
-      {hint ? <Text style={[styles.body, { color: colors.inkSecondary, textAlign: 'center' }]}>{hint}</Text> : null}
-    </View>
   );
 };
 
@@ -204,5 +198,4 @@ const styles = StyleSheet.create({
   time: { fontSize: 12, marginTop: 4 },
   badge: { minWidth: 22, height: 22, borderRadius: 11, paddingHorizontal: 6, alignItems: 'center', justifyContent: 'center' },
   badgeText: { color: '#FFFFFF', fontSize: 11.5, fontWeight: '700' },
-  empty: { padding: 28, borderRadius: 16, alignItems: 'center', gap: 8 },
 });

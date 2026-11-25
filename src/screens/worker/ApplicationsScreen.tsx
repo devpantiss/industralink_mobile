@@ -12,7 +12,6 @@ import {
   Check,
   ChevronRight,
   Clock,
-  FileText,
   Gift,
   Phone,
   XCircle,
@@ -34,6 +33,7 @@ import { t } from '../../lib/i18n';
 import type { WorkerApplication } from '../../types';
 import { shadows } from '../../theme/shadows';
 import { PullToRefresh } from '../../components/ui/PullToRefresh';
+import { EmptyState } from '../../components/ui/EmptyState';
 
 type NavigationProp = NativeStackNavigationProp<WorkerStackParamList>;
 type Tab = 'active' | 'interviews' | 'closed';
@@ -115,24 +115,11 @@ export const ApplicationsScreen: React.FC = () => {
         {isLoading ? (
           <ListSkeleton />
         ) : currentList.length === 0 ? (
-          <View style={[styles.emptyBox, { backgroundColor: colors.surfaceMuted }]}>
-            <FileText size={36} color={colors.inkMuted} />
-            <Text style={[styles.emptyTitle, { color: colors.ink }]}>
-              {tab === 'closed'
-                ? t('Nothing here yet')
-                : tab === 'interviews'
-                ? t('No interviews yet')
-                : t("You haven't applied yet")}
-            </Text>
-            {tab === 'active' && (
-              <TouchableOpacity
-                onPress={() => navigation.navigate('WorkerTabs', { screen: 'FindJobs' })}
-                style={[styles.findJobsBtn, { backgroundColor: colors.primary }]}
-              >
-                <Text style={styles.findJobsBtnText}>{t('Find jobs')}</Text>
-              </TouchableOpacity>
-            )}
-          </View>
+          <EmptyState
+            art="applications"
+            title={tab === 'closed' ? t('Nothing here yet') : tab === 'interviews' ? t('No interviews yet') : t("You haven't applied yet")}
+            action={tab === 'active' ? { label: t('Find jobs'), onPress: () => navigation.navigate('WorkerTabs', { screen: 'FindJobs' }) } : undefined}
+          />
         ) : (
           currentList.map((a) => (
             <ApplicationCard
@@ -367,50 +354,6 @@ const styles = StyleSheet.create({
   },
   tabsWrap: {
     marginBottom: 16,
-  },
-  tabItem: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    height: 44,
-    borderRadius: 11,
-  },
-  tabLabel: {
-    fontSize: 13,
-  },
-  countPill: {
-    paddingHorizontal: 6,
-    paddingVertical: 1,
-    borderRadius: 999,
-  },
-  countPillText: {
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  emptyBox: {
-    padding: 36,
-    borderRadius: 16,
-    alignItems: 'center',
-    gap: 8,
-    marginTop: 20,
-  },
-  emptyTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    marginTop: 6,
-  },
-  findJobsBtn: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 999,
-    marginTop: 8,
-  },
-  findJobsBtnText: {
-    color: '#FFF',
-    fontSize: 14,
-    fontWeight: '700',
   },
   card: {
     borderRadius: 16,

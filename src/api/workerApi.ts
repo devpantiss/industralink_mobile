@@ -1,5 +1,4 @@
-import { apiClient, USE_MOCKS, delay, fileForUpload } from './client';
-import { mockDb } from '../mocks/db';
+import { apiClient, fileForUpload } from './client';
 import type {
   JobForWorker,
   WorkerApplication,
@@ -17,40 +16,22 @@ import type {
 
 export const workerApi = {
   async getSummary(): Promise<WorkerSummary> {
-    if (USE_MOCKS) {
-      await delay(60);
-      return mockDb.getWorkerSummary();
-    }
     const res = await apiClient.get('/worker/summary');
     return res.data;
   },
 
   async getJobs(params?: { search?: string; trade?: string }): Promise<JobForWorker[]> {
-    if (USE_MOCKS) {
-      await delay(60);
-      return mockDb.getJobs(params);
-    }
     // Same search as Find jobs, first page only.
     const res = await apiClient.get('/jobs', { params: { q: params?.search, trade: params?.trade } });
     return res.data.items;
   },
 
   async searchJobs(params?: JobSearchParams): Promise<Paginated<JobForWorker>> {
-    if (USE_MOCKS) {
-      await delay(80);
-      return mockDb.searchJobs(params);
-    }
     const res = await apiClient.get('/jobs', { params });
     return res.data;
   },
 
   async getJob(id: string): Promise<JobForWorker> {
-    if (USE_MOCKS) {
-      await delay(60);
-      const j = await mockDb.getJobById(id);
-      if (!j) throw new Error('Job not found');
-      return j;
-    }
     const res = await apiClient.get(`/jobs/${id}`);
     return res.data;
   },
@@ -60,19 +41,11 @@ export const workerApi = {
   },
 
   async getSavedJobs(): Promise<JobForWorker[]> {
-    if (USE_MOCKS) {
-      await delay(60);
-      return mockDb.getSavedJobs();
-    }
     const res = await apiClient.get('/worker/saved');
     return res.data;
   },
 
   async toggleSaveJob(id: string, forceState?: boolean): Promise<boolean> {
-    if (USE_MOCKS) {
-      await delay(60);
-      return mockDb.toggleSaveJob(id, forceState);
-    }
     // Without forceState, look up the current state and flip it.
     const save = forceState ?? !(await apiClient.get(`/jobs/${id}`)).data.saved;
     const res = save ? await apiClient.post(`/jobs/${id}/save`) : await apiClient.delete(`/jobs/${id}/save`);
@@ -83,39 +56,21 @@ export const workerApi = {
     jobId: string,
     payload?: { sentWith?: string; documentId?: string }
   ): Promise<Application> {
-    if (USE_MOCKS) {
-      await delay(120);
-      return mockDb.applyJob(jobId, payload);
-    }
     const res = await apiClient.post(`/jobs/${jobId}/apply`, { sentWith: payload?.sentWith ?? 'profile', documentId: payload?.documentId });
     return res.data;
   },
 
   async getApplications(): Promise<WorkerApplication[]> {
-    if (USE_MOCKS) {
-      await delay(60);
-      return mockDb.getApplications();
-    }
     const res = await apiClient.get('/worker/applications');
     return res.data;
   },
 
   async getApplication(id: string): Promise<WorkerApplication> {
-    if (USE_MOCKS) {
-      await delay(60);
-      const a = await mockDb.getApplicationById(id);
-      if (!a) throw new Error('Application not found');
-      return a;
-    }
     const res = await apiClient.get(`/worker/applications/${id}`);
     return res.data;
   },
 
   async withdrawApplication(id: string): Promise<void> {
-    if (USE_MOCKS) {
-      await delay(60);
-      return mockDb.withdrawApplication(id);
-    }
     await apiClient.post(`/worker/applications/${id}/withdraw`);
   },
 
@@ -124,10 +79,6 @@ export const workerApi = {
     response: 'attending' | 'cant_attend',
     note?: string
   ): Promise<void> {
-    if (USE_MOCKS) {
-      await delay(60);
-      return mockDb.replyInterview(id, response, note);
-    }
     await apiClient.post(`/worker/applications/${id}/interview-response`, { response, note });
   },
 
@@ -136,45 +87,25 @@ export const workerApi = {
     response: 'accepted' | 'declined',
     note?: string
   ): Promise<void> {
-    if (USE_MOCKS) {
-      await delay(60);
-      return mockDb.replyOffer(id, response, note);
-    }
     await apiClient.post(`/worker/applications/${id}/offer-response`, { response, note });
   },
 
   async getProfile(): Promise<WorkerProfile> {
-    if (USE_MOCKS) {
-      await delay(50);
-      return mockDb.getWorkerProfile();
-    }
     const res = await apiClient.get('/worker/profile');
     return res.data;
   },
 
   async updateProfile(partial: Partial<WorkerProfile>): Promise<WorkerProfile> {
-    if (USE_MOCKS) {
-      await delay(80);
-      return mockDb.updateWorkerProfile(partial);
-    }
     const res = await apiClient.patch('/worker/profile', partial);
     return res.data;
   },
 
   async getDocuments(): Promise<WorkerDocument[]> {
-    if (USE_MOCKS) {
-      await delay(50);
-      return mockDb.getDocuments();
-    }
     const res = await apiClient.get('/worker/documents');
     return res.data;
   },
 
   async uploadDocument(doc: { name: string; type: DocType; fileUrl: string; mimeType?: string; sizeBytes?: number }): Promise<WorkerDocument> {
-    if (USE_MOCKS) {
-      await delay(120);
-      return mockDb.uploadDocument(doc);
-    }
     // A real file upload: the file picked on the phone plus its type.
     const form = new FormData();
     form.append('file', fileForUpload(doc.fileUrl, doc.name, doc.mimeType));
@@ -184,45 +115,23 @@ export const workerApi = {
   },
 
   async deleteDocument(id: string): Promise<void> {
-    if (USE_MOCKS) {
-      await delay(80);
-      return mockDb.deleteDocument(id);
-    }
     await apiClient.delete(`/worker/documents/${id}`);
   },
 
   async setDefaultResume(id: string): Promise<void> {
-    if (USE_MOCKS) {
-      await delay(80);
-      return mockDb.setDefaultResume(id);
-    }
     await apiClient.post(`/worker/documents/${id}/default`);
   },
 
   async listCompanies(params?: { q?: string; sector?: string }): Promise<{ company: Company; openJobs: number }[]> {
-    if (USE_MOCKS) {
-      await delay(80);
-      return mockDb.listCompanies(params);
-    }
     const res = await apiClient.get('/companies', { params });
     return res.data;
   },
 
   async reportJob(jobId: string, reason: ReportReason, details?: string): Promise<void> {
-    if (USE_MOCKS) {
-      await delay(120);
-      return mockDb.reportJob(jobId, reason, details);
-    }
     await apiClient.post(`/jobs/${jobId}/report`, { reason, details });
   },
 
   async getCompany(id: string): Promise<CompanyForWorker> {
-    if (USE_MOCKS) {
-      await delay(60);
-      const res = await mockDb.getCompanyForWorker(id);
-      if (!res) throw new Error('Company not found');
-      return res;
-    }
     const res = await apiClient.get(`/companies/${id}`);
     return res.data;
   },

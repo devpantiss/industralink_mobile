@@ -1,5 +1,4 @@
 import React, { useState, useMemo } from 'react';
-import { GradientFill } from '../../components/ui/GradientFill';
 import { LinearGradient } from 'expo-linear-gradient';
 import { gradients } from '../../theme/effects';
 import { TRADE_ICON } from '../../lib/tradeIcons';
@@ -45,6 +44,7 @@ import { TRADE_LABEL, SECTOR_LABEL, SHIFT_LABEL } from '../../lib/labels';
 import { t } from '../../lib/i18n';
 import type { JobForWorker, JobSearchParams, Sector, Shift, Trade } from '../../types';
 import { PullToRefresh } from '../../components/ui/PullToRefresh';
+import { EmptyState } from '../../components/ui/EmptyState';
 
 type NavigationProp = NativeStackNavigationProp<WorkerStackParamList>;
 
@@ -387,22 +387,12 @@ export const FindJobsScreen: React.FC = () => {
           ) : jobsQuery.isError ? (
             <ErrorState onRetry={() => void jobsQuery.refetch()} />
           ) : (
-          <View style={[styles.emptyBox, { backgroundColor: colors.surfaceMuted }]}>
-            <Search size={36} color={colors.inkMuted} />
-            <Text style={[styles.emptyTitle, { color: colors.ink }]}>
-              {t('No jobs found')}
-            </Text>
-            <Text style={[styles.emptyDesc, { color: colors.inkSecondary }]}>
-              {t('Try removing some filters or searching a nearby city.')}
-            </Text>
-            <TouchableOpacity
-              onPress={handleClearAll}
-              style={[styles.clearAllBtn, { backgroundColor: 'transparent', overflow: 'hidden' }]}
-            >
-              <GradientFill />
-              <Text style={styles.clearAllBtnText}>{t('Clear filters')}</Text>
-            </TouchableOpacity>
-          </View>
+          <EmptyState
+            art="search"
+            title={t('No jobs found')}
+            description={t('Try removing some filters or searching a nearby city.')}
+            action={{ label: t('Clear filters'), onPress: handleClearAll }}
+          />
           )
         }
         ListFooterComponent={
@@ -650,29 +640,6 @@ const styles = StyleSheet.create({
     marginBottom: 0,
     paddingBottom: 22,
   },
-  bannerContainer: {
-    position: 'relative',
-    overflow: 'hidden',
-    paddingHorizontal: 20,
-    paddingTop: 24,
-    paddingBottom: 40,
-  },
-  bannerTextContent: {
-    position: 'relative',
-    zIndex: 2,
-    maxWidth: '85%',
-  },
-  bannerTitle: {
-    fontSize: 24,
-    fontWeight: '700',
-    letterSpacing: -0.5,
-    lineHeight: 32,
-  },
-  bannerSubtitle: {
-    fontSize: 13,
-    lineHeight: 18,
-    marginTop: 6,
-  },
   trustBadgesRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -781,34 +748,6 @@ const styles = StyleSheet.create({
     fontSize: 12.5,
     fontWeight: '600',
   },
-  emptyBox: {
-    margin: 16,
-    padding: 32,
-    borderRadius: 16,
-    alignItems: 'center',
-    gap: 8,
-  },
-  emptyTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    marginTop: 6,
-  },
-  emptyDesc: {
-    fontSize: 13,
-    textAlign: 'center',
-    lineHeight: 18,
-  },
-  clearAllBtn: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 999,
-    marginTop: 10,
-  },
-  clearAllBtnText: {
-    color: '#FFF',
-    fontSize: 13.5,
-    fontWeight: '700',
-  },
   loadMoreBtn: {
     marginHorizontal: 16,
     marginTop: 8,
@@ -821,36 +760,6 @@ const styles = StyleSheet.create({
   loadMoreText: {
     fontSize: 14,
     fontWeight: '600',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.55)',
-    justifyContent: 'flex-end',
-  },
-  filterSheet: {
-    borderTopLeftRadius: 22,
-    borderTopRightRadius: 22,
-    maxHeight: '85%',
-  },
-  filterSheetHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-  },
-  filterSheetTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  clearLinkText: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  filterSheetBody: {
-    padding: 20,
-    gap: 20,
   },
   filterGroup: {
     gap: 10,
@@ -898,10 +807,6 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 999,
   },
-  filterSheetFooter: {
-    padding: 16,
-    borderTopWidth: StyleSheet.hairlineWidth,
-  },
   applyFilterBtn: {
     height: 50,
     borderRadius: 25,
@@ -912,20 +817,6 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 15,
     fontWeight: '700',
-  },
-  sortCard: {
-    margin: 24,
-    borderRadius: 16,
-    padding: 16,
-    alignSelf: 'center',
-    width: '80%',
-    gap: 6,
-  },
-  sortCardTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 6,
-    paddingHorizontal: 10,
   },
   sortRow: {
     flexDirection: 'row',

@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Animated, { FadeIn } from 'react-native-reanimated';
-import { Flag, LifeBuoy, Phone } from '../../components/ui/icons';
+import { Phone } from '../../components/ui/icons';
 import { Text, TextInput } from '../../components/ui/Text';
 import { Screen } from '../../components/layout/Screen';
 import { AppHeader } from '../../components/layout/AppHeader';
@@ -21,6 +21,7 @@ import { openContact } from '../../lib/contact';
 import type { AdminReportRow, ReportReason } from '../../types';
 import { shadows } from '../../theme/shadows';
 import { PullToRefresh } from '../../components/ui/PullToRefresh';
+import { EmptyState } from '../../components/ui/EmptyState';
 
 export const REPORT_REASON_LABEL: Record<ReportReason, string> = {
   asks_money: 'Asked for money',
@@ -114,10 +115,10 @@ function JobReports({ status }: { status: string }) {
         {list.isLoading ? (
           <ListSkeleton />
         ) : !list.data?.length ? (
-          <Empty
-            icon={<Flag size={30} color={colors.inkMuted} />}
+          <EmptyState
+            art="done"
             title={status === 'open' ? 'No open reports' : 'Nothing here'}
-            text="Workers report jobs from the job page."
+            description="Workers report jobs from the job page."
           />
         ) : (
           groupOpen(list.data, status === 'open').map(({ r, all }) => {
@@ -253,11 +254,7 @@ function HelpRequests({ status }: { status: string }) {
       {list.isLoading ? (
         <ListSkeleton />
       ) : !list.data?.length ? (
-        <Empty
-          icon={<LifeBuoy size={30} color={colors.inkMuted} />}
-          title="No help requests"
-          text="People send these from the Help page."
-        />
+        <EmptyState art="done" title="No help requests" description="People send these from the Help page." />
       ) : (
         list.data.map((t) => {
           const money = t.topic.toLowerCase().includes('money');
@@ -311,17 +308,6 @@ function HelpRequests({ status }: { status: string }) {
   );
 }
 
-const Empty: React.FC<{ icon: React.ReactNode; title: string; text: string }> = ({ icon, title, text }) => {
-  const colors = useUiStore((s) => s.colors);
-  return (
-    <View style={[styles.empty, { backgroundColor: colors.surfaceMuted }]}>
-      {icon}
-      <Text style={[styles.emptyTitle, { color: colors.ink }]}>{title}</Text>
-      <Text style={[styles.emptyText, { color: colors.inkSecondary }]}>{text}</Text>
-    </View>
-  );
-};
-
 const Pill: React.FC<{ text: string; bg: string; fg: string }> = ({ text, bg, fg }) => (
   <View style={[styles.pill, { backgroundColor: bg }]}>
     <Text style={[styles.pillText, { color: fg }]}>{text}</Text>
@@ -349,9 +335,6 @@ const styles = StyleSheet.create({
   call: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, height: 38, borderRadius: 19, borderWidth: 1 },
   callText: { fontSize: 13, fontWeight: '700' },
   doneWrap: { alignItems: 'center' },
-  empty: { borderRadius: 16, padding: 28, alignItems: 'center', gap: 6 },
-  emptyTitle: { fontSize: 15, fontWeight: '700' },
-  emptyText: { fontSize: 13, textAlign: 'center' },
   label: { fontSize: 13, fontWeight: '600', marginBottom: 6 },
   textarea: { minHeight: 88, borderWidth: 1, borderRadius: 12, padding: 12, fontSize: 14, textAlignVertical: 'top' },
 });

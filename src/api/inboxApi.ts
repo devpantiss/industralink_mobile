@@ -1,54 +1,35 @@
-import { apiClient, USE_MOCKS, delay } from './client';
-import { mockDb } from '../mocks/db';
+import { apiClient } from './client';
 import type { AppNotification, Message, MessagePage, MessageThread } from '../types';
 
 export type InboxRole = 'worker' | 'employer' | 'admin';
 
 export const inboxApi = {
   async notifications(role: InboxRole): Promise<AppNotification[]> {
-    if (USE_MOCKS) {
-      await delay(60);
-      return mockDb.getNotifications(role);
-    }
     const res = await apiClient.get('/notifications');
     return res.data;
   },
 
   async markRead(role: InboxRole, id: string): Promise<void> {
-    if (USE_MOCKS) return mockDb.markNotificationRead(id);
     await apiClient.post(`/notifications/${id}/read`);
   },
 
   async markAllRead(role: InboxRole): Promise<void> {
-    if (USE_MOCKS) return mockDb.markAllNotificationsRead(role);
     await apiClient.post('/notifications/read-all');
   },
 
   async threads(role: InboxRole): Promise<MessageThread[]> {
-    if (USE_MOCKS) {
-      await delay(60);
-      return mockDb.getThreads(role === 'admin' ? 'employer' : role);
-    }
     const res = await apiClient.get('/messages');
     return res.data;
   },
 
   /** The newest 50 messages (and marks the chat read), or with `before` the 50 before that message. */
   async thread(role: InboxRole, applicationId: string, before?: string): Promise<MessagePage> {
-    if (USE_MOCKS) {
-      await delay(60);
-      return { hasMore: false, ...(await mockDb.getThread(role === 'admin' ? 'employer' : role, applicationId)) };
-    }
     const res = await apiClient.get(`/messages/${applicationId}`, { params: before ? { before } : undefined });
     return res.data;
   },
 
   /** clientId: made once per message, so a retry after a network error is saved only once. */
   async send(role: InboxRole, applicationId: string, text: string, clientId?: string): Promise<Message> {
-    if (USE_MOCKS) {
-      await delay(80);
-      return mockDb.sendMessage(role === 'admin' ? 'employer' : role, applicationId, text);
-    }
     const res = await apiClient.post(`/messages/${applicationId}`, { text, clientId });
     return res.data;
   },

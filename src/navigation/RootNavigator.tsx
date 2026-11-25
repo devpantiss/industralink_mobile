@@ -9,14 +9,12 @@ import { WorkerNavigator } from './WorkerNavigator';
 import { EmployerNavigator } from './EmployerNavigator';
 import { AdminNavigator } from './AdminNavigator';
 import { useAuthStore } from '../store/authStore';
-import { resetDemoData } from '../mocks/persist';
 import { setLangScope } from '../lib/i18n';
 import { useUiStore } from '../store/uiStore';
 import { ToastContainer } from '../components/ui/Toast';
 import { OfflineBanner } from '../components/layout/OfflineBanner';
-import { USE_MOCKS, setUnauthorizedHandler } from '../api/client';
+import { setUnauthorizedHandler } from '../api/client';
 import { OnboardingScreen } from '../screens/auth/OnboardingScreen';
-import type { Role } from '../types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -112,27 +110,24 @@ export const RootNavigator: React.FC = () => {
     return () => setUnauthorizedHandler(null);
   }, []);
 
-  // Demo links (mock data only): industrialink://demo/worker | employer | admin signs in as that role,
-  // demo/logout signs out, demo/light | dark | system sets the theme, demo/reset clears saved demo data, demo/en | hi | or sets the language.
+  // Development builds only: industrialink://dev/worker | employer | admin logs in with the
+  // backend's test login, dev/logout signs out. Handy for checking screens from a script.
   useEffect(() => {
-    if (!USE_MOCKS) return;
+    if (!__DEV__) return;
     const handle = (url: string | null) => {
-      const path = url ? Linking.parse(url).path ?? '' : '';
-      if (path === 'demo/reset') {
-        resetDemoData();
-        return useUiStore.getState().showToast('Demo data reset. Close and reopen the app to start fresh.', 'info');
+      const path = url ? (Linking.parse(url).path ?? '') : '';
+      if (path === 'dev/logout') return void useAuthStore.getState().logout();
+      const match = path.match(/^dev\/(worker|employer|admin)$/);
+      if (match) {
+        useAuthStore
+          .getState()
+          .loginAsDemo(match[1] as 'worker' | 'employer' | 'admin')
+          .catch(() => useUiStore.getState().showToast('Test login failed. Is the backend running?', 'error'));
       }
-      if (path === 'demo/logout') return void useAuthStore.getState().logout();
-      const lg = path.match(/^demo\/(en|hi|or)$/);
-      if (lg) return useUiStore.getState().setLanguage(lg[1] as 'en' | 'hi' | 'or');
-      const th = path.match(/^demo\/(light|dark|system)$/);
-      if (th) return useUiStore.getState().setThemePref(th[1] as 'light' | 'dark' | 'system');
-      const m = path.match(/^demo\/(worker|employer|admin)$/);
-      if (m) useAuthStore.getState().loginAsDemo(m[1] as Role);
     };
-    Linking.getInitialURL().then(handle);
-    const sub = Linking.addEventListener('url', (e) => handle(e.url));
-    return () => sub.remove();
+    void Linking.getInitialURL().then(handle);
+    const subscription = Linking.addEventListener('url', ({ url }) => handle(url));
+    return () => subscription.remove();
   }, []);
 
   const navigationTheme = theme === 'dark' ? {

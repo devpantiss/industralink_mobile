@@ -39,7 +39,6 @@ import { Screen } from '../../components/layout/Screen';
 import { LogoMark } from '../../components/ui/LogoMark';
 import { useUiStore } from '../../store/uiStore';
 import { useAuthStore } from '../../store/authStore';
-import { USE_MOCKS } from '../../api/client';
 import { t } from '../../lib/i18n';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { typography } from '../../theme/typography';
@@ -565,9 +564,6 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
                       </View>
 
                       <View style={styles.resendRow}>
-                        <Text style={[styles.resendHint, { color: colors.inkMuted }]}>
-                          {USE_MOCKS ? 'Demo code: 123456' : ''}
-                        </Text>
                         {countdown > 0 ? (
                           <Text style={[styles.countdownText, { color: colors.inkSecondary }]}>
                             Resend in 0:{countdown < 10 ? `0${countdown}` : countdown}
@@ -726,8 +722,8 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
               )}
             </Animated.View>
 
-            {/* ================= COMPACT DEMO BAR (demo data, or the backend test login in dev builds) ================= */}
-            {(USE_MOCKS || __DEV__) && (
+            {/* Quick test logins (backend test login). Development builds only. */}
+            {__DEV__ && (
             <View style={styles.demoBarWrapper}>
               <View style={styles.demoDividerRow}>
                 <View style={[styles.demoLine, { backgroundColor: colors.border }]} />
@@ -787,7 +783,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
                       <Building2 size={14} color="#0284C7" />
                       <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} style={styles.demoPillLine}>
                         <Text style={[styles.demoPillTitle, { color: colors.ink }]}>HR</Text>
-                        <Text style={[styles.demoPillWho, { color: colors.inkMuted }]}>{USE_MOCKS ? ' · National Eng' : ' · Konark'}</Text>
+                        <Text style={[styles.demoPillWho, { color: colors.inkMuted }]}>{' · Konark'}</Text>
                       </Text>
                     </>
                   )}
@@ -1238,11 +1234,8 @@ const styles = StyleSheet.create({
   resendRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'flex-end',
     marginTop: 8,
-  },
-  resendHint: {
-    fontSize: 11,
   },
   countdownText: {
     fontSize: 11.5,

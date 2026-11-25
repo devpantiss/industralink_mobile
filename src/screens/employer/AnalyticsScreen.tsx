@@ -4,7 +4,7 @@ import { ProgressBar } from '../../components/ui/Progress';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useQuery } from '@tanstack/react-query';
-import { BarChart3, CheckCircle2, ChevronRight, FileText, Timer, Users } from '../../components/ui/icons';
+import { CheckCircle2, ChevronRight, FileText, Timer, Users } from '../../components/ui/icons';
 import { Text } from '../../components/ui/Text';
 import { useTileStyle, TileIcon } from '../../components/ui/tileStyle';
 import { Screen } from '../../components/layout/Screen';
@@ -17,6 +17,7 @@ import { useUiStore } from '../../store/uiStore';
 import type { TileColors } from '../../theme/colors';
 import { shadows } from '../../theme/shadows';
 import { PullToRefresh } from '../../components/ui/PullToRefresh';
+import { EmptyState } from '../../components/ui/EmptyState';
 
 /** Hiring numbers: speed, fill rate, where applicants come from, and each job's steps (web: Analytics). */
 export const AnalyticsScreen: React.FC = () => {
@@ -29,13 +30,7 @@ export const AnalyticsScreen: React.FC = () => {
     if (q.isLoading || !a) return <ListSkeleton count={3} />;
     if (a.totalApplicants === 0)
       return (
-        <View style={[styles.empty, { backgroundColor: colors.surfaceMuted }]}>
-          <BarChart3 size={32} color={colors.inkMuted} />
-          <Text style={[styles.emptyTitle, { color: colors.ink }]}>No numbers yet</Text>
-          <Text style={[styles.emptyText, { color: colors.inkSecondary }]}>
-            Numbers appear once people start applying to your jobs.
-          </Text>
-        </View>
+        <EmptyState art="chart" title="No numbers yet" description="Numbers appear once people start applying to your jobs." />
       );
 
     const maxWeek = Math.max(1, ...a.applicantsPerWeek.map((w) => w.count));
@@ -232,7 +227,4 @@ const styles = StyleSheet.create({
   stepNum: { fontSize: 17, fontWeight: '700' },
   stepOf: { fontSize: 12, fontWeight: '600' },
   stepLabel: { fontSize: 11.5, fontWeight: '600', marginTop: 1 },
-  empty: { borderRadius: 16, padding: 28, alignItems: 'center', gap: 6 },
-  emptyTitle: { fontSize: 15, fontWeight: '700' },
-  emptyText: { fontSize: 13, textAlign: 'center', lineHeight: 18 },
 });

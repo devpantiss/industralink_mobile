@@ -1,5 +1,4 @@
-import { apiClient, USE_MOCKS, delay } from './client';
-import { mockDb } from '../mocks/db';
+import { apiClient } from './client';
 import {
   VerificationItem,
   AdminSummary,
@@ -14,19 +13,11 @@ import {
 
 export const adminApi = {
   async getSummary(): Promise<AdminSummary> {
-    if (USE_MOCKS) {
-      await delay();
-      return mockDb.getAdminSummary();
-    }
     const res = await apiClient.get('/admin/summary');
     return res.data;
   },
 
   async getVerifications(): Promise<VerificationItem[]> {
-    if (USE_MOCKS) {
-      await delay();
-      return mockDb.getVerifications();
-    }
     const res = await apiClient.get('/admin/verifications');
     return res.data;
   },
@@ -37,19 +28,10 @@ export const adminApi = {
     decision: 'approve' | 'reject',
     reason?: string
   ): Promise<void> {
-    if (USE_MOCKS) {
-      await delay(150);
-      await mockDb.decideVerification(kind || 'company', id, decision, reason);
-      return;
-    }
     await apiClient.post(`/admin/verifications/${kind || 'company'}/${id}`, { decision, reason });
   },
 
   async getUsers(params?: { role?: string; q?: string }): Promise<AdminUserRow[]> {
-    if (USE_MOCKS) {
-      await delay();
-      return mockDb.getAdminUsers(params);
-    }
     // The API lists one role at a time; "All" asks for both and merges them, newest first.
     if (params?.role === 'worker' || params?.role === 'employer') {
       return (await apiClient.get('/admin/users', { params })).data;
@@ -61,91 +43,47 @@ export const adminApi = {
   },
 
   async setUserStatus(id: string, status: AccountStatus, reason?: string): Promise<AdminUserRow> {
-    if (USE_MOCKS) {
-      await delay(150);
-      return mockDb.setUserStatus(id, status, reason);
-    }
     return (await apiClient.patch(`/admin/users/${id}`, { status, reason })).data;
   },
 
   async getUserImpact(id: string): Promise<{ activeJobs: number; applicants: number }> {
-    if (USE_MOCKS) {
-      await delay(60);
-      return mockDb.getUserImpact(id);
-    }
     return (await apiClient.get(`/admin/user-impact/${id}`)).data;
   },
 
   async getJobs(params?: { q?: string; status?: string }): Promise<AdminJobRow[]> {
-    if (USE_MOCKS) {
-      await delay();
-      return mockDb.getAdminJobs(params);
-    }
     return (await apiClient.get('/admin/jobs', { params })).data;
   },
 
   async removeJob(id: string, reason: string): Promise<void> {
-    if (USE_MOCKS) {
-      await delay(150);
-      return mockDb.removeJob(id, reason);
-    }
     await apiClient.post(`/admin/jobs/${id}/remove`, { reason });
   },
 
   async getReports(status: string): Promise<AdminReportRow[]> {
-    if (USE_MOCKS) {
-      await delay();
-      return mockDb.getReports(status);
-    }
     return (await apiClient.get('/admin/reports', { params: { status } })).data;
   },
 
   async resolveReport(id: string, action: 'dismiss' | 'remove_job', note?: string): Promise<void> {
-    if (USE_MOCKS) {
-      await delay(150);
-      return mockDb.resolveReport(id, action, note);
-    }
     await apiClient.post(`/admin/reports/${id}`, { action, note });
   },
 
   async getTickets(status: string): Promise<SupportTicket[]> {
-    if (USE_MOCKS) {
-      await delay();
-      return mockDb.getTickets(status);
-    }
     return (await apiClient.get('/admin/support', { params: { status } })).data;
   },
 
   async closeTicket(id: string): Promise<void> {
-    if (USE_MOCKS) {
-      await delay(120);
-      return mockDb.closeTicket(id);
-    }
     await apiClient.post(`/admin/support/${id}/close`);
   },
 
   async getAudit(): Promise<AuditEntry[]> {
-    if (USE_MOCKS) {
-      await delay();
-      return mockDb.getAudit();
-    }
     return (await apiClient.get('/admin/audit')).data;
   },
 
   async getPlatformSettings(): Promise<PlatformSettings> {
-    if (USE_MOCKS) {
-      await delay(60);
-      return mockDb.getPlatformSettings();
-    }
     const res = await apiClient.get('/admin/settings');
     return res.data;
   },
 
   async updatePlatformSettings(changes: Partial<PlatformSettings>): Promise<PlatformSettings> {
-    if (USE_MOCKS) {
-      await delay(80);
-      return mockDb.updatePlatformSettings(changes);
-    }
     const res = await apiClient.patch('/admin/settings', changes);
     return res.data;
   },

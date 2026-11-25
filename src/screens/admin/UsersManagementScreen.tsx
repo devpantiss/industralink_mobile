@@ -3,7 +3,7 @@ import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
 import { View, StyleSheet, Pressable } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Animated, { FadeIn } from 'react-native-reanimated';
-import { Search, Users, X } from '../../components/ui/icons';
+import { Search, X } from '../../components/ui/icons';
 import * as Haptics from 'expo-haptics';
 import { Text, TextInput } from '../../components/ui/Text';
 import { Screen } from '../../components/layout/Screen';
@@ -23,6 +23,7 @@ import { formatDate, formatPhone } from '../../lib/format';
 import type { AdminUserRow } from '../../types';
 import { shadows } from '../../theme/shadows';
 import { PullToRefresh } from '../../components/ui/PullToRefresh';
+import { EmptyState } from '../../components/ui/EmptyState';
 
 type RoleKey = 'all' | 'worker' | 'employer';
 const SUSPEND_REASONS = ['Asked workers for money', 'Fake or false details', 'Abusive behaviour', 'Repeated policy breaks', 'Other'];
@@ -113,10 +114,7 @@ export const UsersManagementScreen: React.FC = () => {
         {list.isLoading ? (
           <ListSkeleton />
         ) : !list.data?.length ? (
-          <View style={[styles.empty, { backgroundColor: colors.surfaceMuted }]}>
-            <Users size={30} color={colors.inkMuted} />
-            <Text style={[styles.emptyTitle, { color: colors.ink }]}>No one found</Text>
-          </View>
+          <EmptyState art="people" title="No one found" />
         ) : (
           list.data.map((u) => {
             const blocked = u.status === 'blocked';
@@ -265,6 +263,4 @@ const styles = StyleSheet.create({
   pillText: { fontSize: 11, fontWeight: '700' },
   action: { height: 34, paddingHorizontal: 14, borderRadius: 17, borderWidth: 1, justifyContent: 'center' },
   actionText: { fontSize: 13, fontWeight: '700' },
-  empty: { borderRadius: 16, padding: 28, alignItems: 'center', gap: 6 },
-  emptyTitle: { fontSize: 15, fontWeight: '700' },
 });

@@ -1,11 +1,9 @@
 import React from 'react';
-import { GradientFill } from '../../components/ui/GradientFill';
-import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, ScrollView } from 'react-native';
 import { Text } from '../../components/ui/Text';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Bookmark } from '../../components/ui/icons';
 import type { WorkerStackParamList } from '../../navigation/types';
 import { ListSkeleton } from '../../components/ui/Skeleton';
 import { Screen } from '../../components/layout/Screen';
@@ -18,6 +16,7 @@ import { useUiStore } from '../../store/uiStore';
 import { t } from '../../lib/i18n';
 import type { JobForWorker } from '../../types';
 import { PullToRefresh } from '../../components/ui/PullToRefresh';
+import { EmptyState } from '../../components/ui/EmptyState';
 
 type NavigationProp = NativeStackNavigationProp<WorkerStackParamList>;
 
@@ -63,22 +62,12 @@ export const SavedJobsScreen: React.FC = () => {
         {isLoading ? (
           <ListSkeleton />
         ) : savedList.length === 0 ? (
-          <View style={[styles.emptyBox, { backgroundColor: colors.surfaceMuted }]}>
-            <Bookmark size={36} color={colors.inkMuted} />
-            <Text style={[styles.emptyTitle, { color: colors.ink }]}>
-              {t('No saved jobs yet')}
-            </Text>
-            <Text style={[styles.emptyDesc, { color: colors.inkSecondary }]}>
-              {t('Tap the bookmark icon on any job to save it here.')}
-            </Text>
-            <TouchableOpacity
-              onPress={() => navigation.navigate('WorkerTabs', { screen: 'FindJobs' })}
-              style={[styles.findBtn, { backgroundColor: 'transparent', overflow: 'hidden' }]}
-            >
-              <GradientFill />
-              <Text style={styles.findBtnText}>{t('Find jobs')}</Text>
-            </TouchableOpacity>
-          </View>
+          <EmptyState
+            art="saved"
+            title={t('No saved jobs yet')}
+            description={t('Tap the bookmark icon on any job to save it here.')}
+            action={{ label: t('Find jobs'), onPress: () => navigation.navigate('WorkerTabs', { screen: 'FindJobs' }) }}
+          />
         ) : (
           savedList.map((j) => (
             // Unsaved cards fade out and the rest slide up to close the gap.
@@ -113,33 +102,5 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 13.5,
     marginTop: 3,
-  },
-  emptyBox: {
-    padding: 36,
-    borderRadius: 16,
-    alignItems: 'center',
-    gap: 8,
-    marginTop: 20,
-  },
-  emptyTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    marginTop: 6,
-  },
-  emptyDesc: {
-    fontSize: 13,
-    textAlign: 'center',
-    lineHeight: 18,
-  },
-  findBtn: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 999,
-    marginTop: 8,
-  },
-  findBtnText: {
-    color: '#FFF',
-    fontSize: 14,
-    fontWeight: '700',
   },
 });

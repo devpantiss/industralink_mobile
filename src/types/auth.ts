@@ -24,6 +24,5 @@ export interface AuthState {
   role: UserRole;
   login: (user: User, token: string) => void;
   logout: () => void;
-  switchRole: (role: UserRole) => void;
   updateUser: (partial: Partial<User>) => void;
 }

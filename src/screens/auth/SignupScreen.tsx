@@ -802,7 +802,7 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
                       <TextInput
                         value={email}
                         onChangeText={setEmail}
-                        placeholder="recruiter@nationaleng.demo"
+                        placeholder="name@company.com"
                         placeholderTextColor={colors.placeholder}
                         keyboardType="email-address"
                         autoCapitalize="none"

@@ -6,7 +6,7 @@ import { View, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-nat
 import { Text } from '../../components/ui/Text';
 import { useNavigation } from '@react-navigation/native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, Briefcase, MoreVertical, Pencil, Copy, PauseCircle, PlayCircle, Trash2 } from '../../components/ui/icons';
+import { Plus, MoreVertical, Pencil, Copy, PauseCircle, PlayCircle, Trash2 } from '../../components/ui/icons';
 import { Sheet } from '../../components/ui/Sheet';
 import { ListSkeleton } from '../../components/ui/Skeleton';
 import { SegmentedTabs } from '../../components/ui/SegmentedTabs';
@@ -22,6 +22,7 @@ import { t } from '../../lib/i18n';
 import type { Job } from '../../types';
 import { shadows } from '../../theme/shadows';
 import { PullToRefresh } from '../../components/ui/PullToRefresh';
+import { EmptyState } from '../../components/ui/EmptyState';
 
 export const EmployerJobsScreen: React.FC = () => {
   const navigation = useNavigation<any>();
@@ -136,21 +137,11 @@ export const EmployerJobsScreen: React.FC = () => {
         {isLoading ? (
           <ListSkeleton />
         ) : currentList.length === 0 ? (
-          <View style={[styles.emptyBox, { backgroundColor: colors.surfaceMuted }]}>
-            <Briefcase size={36} color={colors.inkMuted} />
-            <Text style={[styles.emptyTitle, { color: colors.ink }]}>{t('No jobs here')}</Text>
-            {tab === 'active' && (
-              <TouchableOpacity
-                onPress={() => navigation.navigate('PostJobWizard')}
-                style={[styles.emptyPostBtn, { backgroundColor: 'transparent', overflow: 'hidden' }]}
-              >
-                <GradientFill />
-                <Text style={{ color: '#FFF', fontWeight: '700', fontSize: 13.5 }}>
-                  {t('Post your first job')}
-                </Text>
-              </TouchableOpacity>
-            )}
-          </View>
+          <EmptyState
+            art="jobs"
+            title={t('No jobs here')}
+            action={tab === 'active' ? { label: t('Post your first job'), onPress: () => navigation.navigate('PostJobWizard') } : undefined}
+          />
         ) : (
           currentList.map((job) => (
             <TouchableOpacity
@@ -327,45 +318,6 @@ const styles = StyleSheet.create({
   },
   tabsWrap: {
     marginBottom: 16,
-  },
-  tabItem: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    height: 44,
-    borderRadius: 11,
-  },
-  tabText: {
-    fontSize: 13,
-  },
-  countPill: {
-    paddingHorizontal: 6,
-    paddingVertical: 1,
-    borderRadius: 999,
-  },
-  countPillText: {
-    fontSize: 11,
-    fontWeight: '700',
-  },
-  emptyBox: {
-    padding: 36,
-    borderRadius: 16,
-    alignItems: 'center',
-    gap: 8,
-    marginTop: 20,
-  },
-  emptyTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    marginTop: 6,
-  },
-  emptyPostBtn: {
-    paddingHorizontal: 18,
-    paddingVertical: 9,
-    borderRadius: 999,
-    marginTop: 8,
   },
   jobCard: {
     borderRadius: 16,

@@ -8,11 +8,10 @@ import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
-import { ArrowLeft, Search, Share2, Users, X, CheckCircle2 } from '../../components/ui/icons';
+import { ArrowLeft, Search, Share2, X, CheckCircle2 } from '../../components/ui/icons';
 import { Text, TextInput } from '../../components/ui/Text';
 import { Screen } from '../../components/layout/Screen';
 import { ListSkeleton } from '../../components/ui/Skeleton';
-import { Button } from '../../components/ui/Button';
 import { CandidateRow, stageTone } from '../../components/domain/CandidateRow';
 import { employerApi } from '../../api/employerApi';
 import { queryKeys } from '../../api/keys';
@@ -23,6 +22,7 @@ import type { EmployerStackParamList } from '../../navigation/types';
 import type { ApplicationStage, Candidate } from '../../types';
 import { shadows } from '../../theme/shadows';
 import { PullToRefresh } from '../../components/ui/PullToRefresh';
+import { EmptyState } from '../../components/ui/EmptyState';
 
 type Tab = 'all' | ApplicationStage;
 const TABS: { key: Tab; label: string }[] = [
@@ -236,23 +236,18 @@ export const JobApplicantsScreen: React.FC = () => {
           {cands.isLoading ? (
             <ListSkeleton count={3} />
           ) : list.length === 0 ? (
-            <View style={[styles.empty, { backgroundColor: colors.surfaceMuted }]}>
-              <Users size={32} color={colors.inkMuted} />
-              <Text style={[styles.emptyTitle, { color: colors.ink }]}>No applicants yet</Text>
-              <Text style={[styles.emptyText, { color: colors.inkSecondary }]}>
-                Share the job on WhatsApp groups to get applicants faster.
-              </Text>
-              <Button label="Share job link" variant="secondary" size="sm" onPress={shareJob} style={styles.emptyBtn} />
-            </View>
+            <EmptyState
+              art="people"
+              title="No applicants yet"
+              description="Share the job on WhatsApp groups to get applicants faster."
+              action={{ label: 'Share job link', onPress: shareJob }}
+            />
           ) : shown.length === 0 ? (
-            <View style={[styles.empty, { backgroundColor: colors.surfaceMuted }]}>
-              <Text style={[styles.emptyTitle, { color: colors.ink }]}>
-                {q ? 'No one matches your search' : `No one in ${tab === 'all' ? 'this list' : STAGE_LABEL[tab as ApplicationStage]}`}
-              </Text>
-              <Text style={[styles.emptyText, { color: colors.inkSecondary }]}>
-                {q ? 'Try a name, city or licence.' : 'People move here as you take them through hiring.'}
-              </Text>
-            </View>
+            <EmptyState
+              art={q ? 'search' : 'people'}
+              title={q ? 'No one matches your search' : `No one in ${tab === 'all' ? 'this list' : STAGE_LABEL[tab as ApplicationStage]}`}
+              description={q ? 'Try a name, city or licence.' : 'People move here as you take them through hiring.'}
+            />
           ) : (
             shown.map((c) => (
               <Animated.View key={c.id} entering={FadeIn.duration(180)} exiting={FadeOut.duration(150)} layout={LinearTransition.duration(220)}>
@@ -329,8 +324,4 @@ const styles = StyleSheet.create({
   },
   searchInput: { flex: 1, fontSize: 14 },
   list: { paddingHorizontal: 16, gap: 10 },
-  empty: { borderRadius: 16, padding: 28, alignItems: 'center', gap: 6, marginTop: 8 },
-  emptyTitle: { fontSize: 15, fontWeight: '700', textAlign: 'center' },
-  emptyText: { fontSize: 13, textAlign: 'center', lineHeight: 18 },
-  emptyBtn: { marginTop: 8 },
 });

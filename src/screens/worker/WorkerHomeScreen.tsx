@@ -16,7 +16,6 @@ import {
   SlidersHorizontal,
   ArrowRight,
   MessageCircle,
-  Briefcase,
   ChevronRight,
   X,
   Send,
@@ -41,6 +40,7 @@ import type { JobForWorker } from '../../types';
 import type { TileColors } from '../../theme/colors';
 import { shadows } from '../../theme/shadows';
 import { PullToRefresh } from '../../components/ui/PullToRefresh';
+import { EmptyState } from '../../components/ui/EmptyState';
 
 type NavigationProp = NativeStackNavigationProp<WorkerStackParamList>;
 
@@ -269,15 +269,11 @@ export const WorkerHomeScreen: React.FC = () => {
         {jobsLoading ? (
           <ListSkeleton />
         ) : jobs.length === 0 ? (
-          <View style={[styles.empty, { backgroundColor: colors.surfaceMuted }]}>
-            <Briefcase size={32} color={colors.inkMuted} />
-            <Text style={[styles.emptyTitle, { color: colors.ink }]}>
-              {q ? t('No jobs match "{q}"', { q }) : t('No jobs yet')}
-            </Text>
-            <Text style={[styles.emptyDesc, { color: colors.inkSecondary }]}>
-              {t('Try another trade, like welder, fitter or driver.')}
-            </Text>
-          </View>
+          <EmptyState
+            art="search"
+            title={q ? t('No jobs match "{q}"', { q }) : t('No jobs yet')}
+            description={t('Try another trade, like welder, fitter or driver.')}
+          />
         ) : (
           jobs.map((j, i) => (
             <Stagger key={j.id} index={i}>
@@ -393,10 +389,6 @@ const styles = StyleSheet.create({
   sectionSub: { fontSize: 13, marginTop: 2 },
   seeAll: { flexDirection: 'row', alignItems: 'center', gap: 2, paddingVertical: 4 },
   seeAllText: { fontSize: 14, fontWeight: '700' },
-
-  empty: { borderRadius: 16, padding: 28, alignItems: 'center', gap: 6 },
-  emptyTitle: { fontSize: 16, fontWeight: '700', textAlign: 'center', marginTop: 4 },
-  emptyDesc: { fontSize: 14, textAlign: 'center' },
 
   allBtn: {
     height: 48,

@@ -1,5 +1,5 @@
 /**
- * Data shapes shared by the UI, mock DB, and real backend.
+ * Data shapes returned by the backend API (see the backend docs/API_CONTRACT.md).
  * Complete 1:1 match with web dashboard types.
  */
 
@@ -149,8 +149,6 @@ export interface WalkIn {
 }
 
 export interface Job {
-  /** Demo data only: which employer account owns this job (seed jobs belong to the demo employer). */
-  ownerCompanyId?: string;
   id: string;
   companyId: string;
   companyName: string;

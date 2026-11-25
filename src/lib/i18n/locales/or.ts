@@ -116,8 +116,6 @@ const dict: Record<string, string> = {
   "Delete for ever": "ସବୁଦିନ ପାଇଁ ହଟାନ୍ତୁ",
   "Delete my account": "ମୋର ଖାତା ବନ୍ଦ କରନ୍ତୁ",
   "Delete your account?": "ଆପଣଙ୍କ ଖାତା ହଟାଇବେ?",
-  "Demo: any 6 digits work.": "ଡେମୋ: ଯେକୌଣସି ୬ଟି ଅଙ୍କ ଚାଲିବ।",
-  "Demo: these contact details are placeholders.": "ଡେମୋ: ଏହି ଯୋଗାଯୋଗ ବିବରଣୀ କେବଳ ଉଦାହରଣ ପାଇଁ।",
   "Description": "ବିବରଣୀ",
   "Details": "ବିବରଣୀ",
   "Direct employer": "ସିଧାସଳଖ ନିଯୋଗଦାତା",

@@ -23,12 +23,11 @@ import { useUiStore } from '../../store/uiStore';
 import { useAuthStore } from '../../store/authStore';
 import { spacing } from '../../theme/spacing';
 import { t } from '../../lib/i18n';
-import { USE_MOCKS } from '../../api/client';
 import { typography } from '../../theme/typography';
 
 export const SettingsScreen: React.FC = () => {
   const { colors, themePref, setThemePref, language, setLanguage, showToast } = useUiStore();
-  const { user, role, switchRole, logout } = useAuthStore();
+  const { user, role, logout } = useAuthStore();
   const currentLang = language;
   const qc = useQueryClient();
   const navigation = useNavigation<any>();
@@ -104,38 +103,8 @@ export const SettingsScreen: React.FC = () => {
         <Card style={styles.card}>
           <Text style={[typography.h2, { color: colors.ink, fontWeight: '700' }]}>{user?.name}</Text>
           <Text style={[typography.caption, { color: colors.inkSecondary }]}>
-            {t(role === 'worker' ? 'Worker' : role === 'employer' ? 'Employer' : 'Admin')} · {user?.phone}
+            {t(role === 'worker' ? 'Worker' : role === 'employer' ? 'Employer' : 'Admin')} · {user?.phone ?? user?.email}
           </Text>
-
-          {/* Demo data only: lets a presenter jump between the three sides of the app. */}
-          {USE_MOCKS && (
-            <>
-              <Text style={[typography.caption, styles.demoLabel, { color: colors.inkMuted }]}>Demo only: switch role</Text>
-              <View style={styles.roleSwitchRow}>
-                {(['worker', 'employer', 'admin'] as const).map((r) => (
-                  <TouchableOpacity
-                    key={r}
-                    accessibilityRole="button"
-                    accessibilityState={{ selected: role === r }}
-                    onPress={() => {
-                      Haptics.selectionAsync().catch(() => {});
-                      switchRole(r);
-                    }}
-                    style={[styles.rolePill, { backgroundColor: role === r ? colors.primary : colors.surfaceMuted }]}
-                  >
-                    <Text
-                      style={[
-                        typography.caption,
-                        { color: role === r ? '#FFFFFF' : colors.ink, fontWeight: '700', textTransform: 'capitalize' },
-                      ]}
-                    >
-                      {r}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </>
-          )}
         </Card>
 
         {/* Vernacular Language Selector (workers only) */}
@@ -375,18 +344,6 @@ const styles = StyleSheet.create({
   card: {
     padding: spacing.lg,
     marginBottom: spacing.md,
-  },
-  demoLabel: { marginTop: spacing.md, fontWeight: '600' },
-  roleSwitchRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-    marginTop: spacing.xs,
-  },
-  rolePill: {
-    flex: 1,
-    paddingVertical: 8,
-    borderRadius: 8,
-    alignItems: 'center',
   },
   langRow: {
     flexDirection: 'row',

@@ -11,7 +11,6 @@ import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
 import { useUiStore } from '../../store/uiStore';
 import { authApi } from '../../api/authApi';
-import { USE_MOCKS } from '../../api/client';
 import { spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
 import type { AuthStackParamList } from '../../navigation/types';
@@ -24,15 +23,15 @@ export const ForgotPasswordScreen: React.FC<Props> = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string>();
   const [loading, setLoading] = useState(false);
-  const [sent, setSent] = useState<{ demoResetLink?: string } | null>(null);
+  const [sent, setSent] = useState(false);
 
   const submit = async () => {
     if (!/^\S+@\S+\.\S+$/.test(email.trim())) return setError('Enter your work email.');
     setError(undefined);
     setLoading(true);
     try {
-      const res = await authApi.forgotPassword(email.trim());
-      setSent({ demoResetLink: res.demoResetLink });
+      await authApi.forgotPassword(email.trim());
+      setSent(true);
     } catch (e: any) {
       setError(errorText(e, 'Could not send the email. Try again.'));
     } finally {
@@ -53,13 +52,6 @@ export const ForgotPasswordScreen: React.FC<Props> = ({ navigation }) => {
             <Text style={[typography.body, { color: colors.inkSecondary, textAlign: 'center' }]}>
               If {email.trim()} has an account, we sent a link to set a new password.
             </Text>
-            {USE_MOCKS && sent.demoResetLink && (
-              <Button
-                label="Demo: open the reset link"
-                variant="outline"
-                onPress={() => navigation.navigate('ResetPassword', { token: 'demo-reset-token' })}
-              />
-            )}
             <Button label="Back to log in" variant="ghost" onPress={() => navigation.navigate('Login')} />
           </View>
         ) : (

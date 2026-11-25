@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { View, StyleSheet, Pressable } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Animated, { FadeIn } from 'react-native-reanimated';
-import { Briefcase, Search, X } from '../../components/ui/icons';
+import { Search, X } from '../../components/ui/icons';
 import { Text, TextInput } from '../../components/ui/Text';
 import { Screen } from '../../components/layout/Screen';
 import { AppHeader } from '../../components/layout/AppHeader';
@@ -20,6 +20,7 @@ import { formatDate, formatPay } from '../../lib/format';
 import type { AdminJobRow } from '../../types';
 import { shadows } from '../../theme/shadows';
 import { PullToRefresh } from '../../components/ui/PullToRefresh';
+import { EmptyState } from '../../components/ui/EmptyState';
 
 const REASONS = ['Asks workers for money', 'Fake or misleading job', 'Pay not shown / unrealistic', 'Duplicate post', 'Other'];
 type StatusKey = 'active' | 'closed' | 'all';
@@ -106,10 +107,7 @@ export const AdminJobsScreen: React.FC = () => {
         {list.isLoading ? (
           <ListSkeleton />
         ) : !list.data?.length ? (
-          <View style={[styles.empty, { backgroundColor: colors.surfaceMuted }]}>
-            <Briefcase size={30} color={colors.inkMuted} />
-            <Text style={[styles.emptyTitle, { color: colors.ink }]}>No jobs found</Text>
-          </View>
+          <EmptyState art="jobs" title="No jobs found" />
         ) : (
           list.data.map((j) => {
             const noPay = !j.payMin && !j.payMax;
@@ -272,8 +270,6 @@ const styles = StyleSheet.create({
   pay: { fontSize: 12.5, flexShrink: 1 },
   removeBtn: { height: 34, paddingHorizontal: 14, borderRadius: 17, borderWidth: 1, justifyContent: 'center' },
   removeText: { fontSize: 13, fontWeight: '700' },
-  empty: { borderRadius: 16, padding: 28, alignItems: 'center', gap: 6 },
-  emptyTitle: { fontSize: 15, fontWeight: '700' },
   actions: { flexDirection: 'row', gap: 10 },
   reasons: { gap: 8, marginBottom: 16 },
   reason: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 50, paddingHorizontal: 14, borderRadius: 12, borderWidth: 1 },

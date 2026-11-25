@@ -16,7 +16,6 @@ import {
   Search,
   Send,
   EyeOff,
-  UserSearch,
   CheckCircle2,
 } from '../../components/ui/icons';
 import * as Haptics from 'expo-haptics';
@@ -38,6 +37,7 @@ import { formatNumber } from '../../lib/format';
 import { t } from '../../lib/i18n';
 import type { TalentProfile, Trade } from '../../types';
 import { shadows } from '../../theme/shadows';
+import { EmptyState } from '../../components/ui/EmptyState';
 
 export const FindWorkersScreen: React.FC = () => {
   const { colors, showToast } = useUiStore();
@@ -170,13 +170,7 @@ export const FindWorkersScreen: React.FC = () => {
         {isLoading ? (
           <ListSkeleton />
         ) : filtered.length === 0 ? (
-          <View style={[styles.emptyBox, { backgroundColor: colors.surfaceMuted }]}>
-            <UserSearch size={36} color={colors.inkMuted} />
-            <Text style={[styles.emptyTitle, { color: colors.ink }]}>{t('No workers match')}</Text>
-            <Text style={[styles.emptySubtitle, { color: colors.inkSecondary }]}>
-              {t('Try fewer filters, or search another trade.')}
-            </Text>
-          </View>
+          <EmptyState art="people" title={t('No workers match')} description={t('Try fewer filters, or search another trade.')} />
         ) : (
           filtered.map((w) => (
             <View
@@ -448,21 +442,6 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: 12.5,
     fontWeight: '700',
-  },
-  emptyBox: {
-    padding: 36,
-    borderRadius: 16,
-    alignItems: 'center',
-    gap: 8,
-    marginTop: 20,
-  },
-  emptyTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    marginTop: 6,
-  },
-  emptySubtitle: {
-    fontSize: 13,
   },
   selectJobLabel: {
     fontSize: 13.5,

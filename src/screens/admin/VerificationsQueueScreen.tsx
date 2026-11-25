@@ -25,6 +25,7 @@ import { formatDate, timeAgo } from '../../lib/format';
 import type { VerificationItem, VerificationStatus } from '../../types';
 import { shadows } from '../../theme/shadows';
 import { PullToRefresh } from '../../components/ui/PullToRefresh';
+import { EmptyState } from '../../components/ui/EmptyState';
 
 const QUICK_REASONS = [
   'GST certificate is for a different company name',
@@ -115,15 +116,11 @@ export const VerificationsQueueScreen: React.FC = () => {
         {q.isLoading ? (
           <ListSkeleton />
         ) : shown.length === 0 ? (
-          <View style={[styles.empty, { backgroundColor: colors.surfaceMuted }]}>
-            <BadgeCheck size={32} color={colors.primary} />
-            <Text style={[styles.emptyTitle, { color: colors.ink }]}>
-              {tab === 'pending' ? 'All caught up' : 'Nothing here yet'}
-            </Text>
-            {tab === 'pending' && (
-              <Text style={[styles.emptyText, { color: colors.inkSecondary }]}>No companies are waiting for approval.</Text>
-            )}
-          </View>
+          <EmptyState
+            art="done"
+            title={tab === 'pending' ? 'All caught up' : 'Nothing here yet'}
+            description={tab === 'pending' ? 'No companies are waiting for approval.' : undefined}
+          />
         ) : (
           shown.map((v) => (
             <Animated.View key={v.id} entering={FadeIn.duration(180)}>
@@ -314,9 +311,6 @@ const styles = StyleSheet.create({
   itemTime: { fontSize: 12 },
   pill: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 999 },
   pillText: { fontSize: 11, fontWeight: '700' },
-  empty: { borderRadius: 16, padding: 28, alignItems: 'center', gap: 6 },
-  emptyTitle: { fontSize: 15, fontWeight: '700' },
-  emptyText: { fontSize: 13, textAlign: 'center' },
   sheetBody: { gap: 12 },
   notice: { flexDirection: 'row', gap: 8, alignItems: 'flex-start', borderRadius: 10, padding: 12 },
   noticeText: { flex: 1, fontSize: 13, lineHeight: 18, fontWeight: '600' },
@@ -336,7 +330,5 @@ const styles = StyleSheet.create({
   actions: { flexDirection: 'row', gap: 10 },
   label: { fontSize: 13, fontWeight: '600' },
   quick: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  quickChip: { borderWidth: 1, borderRadius: 18, paddingHorizontal: 12, paddingVertical: 8 },
-  quickText: { fontSize: 13, fontWeight: '600' },
   textarea: { minHeight: 88, borderWidth: 1, borderRadius: 12, padding: 12, fontSize: 14, textAlignVertical: 'top' },
 });

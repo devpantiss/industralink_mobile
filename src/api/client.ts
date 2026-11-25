@@ -2,7 +2,6 @@ import { create } from 'axios';
 import { storage } from '../lib/storage';
 
 export const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:4000/api/v1';
-export const USE_MOCKS = process.env.EXPO_PUBLIC_USE_MOCKS !== 'false';
 
 export const apiClient = create({
   baseURL: API_BASE_URL,
@@ -26,10 +25,6 @@ apiClient.interceptors.request.use(async (config) => {
  */
 export const fileForUpload = (uri: string, name: string, mimeType?: string) =>
   ({ uri, name, type: mimeType ?? 'application/octet-stream' }) as unknown as Blob;
-
-// Helper for simulated network delay when in mock mode
-export const delay = (ms = 150) => new Promise((resolve) => setTimeout(resolve, ms));
-
 
 let unauthorizedHandler: (() => void) | null = null;
 /** Registered once by the app root; called when the server says the session is no longer valid. */

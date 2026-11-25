@@ -10,7 +10,7 @@
 import { useEffect, useSyncExternalStore } from 'react';
 import { AppState } from 'react-native';
 import { useQueryClient, type QueryClient } from '@tanstack/react-query';
-import { API_BASE_URL, USE_MOCKS } from './client';
+import { API_BASE_URL } from './client';
 import { queryKeys } from './keys';
 import { storage } from '../lib/storage';
 
@@ -163,10 +163,7 @@ function startLiveChat(qc: QueryClient): () => void {
 /** Keeps the live connection open while this screen is shown (the logged-in app root). */
 export function useLiveChat() {
   const qc = useQueryClient();
-  useEffect(() => {
-    if (USE_MOCKS) return;
-    return startLiveChat(qc);
-  }, [qc]);
+  useEffect(() => startLiveChat(qc), [qc]);
 }
 
 /** Tell the other side "typing…" (sent at most every 2.5 s per chat). */

@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react';
 import { View, StyleSheet, ScrollView } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
-import { ScrollText } from '../../components/ui/icons';
 import { Text } from '../../components/ui/Text';
 import { Screen } from '../../components/layout/Screen';
 import { AppHeader } from '../../components/layout/AppHeader';
@@ -12,6 +11,7 @@ import { useUiStore } from '../../store/uiStore';
 import type { AuditEntry } from '../../types';
 import { shadows } from '../../theme/shadows';
 import { PullToRefresh } from '../../components/ui/PullToRefresh';
+import { EmptyState } from '../../components/ui/EmptyState';
 
 const dayLabel = (iso: string) => {
   const d = new Date(iso);
@@ -57,10 +57,7 @@ export const ActivityLogScreen: React.FC = () => {
         {q.isLoading ? (
           <ListSkeleton />
         ) : groups.length === 0 ? (
-          <View style={[styles.empty, { backgroundColor: colors.surfaceMuted }]}>
-            <ScrollText size={30} color={colors.inkMuted} />
-            <Text style={[styles.emptyTitle, { color: colors.ink }]}>No activity yet</Text>
-          </View>
+          <EmptyState art="applications" title="No activity yet" />
         ) : (
           groups.map((g) => (
             <View key={g.day} style={styles.group}>
@@ -98,6 +95,4 @@ const styles = StyleSheet.create({
   time: { width: 64, fontSize: 12.5, paddingTop: 1 },
   text: { flex: 1, fontSize: 14, lineHeight: 20 },
   strong: { fontWeight: '700' },
-  empty: { borderRadius: 16, padding: 28, alignItems: 'center', gap: 6 },
-  emptyTitle: { fontSize: 15, fontWeight: '700' },
 });
