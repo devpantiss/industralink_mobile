@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, FlatList, Pressable, RefreshControl } from 'react-native';
+import { View, StyleSheet, FlatList, Pressable } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Bell, MessageCircle, CalendarClock, BadgeCheck, Users, ShieldCheck, Briefcase, type AppIcon } from '../../components/ui/icons';
@@ -20,6 +20,7 @@ import { t } from '../../lib/i18n';
 import type { AppNotification, MessageThread } from '../../types';
 import { shadows } from '../../theme/shadows';
 import { useTabBarSpace } from '../../components/layout/TabBar';
+import { PullToRefresh } from '../../components/ui/PullToRefresh';
 
 /** Messages tab on the bottom bar. */
 export const MessagesTabScreen: React.FC = () => <InboxScreen asTab />;
@@ -84,7 +85,7 @@ export const InboxScreen: React.FC<{ asTab?: boolean }> = ({ asTab = false }) =>
           data={notes.data ?? []}
           keyExtractor={(n) => n.id}
           contentContainerStyle={styles.list}
-          refreshControl={<RefreshControl refreshing={notes.isRefetching} onRefresh={() => void notes.refetch()} tintColor={colors.primary} />}
+          refreshControl={<PullToRefresh onRefresh={() => notes.refetch()} />}
           ListHeaderComponent={
             unreadNotes > 0 ? (
               <Pressable onPress={() => markAll.mutate()} hitSlop={8} style={styles.markAll}>
@@ -118,7 +119,7 @@ export const InboxScreen: React.FC<{ asTab?: boolean }> = ({ asTab = false }) =>
           data={threads.data ?? []}
           keyExtractor={(th) => th.applicationId}
           contentContainerStyle={[styles.list, asTab && { paddingBottom: tabSpace }]}
-          refreshControl={<RefreshControl refreshing={threads.isRefetching} onRefresh={() => void threads.refetch()} tintColor={colors.primary} />}
+          refreshControl={<PullToRefresh onRefresh={() => threads.refetch()} />}
           renderItem={({ item: th }) => (
             <Pressable
               onPress={() => openThread(th)}

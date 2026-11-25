@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, StyleSheet, FlatList, Pressable, RefreshControl } from 'react-native';
+import { View, StyleSheet, FlatList, Pressable } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useQuery } from '@tanstack/react-query';
@@ -19,6 +19,7 @@ import { t } from '../../lib/i18n';
 import type { WorkerStackParamList } from '../../navigation/types';
 import type { Sector } from '../../types';
 import { shadows } from '../../theme/shadows';
+import { PullToRefresh } from '../../components/ui/PullToRefresh';
 
 type Nav = NativeStackNavigationProp<WorkerStackParamList>;
 
@@ -44,7 +45,7 @@ export const CompaniesScreen: React.FC = () => {
         keyExtractor={(r) => r.company.id}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
-        refreshControl={<RefreshControl refreshing={query.isRefetching} onRefresh={() => void query.refetch()} tintColor={colors.primary} />}
+        refreshControl={<PullToRefresh onRefresh={() => query.refetch()} />}
         ListHeaderComponent={
           <View style={styles.header}>
             <View style={[styles.search, { backgroundColor: colors.surface, borderColor: colors.border }]}>

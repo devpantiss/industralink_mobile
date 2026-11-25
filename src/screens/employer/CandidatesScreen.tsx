@@ -5,7 +5,6 @@ import {
   StyleSheet,
   FlatList,
   TouchableOpacity,
-  RefreshControl,
 } from 'react-native';
 import { Text, TextInput } from '../../components/ui/Text';
 import { useNavigation } from '@react-navigation/native';
@@ -25,6 +24,7 @@ import { RejectSheet } from '../../components/domain/PipelineSheets';
 import { Button } from '../../components/ui/Button';
 import { errorText } from '../../lib/errors';
 import type { ApplicationStage } from '../../types';
+import { PullToRefresh } from '../../components/ui/PullToRefresh';
 
 export const CandidatesScreen: React.FC = () => {
   const navigation = useNavigation<any>();
@@ -39,7 +39,7 @@ export const CandidatesScreen: React.FC = () => {
   const qc = useQueryClient();
   const showToast = useUiStore((s) => s.showToast);
 
-  const { data: candidates, isLoading, isError, isRefetching, refetch } = useQuery({
+  const { data: candidates, isLoading, isError, refetch } = useQuery({
     queryKey: queryKeys.employer.allCandidates({ stage: stageFilter || undefined }),
     queryFn: () => employerApi.getAllCandidates({ stage: stageFilter || undefined }),
   });
@@ -142,13 +142,7 @@ export const CandidatesScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         refreshControl={
-          <RefreshControl
-            refreshing={isRefetching}
-            onRefresh={() => {
-              void refetch();
-            }}
-            tintColor={colors.primary}
-          />
+          <PullToRefresh onRefresh={() => refetch()} />
         }
         renderItem={({ item: c }) => (
           <CandidateRow

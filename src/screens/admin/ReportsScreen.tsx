@@ -1,7 +1,7 @@
 import { errorText } from '../../lib/errors';
 import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
 import React, { useState } from 'react';
-import { View, StyleSheet, RefreshControl, Pressable } from 'react-native';
+import { View, StyleSheet, Pressable } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { Flag, LifeBuoy, Phone } from '../../components/ui/icons';
@@ -20,6 +20,7 @@ import { formatPhone, timeAgo } from '../../lib/format';
 import { openContact } from '../../lib/contact';
 import type { AdminReportRow, ReportReason } from '../../types';
 import { shadows } from '../../theme/shadows';
+import { PullToRefresh } from '../../components/ui/PullToRefresh';
 
 export const REPORT_REASON_LABEL: Record<ReportReason, string> = {
   asks_money: 'Asked for money',
@@ -107,7 +108,7 @@ function JobReports({ status }: { status: string }) {
         contentContainerStyle={styles.list}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={list.isRefetching} onRefresh={() => void list.refetch()} tintColor={colors.primary} />
+          <PullToRefresh onRefresh={() => list.refetch()} />
         }
       >
         {list.isLoading ? (
@@ -246,7 +247,7 @@ function HelpRequests({ status }: { status: string }) {
       contentContainerStyle={styles.list}
       showsVerticalScrollIndicator={false}
       refreshControl={
-        <RefreshControl refreshing={list.isRefetching} onRefresh={() => void list.refetch()} tintColor={colors.primary} />
+        <PullToRefresh onRefresh={() => list.refetch()} />
       }
     >
       {list.isLoading ? (

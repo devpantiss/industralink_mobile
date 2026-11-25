@@ -1,7 +1,7 @@
 import React from 'react';
 import { GradientFill } from '../../components/ui/GradientFill';
 import { gradients } from '../../theme/effects';
-import { View, StyleSheet, ScrollView, RefreshControl, Pressable } from 'react-native';
+import { View, StyleSheet, ScrollView, Pressable } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowRight, BadgeCheck, Briefcase, Building2, HardHat, PartyPopper } from '../../components/ui/icons';
@@ -19,6 +19,7 @@ import { formatNumber } from '../../lib/format';
 import type { AdminDrawerParamList } from '../../navigation/types';
 import type { TileColors } from '../../theme/colors';
 import { shadows } from '../../theme/shadows';
+import { PullToRefresh } from '../../components/ui/PullToRefresh';
 
 /** Admin overview (web: AdminHome): what needs doing today, and how the platform is growing. */
 export const AdminHomeScreen: React.FC = () => {
@@ -37,7 +38,7 @@ export const AdminHomeScreen: React.FC = () => {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={q.isRefetching} onRefresh={() => void q.refetch()} tintColor={colors.primary} />
+          <PullToRefresh onRefresh={() => q.refetch()} />
         }
       >
         <Hero

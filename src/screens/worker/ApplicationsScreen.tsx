@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import { gradients } from '../../theme/effects';
 import { useTabBarSpace } from '../../components/layout/TabBar';
-import { View, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Text } from '../../components/ui/Text';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -33,6 +33,7 @@ import { openContact } from '../../lib/contact';
 import { t } from '../../lib/i18n';
 import type { WorkerApplication } from '../../types';
 import { shadows } from '../../theme/shadows';
+import { PullToRefresh } from '../../components/ui/PullToRefresh';
 
 type NavigationProp = NativeStackNavigationProp<WorkerStackParamList>;
 type Tab = 'active' | 'interviews' | 'closed';
@@ -64,7 +65,6 @@ export const ApplicationsScreen: React.FC = () => {
   const {
     data: applications,
     isLoading,
-    isRefetching,
     refetch,
   } = useQuery({
     queryKey: queryKeys.worker.applications,
@@ -88,13 +88,7 @@ export const ApplicationsScreen: React.FC = () => {
         contentContainerStyle={[styles.scrollContent, { paddingBottom: tabSpace }]}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl
-            refreshing={isRefetching}
-            onRefresh={() => {
-              void refetch();
-            }}
-            tintColor={colors.primary}
-          />
+          <PullToRefresh onRefresh={() => refetch()} />
         }
       >
         {/* Page Title */}

@@ -13,6 +13,9 @@ import { useAuthStore } from '../../store/authStore';
 
 interface AppHeaderProps {
   title?: string;
+  /** A small line under the title, e.g. the job in a chat, or "typing…" (highlighted). */
+  subtitle?: string;
+  subtitleHighlight?: boolean;
   showBack?: boolean;
   rightAction?: React.ReactNode;
 }
@@ -21,7 +24,7 @@ interface AppHeaderProps {
  * Top bar for tab and drawer screens. Sits on the page background (no white strip or
  * hard line) with the brand mark, and outlined round buttons.
  */
-export const AppHeader: React.FC<AppHeaderProps> = ({ title, showBack = false, rightAction }) => {
+export const AppHeader: React.FC<AppHeaderProps> = ({ title, subtitle, subtitleHighlight = false, showBack = false, rightAction }) => {
   const navigation = useNavigation();
   const colors = useUiStore((s) => s.colors);
   const theme = useUiStore((s) => s.theme);
@@ -69,9 +72,20 @@ export const AppHeader: React.FC<AppHeaderProps> = ({ title, showBack = false, r
         ) : null}
 
         {title ? (
-          <Text style={[styles.title, { color: colors.ink }]} numberOfLines={1} accessibilityRole="header">
-            {title}
-          </Text>
+          <View style={styles.titleBlock}>
+            <Text style={[styles.title, { color: colors.ink }]} numberOfLines={1} accessibilityRole="header">
+              {title}
+            </Text>
+            {subtitle ? (
+              <Text
+                style={[styles.subtitle, { color: subtitleHighlight ? colors.primary : colors.inkMuted }]}
+                numberOfLines={1}
+                accessibilityLiveRegion="polite"
+              >
+                {subtitle}
+              </Text>
+            ) : null}
+          </View>
         ) : (
           <View style={styles.brand} accessible accessibilityLabel="IndustriaLink">
             <LogoMark size={30} />
@@ -141,7 +155,9 @@ const styles = StyleSheet.create({
   right: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   brand: { flexDirection: 'row', alignItems: 'center', gap: 9 },
   wordmark: { fontSize: 18, fontWeight: '700', letterSpacing: -0.3 },
-  title: { fontSize: 17, fontWeight: '700', letterSpacing: -0.2, flexShrink: 1 },
+  titleBlock: { flexShrink: 1 },
+  title: { fontSize: 17, fontWeight: '700', letterSpacing: -0.2 },
+  subtitle: { fontSize: 12, fontWeight: '500', marginTop: 1 },
   badge: { position: 'absolute', top: -3, right: -3, minWidth: 18, height: 18, borderRadius: 9, paddingHorizontal: 4, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
   badgeText: { color: '#FFFFFF', fontSize: 11, fontWeight: '700', lineHeight: 13 },
   roundWrap: { borderRadius: 20 },

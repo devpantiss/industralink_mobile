@@ -10,7 +10,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  RefreshControl,
 } from 'react-native';
 import { Text } from '../../components/ui/Text';
 import { useTileStyle, TileIcon } from '../../components/ui/tileStyle';
@@ -39,6 +38,7 @@ import { SHIFT_LABEL } from '../../lib/labels';
 import { formatDateTime, greeting, isAfterAgo } from '../../lib/format';
 import { t } from '../../lib/i18n';
 import { shadows } from '../../theme/shadows';
+import { PullToRefresh } from '../../components/ui/PullToRefresh';
 
 export const EmployerHomeScreen: React.FC = () => {
   const navigation = useNavigation<any>();
@@ -68,14 +68,6 @@ export const EmployerHomeScreen: React.FC = () => {
     .filter((c) => c.interview && isAfterAgo(c.interview.at, 3_600_000))
     .slice(0, 4);
 
-  const isRefreshing = summaryQuery.isRefetching || jobsQuery.isRefetching || interviewsQuery.isRefetching;
-
-  const handleRefresh = () => {
-    summaryQuery.refetch();
-    jobsQuery.refetch();
-    interviewsQuery.refetch();
-  };
-
   const firstName = (user?.name || 'Recruiter').split(' ')[0];
 
   return (
@@ -86,11 +78,7 @@ export const EmployerHomeScreen: React.FC = () => {
         contentContainerStyle={[styles.scrollContent, { paddingBottom: tabSpace }]}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl
-            refreshing={isRefreshing}
-            onRefresh={handleRefresh}
-            tintColor={colors.primary}
-          />
+          <PullToRefresh onRefresh={() => Promise.all([summaryQuery.refetch(), jobsQuery.refetch(), interviewsQuery.refetch()])} />
         }
       >
         <Hero

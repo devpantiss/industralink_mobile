@@ -1,6 +1,6 @@
 import React from 'react';
 import { GradientFill } from '../../components/ui/GradientFill';
-import { View, StyleSheet, ScrollView, TouchableOpacity, RefreshControl } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { Text } from '../../components/ui/Text';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -17,6 +17,7 @@ import { queryKeys } from '../../api/keys';
 import { useUiStore } from '../../store/uiStore';
 import { t } from '../../lib/i18n';
 import type { JobForWorker } from '../../types';
+import { PullToRefresh } from '../../components/ui/PullToRefresh';
 
 type NavigationProp = NativeStackNavigationProp<WorkerStackParamList>;
 
@@ -25,7 +26,7 @@ export const SavedJobsScreen: React.FC = () => {
   const { colors } = useUiStore();
   const qc = useQueryClient();
 
-  const { data: jobs, isLoading, isRefetching, refetch } = useQuery({
+  const { data: jobs, isLoading, refetch } = useQuery({
     queryKey: queryKeys.worker.saved,
     queryFn: () => workerApi.getSavedJobs(),
   });
@@ -49,13 +50,7 @@ export const SavedJobsScreen: React.FC = () => {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl
-            refreshing={isRefetching}
-            onRefresh={() => {
-              void refetch();
-            }}
-            tintColor={colors.primary}
-          />
+          <PullToRefresh onRefresh={() => refetch()} />
         }
       >
         <View style={styles.titleBlock}>

@@ -381,6 +381,13 @@ export interface MessageThread {
   canSend: boolean;
 }
 
+/** One page of a chat, oldest first. `hasMore`: there are older messages to load. */
+export interface MessagePage {
+  thread: MessageThread;
+  messages: Message[];
+  hasMore: boolean;
+}
+
 export interface TalentProfile {
   userId: string;
   name: string;

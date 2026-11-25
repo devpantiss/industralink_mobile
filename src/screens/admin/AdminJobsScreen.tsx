@@ -1,7 +1,7 @@
 import { errorText } from '../../lib/errors';
 import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
 import React, { useState } from 'react';
-import { View, StyleSheet, RefreshControl, Pressable } from 'react-native';
+import { View, StyleSheet, Pressable } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { Briefcase, Search, X } from '../../components/ui/icons';
@@ -19,6 +19,7 @@ import { useUiStore } from '../../store/uiStore';
 import { formatDate, formatPay } from '../../lib/format';
 import type { AdminJobRow } from '../../types';
 import { shadows } from '../../theme/shadows';
+import { PullToRefresh } from '../../components/ui/PullToRefresh';
 
 const REASONS = ['Asks workers for money', 'Fake or misleading job', 'Pay not shown / unrealistic', 'Duplicate post', 'Other'];
 type StatusKey = 'active' | 'closed' | 'all';
@@ -66,7 +67,7 @@ export const AdminJobsScreen: React.FC = () => {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={list.isRefetching} onRefresh={() => void list.refetch()} tintColor={colors.primary} />
+          <PullToRefresh onRefresh={() => list.refetch()} />
         }
       >
         <Text style={[styles.title, { color: colors.ink }]}>Jobs</Text>

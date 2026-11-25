@@ -32,7 +32,7 @@ type LiveEvent =
 /** http://host:4000/api/v1 → ws://host:4000/ws (https → wss). */
 const LIVE_URL = `${API_BASE_URL.replace(/^http/, 'ws').replace(/\/api\/v\d+\/?$/, '')}/ws`;
 
-// ── Small store the screens can watch ──
+// A small store the screens watch with useSyncExternalStore.
 let connected = false;
 /** Chats where the other side is typing right now, each with a timer to clear it. */
 const typingTimers = new Map<string, ReturnType<typeof setTimeout>>();
@@ -57,6 +57,15 @@ function setTyping(applicationId: string, typing: boolean) {
 
 let socket: WebSocket | null = null;
 const lastTypingSent = new Map<string, number>();
+
+/** Closes the current connection; its close event is then ignored (no retry). */
+function closeSocket() {
+  const ws = socket;
+  socket = null;
+  connected = false;
+  changed();
+  ws?.close();
+}
 
 /** Opens the live connection. Returns a function that closes it for good. */
 function startLiveChat(qc: QueryClient): () => void {
@@ -115,7 +124,8 @@ function startLiveChat(qc: QueryClient): () => void {
       }
     };
     ws.onclose = (close) => {
-      if (socket === ws) socket = null;
+      if (socket !== ws) return; // An older connection that was already replaced.
+      socket = null;
       connected = false;
       changed();
       if (stopped || paused || NO_RETRY_CODES.includes(close.code)) return;
@@ -134,7 +144,7 @@ function startLiveChat(qc: QueryClient): () => void {
     } else if (state === 'background') {
       paused = true;
       clearTimeout(retryTimer);
-      socket?.close();
+      closeSocket();
     }
   });
 
@@ -143,9 +153,7 @@ function startLiveChat(qc: QueryClient): () => void {
     stopped = true;
     clearTimeout(retryTimer);
     appState.remove();
-    socket?.close();
-    socket = null;
-    connected = false;
+    closeSocket();
     for (const timer of typingTimers.values()) clearTimeout(timer);
     typingTimers.clear();
     changed();
@@ -153,12 +161,12 @@ function startLiveChat(qc: QueryClient): () => void {
 }
 
 /** Keeps the live connection open while this screen is shown (the logged-in app root). */
-export function useLiveChat(enabled = true) {
+export function useLiveChat() {
   const qc = useQueryClient();
   useEffect(() => {
-    if (USE_MOCKS || !enabled) return;
+    if (USE_MOCKS) return;
     return startLiveChat(qc);
-  }, [qc, enabled]);
+  }, [qc]);
 }
 
 /** Tell the other side "typing…" (sent at most every 2.5 s per chat). */
@@ -173,6 +181,16 @@ export function sendTyping(applicationId: string) {
 /** True while the live connection is up (screens can then refresh less often). */
 export function useLiveConnected(): boolean {
   return useSyncExternalStore(subscribe, () => connected);
+}
+
+const subscribeAppState = (listener: () => void) => {
+  const subscription = AppState.addEventListener('change', listener);
+  return () => subscription.remove();
+};
+
+/** True while the app is open on screen (not in the background). */
+export function useAppActive(): boolean {
+  return useSyncExternalStore(subscribeAppState, () => AppState.currentState === 'active');
 }
 
 /** True while the other side of this chat is typing. */

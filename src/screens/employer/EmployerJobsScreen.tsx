@@ -2,7 +2,7 @@ import { errorText } from '../../lib/errors';
 import { GradientFill } from '../../components/ui/GradientFill';
 import { useTabBarSpace } from '../../components/layout/TabBar';
 import React, { useState } from 'react';
-import { View, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Alert } from 'react-native';
+import { View, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import { Text } from '../../components/ui/Text';
 import { useNavigation } from '@react-navigation/native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -21,6 +21,7 @@ import { formatPay } from '../../lib/format';
 import { t } from '../../lib/i18n';
 import type { Job } from '../../types';
 import { shadows } from '../../theme/shadows';
+import { PullToRefresh } from '../../components/ui/PullToRefresh';
 
 export const EmployerJobsScreen: React.FC = () => {
   const navigation = useNavigation<any>();
@@ -77,7 +78,6 @@ export const EmployerJobsScreen: React.FC = () => {
   const {
     data: allJobs,
     isLoading,
-    isRefetching,
     refetch,
   } = useQuery({
     queryKey: queryKeys.employer.jobs(),
@@ -98,13 +98,7 @@ export const EmployerJobsScreen: React.FC = () => {
         contentContainerStyle={[styles.scrollContent, { paddingBottom: tabSpace }]}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl
-            refreshing={isRefetching}
-            onRefresh={() => {
-              void refetch();
-            }}
-            tintColor={colors.primary}
-          />
+          <PullToRefresh onRefresh={() => refetch()} />
         }
       >
         {/* Title and Post Job Button */}

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
-import { View, StyleSheet, RefreshControl, Pressable } from 'react-native';
+import { View, StyleSheet, Pressable } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { Search, Users, X } from '../../components/ui/icons';
@@ -22,6 +22,7 @@ import { useUiStore } from '../../store/uiStore';
 import { formatDate, formatPhone } from '../../lib/format';
 import type { AdminUserRow } from '../../types';
 import { shadows } from '../../theme/shadows';
+import { PullToRefresh } from '../../components/ui/PullToRefresh';
 
 type RoleKey = 'all' | 'worker' | 'employer';
 const SUSPEND_REASONS = ['Asked workers for money', 'Fake or false details', 'Abusive behaviour', 'Repeated policy breaks', 'Other'];
@@ -73,7 +74,7 @@ export const UsersManagementScreen: React.FC = () => {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={list.isRefetching} onRefresh={() => void list.refetch()} tintColor={colors.primary} />
+          <PullToRefresh onRefresh={() => list.refetch()} />
         }
       >
         <Text style={[styles.title, { color: colors.ink }]}>Users</Text>

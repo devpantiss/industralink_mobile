@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
+import { View, StyleSheet, ScrollView } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { ScrollText } from '../../components/ui/icons';
 import { Text } from '../../components/ui/Text';
@@ -11,6 +11,7 @@ import { queryKeys } from '../../api/keys';
 import { useUiStore } from '../../store/uiStore';
 import type { AuditEntry } from '../../types';
 import { shadows } from '../../theme/shadows';
+import { PullToRefresh } from '../../components/ui/PullToRefresh';
 
 const dayLabel = (iso: string) => {
   const d = new Date(iso);
@@ -45,7 +46,7 @@ export const ActivityLogScreen: React.FC = () => {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={q.isRefetching} onRefresh={() => void q.refetch()} tintColor={colors.primary} />
+          <PullToRefresh onRefresh={() => q.refetch()} />
         }
       >
         <Text style={[styles.title, { color: colors.ink }]}>Activity log</Text>

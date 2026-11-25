@@ -1,7 +1,7 @@
 import React from 'react';
 import { ChartBar } from '../../components/ui/ChartBar';
 import { ProgressBar } from '../../components/ui/Progress';
-import { View, StyleSheet, ScrollView, RefreshControl } from 'react-native';
+import { View, StyleSheet, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useQuery } from '@tanstack/react-query';
 import { BarChart3, CheckCircle2, ChevronRight, FileText, Timer, Users } from '../../components/ui/icons';
@@ -16,6 +16,7 @@ import { queryKeys } from '../../api/keys';
 import { useUiStore } from '../../store/uiStore';
 import type { TileColors } from '../../theme/colors';
 import { shadows } from '../../theme/shadows';
+import { PullToRefresh } from '../../components/ui/PullToRefresh';
 
 /** Hiring numbers: speed, fill rate, where applicants come from, and each job's steps (web: Analytics). */
 export const AnalyticsScreen: React.FC = () => {
@@ -143,7 +144,7 @@ export const AnalyticsScreen: React.FC = () => {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={q.isRefetching} onRefresh={() => void q.refetch()} tintColor={colors.primary} />
+          <PullToRefresh onRefresh={() => q.refetch()} />
         }
       >
         <Text style={[styles.title, { color: colors.ink }]}>Analytics</Text>

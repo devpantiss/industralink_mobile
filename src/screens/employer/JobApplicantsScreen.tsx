@@ -3,7 +3,7 @@ import { ProgressBar } from '../../components/ui/Progress';
 import { gradients } from '../../theme/effects';
 import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
 import React, { useMemo, useState } from 'react';
-import { View, StyleSheet, ScrollView, Pressable, RefreshControl, Share } from 'react-native';
+import { View, StyleSheet, ScrollView, Pressable, Share } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -22,6 +22,7 @@ import { STAGE_LABEL } from '../../lib/labels';
 import type { EmployerStackParamList } from '../../navigation/types';
 import type { ApplicationStage, Candidate } from '../../types';
 import { shadows } from '../../theme/shadows';
+import { PullToRefresh } from '../../components/ui/PullToRefresh';
 
 type Tab = 'all' | ApplicationStage;
 const TABS: { key: Tab; label: string }[] = [
@@ -130,11 +131,7 @@ export const JobApplicantsScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
         stickyHeaderIndices={[1]}
         refreshControl={
-          <RefreshControl
-            refreshing={cands.isRefetching}
-            onRefresh={() => void Promise.all([job.refetch(), cands.refetch()])}
-            tintColor={colors.primary}
-          />
+          <PullToRefresh onRefresh={() => Promise.all([job.refetch(), cands.refetch()])} />
         }
       >
         {/* Job summary */}

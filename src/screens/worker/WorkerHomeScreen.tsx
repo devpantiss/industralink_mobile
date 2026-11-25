@@ -2,7 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { Toggle } from '../../components/ui/Toggle';
 import { useTabBarSpace } from '../../components/layout/TabBar';
 import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
-import { View, StyleSheet, TouchableOpacity, RefreshControl, Pressable } from 'react-native';
+import { View, StyleSheet, TouchableOpacity, Pressable } from 'react-native';
 import { Text, TextInput } from '../../components/ui/Text';
 import { useTileStyle, TileIcon } from '../../components/ui/tileStyle';
 import { ProgressBar } from '../../components/ui/Progress';
@@ -40,6 +40,7 @@ import { t } from '../../lib/i18n';
 import type { JobForWorker } from '../../types';
 import type { TileColors } from '../../theme/colors';
 import { shadows } from '../../theme/shadows';
+import { PullToRefresh } from '../../components/ui/PullToRefresh';
 
 type NavigationProp = NativeStackNavigationProp<WorkerStackParamList>;
 
@@ -99,13 +100,6 @@ export const WorkerHomeScreen: React.FC = () => {
   const firstName = (user?.name || profile?.name || '').split(' ')[0];
   const jobsLoading = latestQuery.isLoading || (profileQuery.isSuccess && forYouQuery.isLoading);
 
-  const refreshing = summaryQuery.isRefetching || latestQuery.isRefetching || forYouQuery.isRefetching;
-  const onRefresh = () => {
-    summaryQuery.refetch();
-    profileQuery.refetch();
-    forYouQuery.refetch();
-    latestQuery.refetch();
-  };
 
   const openNextStep = () => {
     const link = summary?.nextStep?.link ?? '';
@@ -123,7 +117,7 @@ export const WorkerHomeScreen: React.FC = () => {
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} colors={[colors.primary]} />
+          <PullToRefresh onRefresh={() => Promise.all([summaryQuery.refetch(), profileQuery.refetch(), forYouQuery.refetch(), latestQuery.refetch()])} />
         }
       >
         {/* Banner with search */}

@@ -3,7 +3,7 @@ import { Chip } from '../../components/ui/Chip';
 import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
 import { openDocument, openErrorText } from '../../lib/openDocument';
 import React, { useMemo, useState } from 'react';
-import { View, StyleSheet, RefreshControl, Linking, Pressable } from 'react-native';
+import { View, StyleSheet, Linking, Pressable } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import Animated, { FadeIn } from 'react-native-reanimated';
 import { BadgeCheck, ChevronRight, ExternalLink, FileText, AlertTriangle } from '../../components/ui/icons';
@@ -24,6 +24,7 @@ import { COMPANY_DOC_LABEL } from '../../lib/labels';
 import { formatDate, timeAgo } from '../../lib/format';
 import type { VerificationItem, VerificationStatus } from '../../types';
 import { shadows } from '../../theme/shadows';
+import { PullToRefresh } from '../../components/ui/PullToRefresh';
 
 const QUICK_REASONS = [
   'GST certificate is for a different company name',
@@ -91,7 +92,7 @@ export const VerificationsQueueScreen: React.FC = () => {
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
         refreshControl={
-          <RefreshControl refreshing={q.isRefetching} onRefresh={() => void q.refetch()} tintColor={colors.primary} />
+          <PullToRefresh onRefresh={() => q.refetch()} />
         }
       >
         <Text style={[styles.title, { color: colors.ink }]}>Company approvals</Text>

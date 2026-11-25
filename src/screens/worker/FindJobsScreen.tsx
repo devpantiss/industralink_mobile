@@ -11,7 +11,6 @@ import {
   ScrollView,
   FlatList,
   TouchableOpacity,
-  RefreshControl,
   ActivityIndicator,
 } from 'react-native';
 import { Text, TextInput } from '../../components/ui/Text';
@@ -45,6 +44,7 @@ import { useUiStore } from '../../store/uiStore';
 import { TRADE_LABEL, SECTOR_LABEL, SHIFT_LABEL } from '../../lib/labels';
 import { t } from '../../lib/i18n';
 import type { JobForWorker, JobSearchParams, Sector, Shift, Trade } from '../../types';
+import { PullToRefresh } from '../../components/ui/PullToRefresh';
 
 type NavigationProp = NativeStackNavigationProp<WorkerStackParamList>;
 
@@ -195,13 +195,7 @@ export const FindJobsScreen: React.FC = () => {
           if (jobsQuery.hasNextPage && !jobsQuery.isFetchingNextPage) void jobsQuery.fetchNextPage();
         }}
         refreshControl={
-          <RefreshControl
-            refreshing={jobsQuery.isRefetching && !jobsQuery.isFetchingNextPage}
-            onRefresh={() => {
-              void jobsQuery.refetch();
-            }}
-            tintColor={colors.primary}
-          />
+          <PullToRefresh onRefresh={() => jobsQuery.refetch()} />
         }
         renderItem={({ item: j, index }) => (
           <Stagger index={index}>

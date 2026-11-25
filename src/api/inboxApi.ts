@@ -1,6 +1,6 @@
 import { apiClient, USE_MOCKS, delay } from './client';
 import { mockDb } from '../mocks/db';
-import type { AppNotification, Message, MessageThread } from '../types';
+import type { AppNotification, Message, MessagePage, MessageThread } from '../types';
 
 export type InboxRole = 'worker' | 'employer' | 'admin';
 
@@ -33,12 +33,13 @@ export const inboxApi = {
     return res.data;
   },
 
-  async thread(role: InboxRole, applicationId: string): Promise<{ thread: MessageThread; messages: Message[] }> {
+  /** The newest 50 messages (and marks the chat read), or with `before` the 50 before that message. */
+  async thread(role: InboxRole, applicationId: string, before?: string): Promise<MessagePage> {
     if (USE_MOCKS) {
       await delay(60);
-      return mockDb.getThread(role === 'admin' ? 'employer' : role, applicationId);
+      return { hasMore: false, ...(await mockDb.getThread(role === 'admin' ? 'employer' : role, applicationId)) };
     }
-    const res = await apiClient.get(`/messages/${applicationId}`);
+    const res = await apiClient.get(`/messages/${applicationId}`, { params: before ? { before } : undefined });
     return res.data;
   },
 
