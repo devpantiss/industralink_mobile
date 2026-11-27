@@ -15,6 +15,7 @@ import { inboxApi, type InboxRole } from '../../api/inboxApi';
 import { queryKeys } from '../../api/keys';
 import { useUiStore } from '../../store/uiStore';
 import { useAuthStore } from '../../store/authStore';
+import { useOpenLink } from '../../lib/appLinks';
 import { timeAgo } from '../../lib/format';
 import { t } from '../../lib/i18n';
 import type { AppNotification, MessageThread } from '../../types';
@@ -34,6 +35,7 @@ export const InboxScreen: React.FC<{ asTab?: boolean }> = ({ asTab = false }) =>
   const navigation = useNavigation<any>();
   const colors = useUiStore((s) => s.colors);
   const role = useAuthStore((s) => s.role) as InboxRole;
+  const openLink = useOpenLink();
   const qc = useQueryClient();
   const [tab, setTab] = useState<'updates' | 'messages'>(asTab ? 'messages' : 'updates');
   const tabSpace = useTabBarSpace();
@@ -53,14 +55,7 @@ export const InboxScreen: React.FC<{ asTab?: boolean }> = ({ asTab = false }) =>
 
   const openNotification = (n: AppNotification) => {
     if (!n.read) markRead.mutate(n.id);
-    const l = n.link ?? '';
-    if (l.startsWith('application:')) navigation.navigate('ApplicationDetail', { applicationId: l.slice(12) });
-    else if (l === 'jobs') navigation.navigate('WorkerTabs', { screen: 'FindJobs' });
-    else if (l.startsWith('thread:')) navigation.navigate('ChatThread', { threadId: l.slice(7), recipientName: '' });
-    else if (l === 'company') navigation.navigate('EmployerDrawer', { screen: 'Company' });
-    else if (l === 'verifications') navigation.navigate('VerificationsQueue');
-    else if (l === 'reports') navigation.navigate('Reports');
-    else if (l === 'candidates') navigation.navigate('EmployerDrawer', { screen: 'EmployerMain', params: { screen: 'Candidates' } });
+    openLink(n.link);
   };
 
   const openThread = (th: MessageThread) =>

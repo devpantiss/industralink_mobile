@@ -15,10 +15,12 @@ import { ToastContainer } from '../components/ui/Toast';
 import { OfflineBanner } from '../components/layout/OfflineBanner';
 import { setUnauthorizedHandler } from '../api/client';
 import { OnboardingScreen } from '../screens/auth/OnboardingScreen';
+import { PushNotifications } from '../components/layout/PushNotifications';
+import { pushSupported } from '../lib/push';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
-/** Deep links, e.g. industrialink://job/job_1 (shared job links, notifications). */
+/** Deep links, e.g. industrialink://job/job_1 (shared job links; notifications go through lib/appLinks.ts). */
 const linking: LinkingOptions<RootStackParamList> = {
   prefixes: [Linking.createURL('/'), 'industrialink://'],
   config: {
@@ -69,6 +71,7 @@ const linking: LinkingOptions<RootStackParamList> = {
           PostJobWizard: 'employer/post-job/:jobId?',
           CandidateDossier: 'employer/candidate/:candidateId',
           JobApplicants: 'employer/job/:jobId',
+          ChatThread: 'employer/chat/:threadId',
           Inbox: 'employer/inbox',
           Help: 'employer/help',
         },
@@ -190,6 +193,7 @@ export const RootNavigator: React.FC = () => {
           )}
         </Stack.Navigator>
       </OfflineBanner>
+      {isAuthenticated && pushSupported && <PushNotifications />}
       <ToastContainer />
     </NavigationContainer>
   );

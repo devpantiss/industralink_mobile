@@ -20,6 +20,16 @@ export const accountApi = {
     await apiClient.post('/me/delete', { confirm: 'DELETE' });
   },
 
+  /** This phone's Firebase id, so the backend can send push notifications to it. */
+  async savePushToken(token: string): Promise<void> {
+    await apiClient.put('/me/push-token', { token, platform: 'android' });
+  },
+
+  /** No more push notifications on this phone for this login. */
+  async removePushToken(): Promise<void> {
+    await apiClient.delete('/me/push-token');
+  },
+
   /** Help form: becomes a ticket the admin team sees under Reports & help. */
   async sendSupport(body: Omit<SupportTicket, 'id' | 'at' | 'status'>): Promise<void> {
     await apiClient.post('/support', body);

@@ -9,9 +9,6 @@
     },
     "preview": {
       "distribution": "internal",
-      "env": {
-        "EXPO_PUBLIC_USE_MOCKS": "true"
-      },
       "android": {
         "buildType": "apk"
       },

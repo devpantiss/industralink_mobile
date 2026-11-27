@@ -18,6 +18,7 @@ import { useUiStore } from '../../store/uiStore';
 import { useAuthStore } from '../../store/authStore';
 import { errorText } from '../../lib/errors';
 import { formatDateTime } from '../../lib/format';
+import { clearChatNotifications, setOpenChat } from '../../lib/push';
 import { t } from '../../lib/i18n';
 import { gradients } from '../../theme/effects';
 import { shadows } from '../../theme/shadows';
@@ -67,6 +68,14 @@ export const ChatScreen: React.FC = () => {
   const typing = useIsTyping(threadId);
   const focused = useIsFocused();
   const appActive = useAppActive();
+
+  // While the chat is on screen its messages don't pop up, and its notifications leave the phone.
+  useEffect(() => {
+    if (!focused || !appActive) return;
+    setOpenChat(threadId);
+    clearChatNotifications(threadId).catch(() => {});
+    return () => setOpenChat(null);
+  }, [focused, appActive, threadId]);
 
   // Loading the chat marks it read, so it only loads while it is really on screen.
   const threadKey = [...queryKeys.messages.thread(threadId), role];

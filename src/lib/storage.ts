@@ -56,6 +56,23 @@ export const storage = {
     }
   },
 
+  /** Small on/off settings of this phone (not tied to the account). */
+  async getFlag(key: 'pushAsked' | 'pushOff'): Promise<boolean> {
+    try {
+      return (await SecureStore.getItemAsync(`industrialink_${key}`)) === '1';
+    } catch {
+      return false;
+    }
+  },
+
+  async setFlag(key: 'pushAsked' | 'pushOff', on: boolean): Promise<void> {
+    try {
+      await SecureStore.setItemAsync(`industrialink_${key}`, on ? '1' : '0');
+    } catch (e) {
+      console.warn('Failed to save a setting', e);
+    }
+  },
+
   async clearAll(): Promise<void> {
     await this.removeToken();
     await this.removeUser();

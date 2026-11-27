@@ -1,8 +1,8 @@
 import { errorText } from '../../lib/errors';
 import { Toggle } from '../../components/ui/Toggle';
 import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
-import React, { useState } from 'react';
-import { View, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, StyleSheet, TouchableOpacity, Alert, Linking } from 'react-native';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Text } from '../../components/ui/Text';
 import { Moon, Sun, Globe, LogOut, Check, Smartphone, Lock, Trash2, LifeBuoy, ChevronRight, Bell, ShieldCheck, ScrollText, type AppIcon } from '../../components/ui/icons';
@@ -23,6 +23,8 @@ import { useUiStore } from '../../store/uiStore';
 import { useAuthStore } from '../../store/authStore';
 import { spacing } from '../../theme/spacing';
 import { t } from '../../lib/i18n';
+import { getPushState, pushSupported, turnOffPush, turnOnPush, type PushState } from '../../lib/push';
+import { useAppActive } from '../../api/liveChat';
 import { typography } from '../../theme/typography';
 
 export const SettingsScreen: React.FC = () => {
@@ -54,6 +56,25 @@ export const SettingsScreen: React.FC = () => {
   const platform = platformQuery.data;
 
   // Password (company and admin accounts)
+  // Phone notifications. Read again when coming back, e.g. from the phone's own settings.
+  const appActive = useAppActive();
+  const [push, setPush] = useState<PushState | null>(null);
+  useEffect(() => {
+    if (pushSupported && appActive) getPushState().then(setPush).catch(() => {});
+  }, [appActive]);
+  const togglePush = async (on: boolean) => {
+    if (on && push === 'blocked') return void Linking.openSettings();
+    try {
+      if (on) setPush(await turnOnPush());
+      else {
+        await turnOffPush();
+        setPush('off');
+      }
+    } catch (e) {
+      showToast(errorText(e, 'Could not save. Check your connection and try again.'), 'error');
+    }
+  };
+
   const [curPw, setCurPw] = useState('');
   const [newPw, setNewPw] = useState('');
   const [pwError, setPwError] = useState<string>();
@@ -142,9 +163,22 @@ export const SettingsScreen: React.FC = () => {
 
 
         {/* Alerts */}
-        {role !== 'admin' && settings && (
+        {(push || (role !== 'admin' && settings)) && (
           <Card style={styles.card}>
             <SectionTitle icon={Bell} tone={colors.tiles.orange}>{t('Alerts')}</SectionTitle>
+            {push && (
+              <SettingSwitch
+                label={t('Phone notifications')}
+                hint={
+                  push === 'blocked'
+                    ? t('Blocked in your phone settings. Turn on to open them.')
+                    : t('Messages and job updates on this phone.')
+                }
+                value={push === 'on'}
+                onChange={togglePush}
+              />
+            )}
+            {role !== 'admin' && settings && (<>
             <SettingSwitch
               label={role === 'worker' ? t('New jobs that match me') : 'New applicants on my jobs'}
               value={settings.jobAlerts}
@@ -162,6 +196,7 @@ export const SettingsScreen: React.FC = () => {
               value={settings.whatsappAlerts}
               onChange={(v) => saveSettings.mutate({ whatsappAlerts: v })}
             />
+            </>)}
           </Card>
         )}
 

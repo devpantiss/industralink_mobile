@@ -15,6 +15,7 @@ import { Skeleton } from '../../components/ui/Skeleton';
 import { adminApi } from '../../api/adminApi';
 import { queryKeys } from '../../api/keys';
 import { useUiStore } from '../../store/uiStore';
+import { useOpenLink } from '../../lib/appLinks';
 import { formatNumber } from '../../lib/format';
 import type { AdminDrawerParamList } from '../../navigation/types';
 import type { TileColors } from '../../theme/colors';
@@ -29,6 +30,7 @@ export const AdminHomeScreen: React.FC = () => {
   const q = useQuery({ queryKey: queryKeys.admin.summary, queryFn: () => adminApi.getSummary() });
   const s = q.data;
   const go = (screen: keyof AdminDrawerParamList) => navigation.navigate(screen);
+  const openLink = useOpenLink();
   const maxWeek = Math.max(1, ...(s?.signupsPerWeek.map((w) => Math.max(w.workers, w.companies)) ?? [1]));
 
   return (
@@ -93,7 +95,7 @@ export const AdminHomeScreen: React.FC = () => {
             s.attention.map((a, i) => (
               <Pressable
                 key={a.id}
-                onPress={() => go(a.link as keyof AdminDrawerParamList)}
+                onPress={() => openLink(a.link)}
                 accessibilityRole="button"
                 style={({ pressed }) => [
                   styles.attention,

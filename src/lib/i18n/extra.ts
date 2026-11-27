@@ -188,6 +188,13 @@ export const EXTRA_HI: Record<string, string> = {
   'Upload your resume so employers can see it': 'अपना बायोडाटा अपलोड करें ताकि कंपनियां देख सकें',
   'Could not apply. Try again.': 'आवेदन नहीं हो सका। फिर कोशिश करें।',
   'Could not send the report. Try again.': 'शिकायत नहीं भेज सके। फिर कोशिश करें।',
+  'Turn on notifications': 'सूचनाएँ चालू करें',
+  'Get messages from HR and updates on your applications right away, even when the app is closed.': 'HR के संदेश और आपके आवेदनों की खबर तुरंत पाएँ, ऐप बंद होने पर भी।',
+  'Not now': 'अभी नहीं',
+  'Turn on': 'चालू करें',
+  'Phone notifications': 'फ़ोन पर सूचनाएँ',
+  'Messages and job updates on this phone.': 'इस फ़ोन पर संदेश और नौकरी की खबरें।',
+  'Blocked in your phone settings. Turn on to open them.': 'फ़ोन की सेटिंग में बंद है। खोलने के लिए चालू करें।',
 };
 
 export const EXTRA_OR: Record<string, string> = {
@@ -376,6 +383,13 @@ export const EXTRA_OR: Record<string, string> = {
   'Upload your resume so employers can see it': 'ଆପଣଙ୍କ ବାୟୋଡାଟା ଅପଲୋଡ୍ କରନ୍ତୁ ଯେପରି କମ୍ପାନି ଦେଖିପାରିବେ',
   'Could not apply. Try again.': 'ଆବେଦନ ହେଲା ନାହିଁ। ପୁଣି ଚେଷ୍ଟା କରନ୍ତୁ।',
   'Could not send the report. Try again.': 'ରିପୋର୍ଟ ପଠାଇହେଲା ନାହିଁ। ପୁଣି ଚେଷ୍ଟା କରନ୍ତୁ।',
+  'Turn on notifications': 'ସୂଚନା ଚାଲୁ କରନ୍ତୁ',
+  'Get messages from HR and updates on your applications right away, even when the app is closed.': 'HR ର ମେସେଜ୍ ଓ ଆପଣଙ୍କ ଆବେଦନର ଖବର ତୁରନ୍ତ ପାଆନ୍ତୁ, ଆପ୍ ବନ୍ଦ ଥିଲେ ମଧ୍ୟ।',
+  'Not now': 'ଏବେ ନୁହେଁ',
+  'Turn on': 'ଚାଲୁ କରନ୍ତୁ',
+  'Phone notifications': 'ଫୋନରେ ସୂଚନା',
+  'Messages and job updates on this phone.': 'ଏହି ଫୋନରେ ମେସେଜ୍ ଓ ଚାକିରି ଖବର।',
+  'Blocked in your phone settings. Turn on to open them.': 'ଫୋନ ସେଟିଂସରେ ବନ୍ଦ ଅଛି। ଖୋଲିବା ପାଇଁ ଚାଲୁ କରନ୍ତୁ।',
 };
 
 // Onboarding, profile, apply gate and legal pages (added with the product flow work).

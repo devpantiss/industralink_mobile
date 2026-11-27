@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { User, Role } from '../types';
 import { storage } from '../lib/storage';
 import { authApi } from '../api/authApi';
+import { forgetPhone } from '../lib/push';
 
 interface AuthStoreState {
   user: User | null;
@@ -103,6 +104,7 @@ export const useAuthStore = create<AuthStoreState>((set, get) => ({
   logout: async () => {
     // Best effort: log out on the phone even if the server can't be reached.
     await authApi.logout().catch(() => {});
+    await forgetPhone();
     await storage.clearAll();
     set({
       user: null,
