@@ -1,5 +1,5 @@
 import { apiClient } from './client';
-import type { SupportTicket, UserSettings } from '../types';
+import type { SupportTicket, User, UserSettings } from '../types';
 
 export const accountApi = {
   async getSettings(): Promise<UserSettings> {
@@ -12,8 +12,15 @@ export const accountApi = {
     return res.data;
   },
 
-  async changePassword(current: string, next: string): Promise<void> {
+  /** `current` is left out when the account has no password yet (made with Google). */
+  async changePassword(current: string | undefined, next: string): Promise<void> {
     await apiClient.post('/auth/password/change', { current, next });
+  },
+
+  /** Worker's mobile number (10 digits), for companies to call. 409 PHONE_TAKEN if another account has it. */
+  async savePhone(phone: string): Promise<User> {
+    const res = await apiClient.put('/me/phone', { phone });
+    return res.data;
   },
 
   async deleteAccount(): Promise<void> {

@@ -13,11 +13,15 @@ import { useUiStore } from '../../store/uiStore';
 import { authApi } from '../../api/authApi';
 import { spacing } from '../../theme/spacing';
 import { typography } from '../../theme/typography';
+import { t } from '../../lib/i18n';
 import type { AuthStackParamList } from '../../navigation/types';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'ForgotPassword'>;
 
-/** Company and admin accounts only; workers sign in with a code sent by SMS. */
+/**
+ * Every account with a password. The backend sends the link once the email service is set up
+ * (my-notes/STATUS.md); accounts made with Google don't need it.
+ */
 export const ForgotPasswordScreen: React.FC<Props> = ({ navigation }) => {
   const { colors } = useUiStore();
   const [email, setEmail] = useState('');
@@ -26,7 +30,7 @@ export const ForgotPasswordScreen: React.FC<Props> = ({ navigation }) => {
   const [sent, setSent] = useState(false);
 
   const submit = async () => {
-    if (!/^\S+@\S+\.\S+$/.test(email.trim())) return setError('Enter your work email.');
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) return setError(t('Enter a valid email address.'));
     setError(undefined);
     setLoading(true);
     try {
@@ -41,27 +45,27 @@ export const ForgotPasswordScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <Screen edges={['top', 'bottom']}>
-      <AppHeader title="Forgot password" showBack />
+      <AppHeader title={t('Forgot password?')} showBack />
       <KeyboardScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
         {sent ? (
           <View style={styles.center}>
             <View style={[styles.iconCircle, { backgroundColor: colors.successBg }]}>
               <MailCheck size={28} color={colors.successFg} />
             </View>
-            <Text style={[typography.h2, { color: colors.ink, textAlign: 'center' }]}>Check your email</Text>
+            <Text style={[typography.h2, { color: colors.ink, textAlign: 'center' }]}>{t('Check your email')}</Text>
             <Text style={[typography.body, { color: colors.inkSecondary, textAlign: 'center' }]}>
-              If {email.trim()} has an account, we sent a link to set a new password.
+              {t('If {email} has an account, we sent a link to set a new password.', { email: email.trim() })}
             </Text>
-            <Button label="Back to log in" variant="ghost" onPress={() => navigation.navigate('Login')} />
+            <Button label={t('Back to log in')} variant="ghost" onPress={() => navigation.navigate('Login')} />
           </View>
         ) : (
           <>
-            <Text style={[typography.h1, { color: colors.ink }]}>Reset your password</Text>
+            <Text style={[typography.h1, { color: colors.ink }]}>{t('Reset your password')}</Text>
             <Text style={[typography.body, styles.lead, { color: colors.inkSecondary }]}>
-              Enter your work email. We will send you a link to set a new password.
+              {t('Enter the email you signed up with. We will send you a link to set a new password.')}
             </Text>
             <Input
-              label="Work email"
+              label={t('Email')}
               value={email}
               onChangeText={setEmail}
               placeholder="name@company.com"
@@ -71,7 +75,7 @@ export const ForgotPasswordScreen: React.FC<Props> = ({ navigation }) => {
               error={error}
               leftIcon={<Mail size={17} color={colors.inkMuted} />}
             />
-            <Button label="Send reset link" onPress={submit} loading={loading} />
+            <Button label={t('Send reset link')} onPress={submit} loading={loading} />
           </>
         )}
       </KeyboardScrollView>

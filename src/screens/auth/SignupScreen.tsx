@@ -3,7 +3,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { gradients } from '../../theme/effects';
 import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   StyleSheet,
@@ -21,7 +21,6 @@ import * as Haptics from 'expo-haptics';
 import {
   HardHat,
   Building2,
-  ShieldCheck,
   Languages,
   Moon,
   Sun,
@@ -32,7 +31,6 @@ import {
   Mail,
   Lock,
   X,
-  RotateCw,
   ArrowLeft,
   ArrowRight,
   User as UserIcon,
@@ -43,6 +41,8 @@ import { LogoMark } from '../../components/ui/LogoMark';
 import { useUiStore } from '../../store/uiStore';
 import { useAuthStore } from '../../store/authStore';
 import { t } from '../../lib/i18n';
+import { OrDivider } from '../../components/ui/GoogleButton';
+import { GoogleAuthButton } from '../../components/auth/GoogleAuthButton';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Signup'>;
 type Audience = 'worker' | 'employer';
@@ -53,34 +53,25 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
   const insets = useSafeAreaInsets();
   const { width: screenWidth } = useWindowDimensions();
   const { colors, theme, toggleTheme, language, setLanguage, showToast } = useUiStore();
-  const { sendOtp, verifyOtp, signupEmployer } = useAuthStore();
+  const { signupWorker, signupEmployer } = useAuthStore();
 
   const [role, setRole] = useState<Audience>('worker');
-  const [step, setStep] = useState<'details' | 'otp'>('details');
 
-  // Worker form state
-  const [workerName, setWorkerName] = useState('');
-  const [workerPhone, setWorkerPhone] = useState('');
-  const [code, setCode] = useState(['', '', '', '', '', '']);
-  const [workerNameFocused, setWorkerNameFocused] = useState(false);
-  const [workerPhoneFocused, setWorkerPhoneFocused] = useState(false);
-
-  // Employer form state
-  const [employerName, setEmployerName] = useState('');
+  // One form for both tabs. Typed values stay when switching tabs.
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
   const [companyName, setCompanyName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [empNameFocused, setEmpNameFocused] = useState(false);
-  const [companyFocused, setCompanyFocused] = useState(false);
-  const [emailFocused, setEmailFocused] = useState(false);
-  const [passwordFocused, setPasswordFocused] = useState(false);
+  const [focused, setFocused] = useState<'name' | 'second' | 'email' | 'password' | null>(null);
 
   const [loading, setLoading] = useState(false);
   const [langModalVisible, setLangModalVisible] = useState(false);
-  const [countdown, setCountdown] = useState(30);
 
-  const codeInputs = useRef<any[]>([]);
+  const secondRef = useRef<React.ComponentRef<typeof TextInput>>(null);
+  const emailRef = useRef<React.ComponentRef<typeof TextInput>>(null);
+  const passwordRef = useRef<React.ComponentRef<typeof TextInput>>(null);
 
   // Animation values
   const [roleSlideAnim] = useState(() => new Animated.Value(0));
@@ -88,14 +79,6 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
   const [formSlideY] = useState(() => new Animated.Value(0));
 
   // Hero proportion matching login screen (~39%)
-
-  useEffect(() => {
-    let timer: any = null;
-    if (step === 'otp' && countdown > 0) {
-      timer = setInterval(() => setCountdown((c) => c - 1), 1000);
-    }
-    return () => clearInterval(timer);
-  }, [step, countdown]);
 
   const triggerFormTransition = () => {
     formFadeAnim.stopAnimation();
@@ -120,7 +103,6 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
     Haptics.selectionAsync();
 
     setRole(selected);
-    setStep('details');
 
     Animated.spring(roleSlideAnim, {
       toValue: selected === 'worker' ? 0 : 1,
@@ -132,134 +114,51 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
     triggerFormTransition();
   };
 
-  // Submit Worker Details
-  const handleWorkerSubmit = async () => {
-    if (!workerName.trim() || workerName.trim().length < 2) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-      showToast(t('Please enter your full name.'), 'warning');
-      return;
+  /** The first problem with the form, in plain words, or undefined when it is ready. */
+  const formProblem = (): string | undefined => {
+    if (name.trim().length < 2) return t('Please enter your full name.');
+    if (role === 'worker' && !isValidPhone(phone)) {
+      return t('Enter a 10-digit mobile number that starts with 6, 7, 8 or 9.');
     }
-    if (!isValidPhone(workerPhone)) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-      showToast(t('Enter a valid 10-digit mobile number.'), 'warning');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      const res = await sendOtp(workerPhone);
-      if (res.isNewUser === false) {
-        showToast(t('You already have an account. Log in instead.'), 'info');
-        navigation.navigate('Login');
-        return;
-      }
-      showToast(res.message, 'info');
-      setStep('otp');
-      setCountdown(30);
-      triggerFormTransition();
-    } catch (err: any) {
-      showToast(errorText(err, 'Failed to send the code. Try again.'), 'error');
-    } finally {
-      setLoading(false);
-    }
+    if (role === 'employer' && companyName.trim().length < 2) return 'Please enter your company or factory name.';
+    if (!/^\S+@\S+\.\S+$/.test(email.trim())) return t('Enter a valid email address.');
+    if (password.length < 8) return t('Use at least 8 characters for your password.');
+    return undefined;
   };
 
-  // Verify Worker OTP
-  const handleVerifyOtp = async (codeString: string) => {
+  const handleSubmit = async () => {
+    const problem = formProblem();
+    if (problem) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      showToast(problem, 'warning');
+      return;
+    }
     setLoading(true);
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      // The new account is signed in already marked as not onboarded; the app shows the setup screen next.
-      await verifyOtp(workerPhone, codeString, {
-        name: workerName.trim(),
-        phone: `+91 ${workerPhone}`,
-        role: 'worker',
-        onboarded: false,
-      });
+      const account = { name: name.trim(), email: email.trim(), password };
+      if (role === 'worker') await signupWorker({ ...account, phone });
+      else await signupEmployer({ ...account, companyName: companyName.trim() });
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       showToast(t('Account created successfully!'), 'success');
     } catch (err: any) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      showToast(errorText(err, 'That code is not right.'), 'error');
+      showToast(errorText(err, 'Could not create the account. Try again.'), 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleCodeChange = (text: string, index: number) => {
-    const nextCode = [...code];
-    nextCode[index] = text;
-    setCode(nextCode);
-
-    if (text && index < 5) {
-      codeInputs.current[index + 1]?.focus();
-    }
-
-    if (nextCode.every((digit) => digit.length === 1)) {
-      handleVerifyOtp(nextCode.join(''));
-    }
-  };
-
-  const handleCodeKeyPress = (e: any, index: number) => {
-    if (e.nativeEvent.key === 'Backspace' && !code[index] && index > 0) {
-      codeInputs.current[index - 1]?.focus();
-    }
-  };
-
-  const handleResendCode = async () => {
-    if (countdown > 0) return;
-    try {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      await sendOtp(workerPhone);
-      setCountdown(30);
-      showToast(t('New code sent to +91 {phone}', { phone: workerPhone }), 'info');
-    } catch {
-      showToast('Failed to resend code', 'error');
-    }
-  };
-
-  // Submit Employer Registration
-  const handleEmployerSubmit = async () => {
-    if (!employerName.trim()) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-      showToast('Please enter your full name', 'warning');
-      return;
-    }
-    if (!companyName.trim()) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-      showToast('Please enter your company or plant name', 'warning');
-      return;
-    }
-    if (!/^\S+@\S+\.\S+$/.test(email)) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-      showToast('Please enter a valid work email', 'warning');
-      return;
-    }
-    if (password.length < 8) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-      showToast('Password must be at least 8 characters', 'warning');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      await signupEmployer({
-        name: employerName.trim(),
-        companyName: companyName.trim(),
-        email: email.trim(),
-        password,
-      });
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      showToast('Employer account created!', 'success');
-    } catch (err: any) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      showToast(errorText(err, 'Registration failed. Try again.'), 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const termsLine = (
+    <Text style={[styles.fieldHint, { color: colors.inkMuted, marginTop: 6 }]}>
+      {t('By continuing you agree to our')}{' '}
+      <Text style={{ color: colors.primary, fontWeight: '600' }} onPress={() => navigation.navigate('Legal', { kind: 'terms' })}>{t('Terms')}</Text>
+      {' · '}
+      <Text style={{ color: colors.primary, fontWeight: '600' }} onPress={() => navigation.navigate('Legal', { kind: 'privacy' })}>{t('Privacy')}</Text>
+      {' · '}
+      <Text style={{ color: colors.primary, fontWeight: '600' }} onPress={() => navigation.navigate('Legal', { kind: 'nofees' })}>{t('No fees')}</Text>
+    </Text>
+  );
 
   const getLanguageLabel = () => {
     switch (language) {
@@ -362,7 +261,7 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
               <Text style={[styles.mainSubtitle, { color: colors.inkSecondary }]}>
                 {role === 'worker'
                   ? t('Takes less than a minute. Free for workers, always.')
-                  : 'Register your company or plant to hire certified industrial talent.'}
+                  : 'Every company is checked before its jobs go live.'}
               </Text>
             </View>
 
@@ -419,7 +318,7 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
                     I need a job
                   </Text>
                   <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} style={[styles.segmentSub, { color: colors.inkMuted }]}>
-                    Workers · mobile signup
+                    {t('Job seekers')}
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -470,434 +369,157 @@ export const SignupScreen: React.FC<Props> = ({ navigation }) => {
                 transform: [{ translateY: formSlideY }],
               }}
             >
-              {/* ================= WORKER FORM ================= */}
-              {role === 'worker' && (
-                <>
-                  {step === 'details' ? (
-                    <View style={styles.formFieldsBox}>
-                      {/* Full Name */}
-                      <View style={styles.inputGroup}>
-                        <Text style={[styles.fieldLabel, { color: colors.ink }]}>
-                          {t('Your full name')}
-                        </Text>
-                        <View
-                          style={[
-                            styles.inputFrame,
-                            {
-                              backgroundColor: colors.surface,
-                              borderColor: workerNameFocused
-                                ? colors.primary
-                                : colors.border,
-                            },
-                          ]}
-                        >
-                          <UserIcon
-                            size={18}
-                            color={workerNameFocused ? colors.primary : colors.inkMuted}
-                            style={{ marginRight: 10 }}
-                          />
-                          <TextInput
-                            value={workerName}
-                            onChangeText={setWorkerName}
-                            placeholder="e.g. Ramesh Kumar"
-                            placeholderTextColor={colors.placeholder}
-                            onFocus={() => setWorkerNameFocused(true)}
-                            onBlur={() => setWorkerNameFocused(false)}
-                            style={[styles.textInput, { color: colors.ink }]}
-                            autoCapitalize="words"
-                          />
-                          {workerName.length > 0 && (
-                            <TouchableOpacity
-                              onPress={() => setWorkerName('')}
-                              accessibilityLabel={t('Clear')}
-                              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                            >
-                              <X size={16} color={colors.inkMuted} />
-                            </TouchableOpacity>
-                          )}
-                        </View>
-                        <Text style={[styles.fieldHint, { color: colors.inkMuted }]}>
-                          {t('Use your real name so employers know who is applying.')}
-                        </Text>
-                      </View>
+              {/*
+                One form, four rows on both tabs, so switching never changes the height.
+                Only the second row differs: the worker's mobile number, or the company name.
+              */}
+              <View style={styles.formFieldsBox}>
+                <GoogleAuthButton mode="signup" role={role} companyName={companyName} disabled={loading} />
+                <OrDivider label={t('or')} style={styles.orDivider} />
 
-                      {/* Mobile Number */}
-                      <View style={styles.inputGroup}>
-                        <Text style={[styles.fieldLabel, { color: colors.ink }]}>
-                          {t('Mobile number')}
-                        </Text>
-                        <View
-                          style={[
-                            styles.inputFrame,
-                            {
-                              backgroundColor: colors.surface,
-                              borderColor: workerPhoneFocused
-                                ? colors.primary
-                                : colors.border,
-                            },
-                          ]}
-                        >
-                          <View
-                            style={[
-                              styles.countryPrefixBox,
-                              { borderRightColor: colors.border },
-                            ]}
-                          >
-                            <Text style={[styles.prefixText, { color: colors.ink }]}>
-                              +91
-                            </Text>
-                          </View>
-                          <TextInput
-                            value={workerPhone}
-                            onChangeText={setWorkerPhone}
-                            placeholder="9876543210"
-                            placeholderTextColor={colors.placeholder}
-                            keyboardType="phone-pad"
-                            maxLength={10}
-                            onFocus={() => setWorkerPhoneFocused(true)}
-                            onBlur={() => setWorkerPhoneFocused(false)}
-                            style={[
-                              styles.textInput,
-                              { color: colors.ink, letterSpacing: 0.5 },
-                            ]}
-                          />
-                          {workerPhone.length > 0 && (
-                            <TouchableOpacity
-                              onPress={() => setWorkerPhone('')}
-                              accessibilityLabel={t('Clear')}
-                              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                            >
-                              <X size={16} color={colors.inkMuted} />
-                            </TouchableOpacity>
-                          )}
-                        </View>
-                        <Text style={[styles.fieldHint, { color: colors.inkMuted }]}>
-                          {t("We'll send a 6-digit code by SMS. No password needed.")}
-                        </Text>
-                        <Text style={[styles.fieldHint, { color: colors.inkMuted, marginTop: 6 }]}>
-                          {t('By continuing you agree to our')}{' '}
-                          <Text style={{ color: colors.primary, fontWeight: '600' }} onPress={() => navigation.navigate('Legal', { kind: 'terms' })}>{t('Terms')}</Text>
-                          {' · '}
-                          <Text style={{ color: colors.primary, fontWeight: '600' }} onPress={() => navigation.navigate('Legal', { kind: 'privacy' })}>{t('Privacy')}</Text>
-                          {' · '}
-                          <Text style={{ color: colors.primary, fontWeight: '600' }} onPress={() => navigation.navigate('Legal', { kind: 'nofees' })}>{t('No fees')}</Text>
-                        </Text>
-                      </View>
-
-                      {/* Continue to OTP Button */}
-                      <TouchableOpacity
-                        onPress={handleWorkerSubmit}
-                        disabled={loading}
-                        activeOpacity={0.88}
-                        style={[
-                          styles.primaryActionBtn,
-                          { backgroundColor: 'transparent' },
-                        ]}
-                      >
-                        <LinearGradient colors={gradients[theme].brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
-                        {loading ? (
-                          <ActivityIndicator size="small" color="#FFFFFF" />
-                        ) : (
-                          <View style={styles.btnRow}>
-                            <Text style={styles.primaryBtnText}>
-                              {t('Continue')}
-                            </Text>
-                            <ArrowRight size={18} color="#FFFFFF" style={{ marginLeft: 6 }} />
-                          </View>
-                        )}
-                      </TouchableOpacity>
+                <View
+                  style={[
+                    styles.fieldGroup,
+                    { backgroundColor: colors.surface, borderColor: focused ? colors.primary : colors.border },
+                  ]}
+                >
+                  <View style={styles.groupRow}>
+                    <UserIcon size={18} color={focused === 'name' ? colors.primary : colors.inkMuted} />
+                    <TextInput
+                      value={name}
+                      onChangeText={setName}
+                      placeholder={t('Your full name')}
+                      placeholderTextColor={colors.placeholder}
+                      onFocus={() => setFocused('name')}
+                      onBlur={() => setFocused(null)}
+                      autoCapitalize="words"
+                      autoComplete="name"
+                      returnKeyType="next"
+                      submitBehavior="submit"
+                      onSubmitEditing={() => secondRef.current?.focus()}
+                      accessibilityLabel={t('Your full name')}
+                      style={[styles.groupInput, { color: colors.ink }]}
+                    />
+                  </View>
+                  <View style={[styles.groupDivider, { backgroundColor: colors.border }]} />
+                  {role === 'worker' ? (
+                    <View style={styles.groupRow}>
+                      <Text style={[styles.groupPrefix, { color: colors.ink, borderRightColor: colors.border }]}>+91</Text>
+                      <TextInput
+                        ref={secondRef}
+                        value={phone}
+                        onChangeText={(v) => setPhone(v.replace(/\D/g, '').slice(0, 10))}
+                        placeholder={t('Mobile number')}
+                        placeholderTextColor={colors.placeholder}
+                        onFocus={() => setFocused('second')}
+                        onBlur={() => setFocused(null)}
+                        keyboardType="phone-pad"
+                        autoComplete="tel-national"
+                        textContentType="telephoneNumber"
+                        maxLength={10}
+                        returnKeyType="next"
+                        submitBehavior="submit"
+                        onSubmitEditing={() => emailRef.current?.focus()}
+                        accessibilityLabel={t('Mobile number')}
+                        style={[styles.groupInput, { color: colors.ink, letterSpacing: 0.5 }]}
+                      />
                     </View>
                   ) : (
-                    /* Worker OTP Verification Step */
-                    <View style={styles.formFieldsBox}>
-                      <View style={styles.otpHeaderRow}>
-                        <View>
-                          <Text style={[styles.otpHeaderTitle, { color: colors.ink }]}>
-                            {t('Enter verification code')}
-                          </Text>
-                          <Text
-                            style={[styles.otpHeaderSub, { color: colors.inkSecondary }]}
-                          >
-                            {t('Sent to')} +91 {workerPhone}
-                          </Text>
-                        </View>
-                        <TouchableOpacity
-                          onPress={() => setStep('details')}
-                          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                        >
-                          <Text
-                            style={[styles.editPhoneLink, { color: colors.primary }]}
-                          >
-                            {t('Edit')}
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
-
-                      {/* 6 Digit Discrete OTP Boxes */}
-                      <View style={styles.otpBoxesRow}>
-                        {code.map((digit, index) => (
-                          <TextInput
-                            key={index}
-                            ref={(el) => {
-                              codeInputs.current[index] = el;
-                            }}
-                            value={digit}
-                            onChangeText={(text) => handleCodeChange(text, index)}
-                            onKeyPress={(e) => handleCodeKeyPress(e, index)}
-                            keyboardType="number-pad"
-                            maxLength={1}
-                            selectTextOnFocus
-                            style={[
-                              styles.otpBox,
-                              {
-                                backgroundColor: colors.surface,
-                                borderColor: digit
-                                  ? colors.primary
-                                  : colors.borderStrong,
-                                color: colors.ink,
-                              },
-                            ]}
-                          />
-                        ))}
-                      </View>
-
-                      {/* Verify Button */}
-                      <TouchableOpacity
-                        onPress={() => handleVerifyOtp(code.join(''))}
-                        disabled={loading}
-                        activeOpacity={0.88}
-                        style={[
-                          styles.primaryActionBtn,
-                          { backgroundColor: 'transparent' },
-                        ]}
-                      >
-                        <LinearGradient colors={gradients[theme].brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
-                        {loading ? (
-                          <ActivityIndicator size="small" color="#FFFFFF" />
-                        ) : (
-                          <Text style={styles.primaryBtnText}>
-                            {t('Create Worker Account')}
-                          </Text>
-                        )}
-                      </TouchableOpacity>
-
-                      {/* Resend Code Row */}
-                      <View style={styles.resendRow}>
-                        {countdown > 0 ? (
-                          <Text
-                            style={[styles.countdownText, { color: colors.inkMuted }]}
-                          >
-                            {t('Resend code in')} {countdown}s
-                          </Text>
-                        ) : (
-                          <TouchableOpacity
-                            onPress={handleResendCode}
-                            style={styles.resendBtn}
-                          >
-                            <RotateCw size={14} color={colors.primary} />
-                            <Text
-                              style={[styles.resendBtnText, { color: colors.primary }]}
-                            >
-                              {t('Resend SMS code')}
-                            </Text>
-                          </TouchableOpacity>
-                        )}
-                      </View>
-                    </View>
-                  )}
-                </>
-              )}
-
-              {/* ================= EMPLOYER FORM ================= */}
-              {role === 'employer' && (
-                <View style={styles.formFieldsBox}>
-                  {/* Your Name */}
-                  <View style={styles.inputGroup}>
-                    <Text style={[styles.fieldLabel, { color: colors.ink }]}>
-                      Your name
-                    </Text>
-                    <View
-                      style={[
-                        styles.inputFrame,
-                        {
-                          backgroundColor: colors.surface,
-                          borderColor: empNameFocused
-                            ? colors.primary
-                            : colors.border,
-                        },
-                      ]}
-                    >
-                      <UserIcon
-                        size={18}
-                        color={empNameFocused ? colors.primary : colors.inkMuted}
-                        style={{ marginRight: 10 }}
-                      />
+                    <View style={styles.groupRow}>
+                      <Building2 size={18} color={focused === 'second' ? colors.primary : colors.inkMuted} />
                       <TextInput
-                        value={employerName}
-                        onChangeText={setEmployerName}
-                        placeholder="e.g. Pradeep Mohanty (Plant HR)"
-                        placeholderTextColor={colors.placeholder}
-                        onFocus={() => setEmpNameFocused(true)}
-                        onBlur={() => setEmpNameFocused(false)}
-                        style={[styles.textInput, { color: colors.ink }]}
-                        autoCapitalize="words"
-                      />
-                    </View>
-                  </View>
-
-                  {/* Company Name */}
-                  <View style={styles.inputGroup}>
-                    <Text style={[styles.fieldLabel, { color: colors.ink }]}>
-                      Company / Factory name
-                    </Text>
-                    <View
-                      style={[
-                        styles.inputFrame,
-                        {
-                          backgroundColor: colors.surface,
-                          borderColor: companyFocused
-                            ? colors.primary
-                            : colors.border,
-                        },
-                      ]}
-                    >
-                      <Building2
-                        size={18}
-                        color={companyFocused ? colors.primary : colors.inkMuted}
-                        style={{ marginRight: 10 }}
-                      />
-                      <TextInput
+                        ref={secondRef}
                         value={companyName}
                         onChangeText={setCompanyName}
-                        placeholder="e.g. National Heavy Engineering"
+                        placeholder="Company or factory name"
                         placeholderTextColor={colors.placeholder}
-                        onFocus={() => setCompanyFocused(true)}
-                        onBlur={() => setCompanyFocused(false)}
-                        style={[styles.textInput, { color: colors.ink }]}
+                        onFocus={() => setFocused('second')}
+                        onBlur={() => setFocused(null)}
+                        autoCapitalize="words"
+                        autoComplete="organization"
+                        returnKeyType="next"
+                        submitBehavior="submit"
+                        onSubmitEditing={() => emailRef.current?.focus()}
+                        accessibilityLabel="Company or factory name"
+                        style={[styles.groupInput, { color: colors.ink }]}
                       />
                     </View>
+                  )}
+                  <View style={[styles.groupDivider, { backgroundColor: colors.border }]} />
+                  <View style={styles.groupRow}>
+                    <Mail size={18} color={focused === 'email' ? colors.primary : colors.inkMuted} />
+                    <TextInput
+                      ref={emailRef}
+                      value={email}
+                      onChangeText={setEmail}
+                      placeholder={role === 'worker' ? t('Email') : 'Work email'}
+                      placeholderTextColor={colors.placeholder}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                      autoComplete="email"
+                      textContentType="username"
+                      onFocus={() => setFocused('email')}
+                      onBlur={() => setFocused(null)}
+                      returnKeyType="next"
+                      submitBehavior="submit"
+                      onSubmitEditing={() => passwordRef.current?.focus()}
+                      accessibilityLabel={role === 'worker' ? t('Email') : 'Work email'}
+                      style={[styles.groupInput, { color: colors.ink }]}
+                    />
                   </View>
-
-                  {/* Work Email */}
-                  <View style={styles.inputGroup}>
-                    <Text style={[styles.fieldLabel, { color: colors.ink }]}>
-                      Work email
-                    </Text>
-                    <View
-                      style={[
-                        styles.inputFrame,
-                        {
-                          backgroundColor: colors.surface,
-                          borderColor: emailFocused
-                            ? colors.primary
-                            : colors.border,
-                        },
-                      ]}
+                  <View style={[styles.groupDivider, { backgroundColor: colors.border }]} />
+                  <View style={styles.groupRow}>
+                    <Lock size={18} color={focused === 'password' ? colors.primary : colors.inkMuted} />
+                    <TextInput
+                      ref={passwordRef}
+                      value={password}
+                      onChangeText={setPassword}
+                      placeholder={t('Password (8+ characters)')}
+                      placeholderTextColor={colors.placeholder}
+                      secureTextEntry={!showPassword}
+                      autoComplete="new-password"
+                      textContentType="newPassword"
+                      onFocus={() => setFocused('password')}
+                      onBlur={() => setFocused(null)}
+                      returnKeyType="go"
+                      onSubmitEditing={handleSubmit}
+                      accessibilityLabel={t('Password (8+ characters)')}
+                      style={[styles.groupInput, { color: colors.ink }]}
+                    />
+                    <TouchableOpacity
+                      onPress={() => setShowPassword(!showPassword)}
+                      accessibilityLabel={showPassword ? t('Hide password') : t('Show password')}
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                     >
-                      <Mail
-                        size={18}
-                        color={emailFocused ? colors.primary : colors.inkMuted}
-                        style={{ marginRight: 10 }}
-                      />
-                      <TextInput
-                        value={email}
-                        onChangeText={setEmail}
-                        placeholder="name@company.com"
-                        placeholderTextColor={colors.placeholder}
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                        onFocus={() => setEmailFocused(true)}
-                        onBlur={() => setEmailFocused(false)}
-                        style={[styles.textInput, { color: colors.ink }]}
-                      />
-                    </View>
+                      {showPassword ? (
+                        <EyeOff size={18} color={colors.inkMuted} />
+                      ) : (
+                        <Eye size={18} color={colors.inkMuted} />
+                      )}
+                    </TouchableOpacity>
                   </View>
-
-                  {/* Password */}
-                  <View style={styles.inputGroup}>
-                    <Text style={[styles.fieldLabel, { color: colors.ink }]}>
-                      Password
-                    </Text>
-                    <View
-                      style={[
-                        styles.inputFrame,
-                        {
-                          backgroundColor: colors.surface,
-                          borderColor: passwordFocused
-                            ? colors.primary
-                            : colors.border,
-                        },
-                      ]}
-                    >
-                      <Lock
-                        size={18}
-                        color={passwordFocused ? colors.primary : colors.inkMuted}
-                        style={{ marginRight: 10 }}
-                      />
-                      <TextInput
-                        value={password}
-                        onChangeText={setPassword}
-                        placeholder="At least 8 characters"
-                        placeholderTextColor={colors.placeholder}
-                        secureTextEntry={!showPassword}
-                        onFocus={() => setPasswordFocused(true)}
-                        onBlur={() => setPasswordFocused(false)}
-                        style={[styles.textInput, { color: colors.ink }]}
-                      />
-                      <TouchableOpacity
-                        onPress={() => setShowPassword(!showPassword)}
-                        accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
-                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                      >
-                        {showPassword ? (
-                          <EyeOff size={18} color={colors.inkMuted} />
-                        ) : (
-                          <Eye size={18} color={colors.inkMuted} />
-                        )}
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-
-                  {/* Trust Banner Card */}
-                  <View
-                    style={[
-                      styles.trustNoteCard,
-                      {
-                        backgroundColor: colors.infoBg,
-                        borderColor: colors.infoBg,
-                      },
-                    ]}
-                  >
-                    <ShieldCheck size={18} color={colors.infoFg} style={{ marginTop: 1 }} />
-                    <Text style={[styles.trustNoteText, { color: colors.infoFg }]}>
-                      We check every factory and company before jobs go live. This keeps workers safe from fake contractors.
-                    </Text>
-                  </View>
-
-                  {/* Register Company Button */}
-                  <TouchableOpacity
-                    onPress={handleEmployerSubmit}
-                    disabled={loading}
-                    activeOpacity={0.88}
-                    style={[
-                      styles.primaryActionBtn,
-                      { backgroundColor: 'transparent' },
-                    ]}
-                  >
-                    <LinearGradient colors={gradients[theme].brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
-                    {loading ? (
-                      <ActivityIndicator size="small" color="#FFFFFF" />
-                    ) : (
-                      <View style={styles.btnRow}>
-                        <Text style={styles.primaryBtnText}>
-                          Register Company & Start Hiring
-                        </Text>
-                        <ArrowRight size={18} color="#FFFFFF" style={{ marginLeft: 6 }} />
-                      </View>
-                    )}
-                  </TouchableOpacity>
                 </View>
-              )}
+                {termsLine}
+
+                <TouchableOpacity
+                  onPress={handleSubmit}
+                  disabled={loading}
+                  activeOpacity={0.88}
+                  style={styles.primaryActionBtn}
+                >
+                  <LinearGradient colors={gradients[theme].brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
+                  {loading ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <View style={styles.btnRow}>
+                      <Text style={styles.primaryBtnText}>
+                        {role === 'worker' ? t('Create account') : 'Register company'}
+                      </Text>
+                      <ArrowRight size={18} color="#FFFFFF" style={{ marginLeft: 6 }} />
+                    </View>
+                  )}
+                </TouchableOpacity>
+              </View>
             </Animated.View>
 
             {/* Switch to Login Link */}
@@ -1006,9 +628,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     backgroundColor: '#0B1120',
   },
-  heroImageStyle: {
-    resizeMode: 'cover',
-  },
   heroOverlay: {
     ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(11, 17, 32, 0.34)',
@@ -1069,115 +688,6 @@ const styles = StyleSheet.create({
   },
 
   /* HERO SHOWCASE BODY */
-  heroShowcaseBody: {
-    paddingHorizontal: 18,
-    paddingBottom: 22,
-    gap: 10,
-  },
-  heroTaglineRow: {
-    marginBottom: 2,
-  },
-  heroTaglineText: {
-    fontSize: 13.5,
-    fontWeight: '700',
-    color: 'rgba(255, 255, 255, 0.92)',
-    letterSpacing: -0.2,
-  },
-  mainGlassCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.96)',
-    borderRadius: 15,
-    padding: 11,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    elevation: 5,
-  },
-  glassCardTopRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  companyGlyphBox: {
-    width: 34,
-    height: 34,
-    borderRadius: 9,
-    backgroundColor: '#2454E6',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  cardTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  jobTitleText: {
-    fontSize: 13.5,
-    fontWeight: '700',
-    color: '#15191E',
-    flex: 1,
-  },
-  payPill: {
-    backgroundColor: '#E6F8ED',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 10,
-    marginLeft: 6,
-  },
-  payPillText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#086337',
-  },
-  locationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 2,
-  },
-  locationText: {
-    fontSize: 11,
-    color: '#64748B',
-    fontWeight: '500',
-  },
-  glassDivider: {
-    height: 1,
-    backgroundColor: '#EEF0F4',
-    marginVertical: 8,
-  },
-  cardBadgesRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  featureBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  featureBadgeText: {
-    fontSize: 11,
-    fontWeight: '600',
-    color: '#2454E6',
-  },
-  shortlistFloatingPill: {
-    alignSelf: 'flex-start',
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.16,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-  shortlistPillText: {
-    fontSize: 11.5,
-    fontWeight: '700',
-    color: '#0E9F6E',
-  },
 
   /* FORM CARD (White all the way to screen bottom with no gray cutoff) */
   formContainer: {
@@ -1253,40 +763,16 @@ const styles = StyleSheet.create({
   formFieldsBox: {
     gap: 14,
   },
-  inputGroup: {
-    gap: 5,
-  },
-  fieldLabel: {
-    fontSize: 13,
-    fontWeight: '700',
-  },
+  // The box already spaces its children.
+  orDivider: { marginVertical: 2 },
+  groupPrefix: { fontSize: 15, fontWeight: '700', paddingRight: 10, borderRightWidth: 1 },
+  fieldGroup: { borderWidth: 1.5, borderRadius: 12, overflow: 'hidden' },
+  groupRow: { flexDirection: 'row', alignItems: 'center', gap: 10, height: 48, paddingHorizontal: 12 },
+  groupDivider: { height: StyleSheet.hairlineWidth * 2, marginLeft: 40 },
+  groupInput: { flex: 1, fontSize: 15, fontWeight: '600', paddingVertical: 0 },
   fieldHint: {
     fontSize: 11.5,
     marginTop: 2,
-  },
-  inputFrame: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    height: 48,
-    borderWidth: 1.5,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-  },
-  countryPrefixBox: {
-    paddingRight: 10,
-    marginRight: 10,
-    borderRightWidth: 1,
-    justifyContent: 'center',
-  },
-  prefixText: {
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  textInput: {
-    flex: 1,
-    fontSize: 15,
-    fontWeight: '600',
-    height: '100%',
   },
   btnRow: {
     flexDirection: 'row',
@@ -1309,74 +795,8 @@ const styles = StyleSheet.create({
   },
 
   /* OTP STEP */
-  otpHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 4,
-  },
-  otpHeaderTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  otpHeaderSub: {
-    fontSize: 12,
-    marginTop: 2,
-  },
-  editPhoneLink: {
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  otpBoxesRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 6,
-    marginVertical: 4,
-  },
-  otpBox: {
-    flex: 1,
-    height: 50,
-    borderWidth: 1.5,
-    borderRadius: 10,
-    textAlign: 'center',
-    fontSize: 19,
-    fontWeight: '700',
-  },
-  resendRow: {
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  countdownText: {
-    fontSize: 12.5,
-    fontWeight: '500',
-  },
-  resendBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    padding: 6,
-  },
-  resendBtnText: {
-    fontSize: 13,
-    fontWeight: '700',
-  },
 
   /* TRUST NOTE CARD */
-  trustNoteCard: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 8,
-    padding: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-    marginTop: 2,
-  },
-  trustNoteText: {
-    fontSize: 11.5,
-    lineHeight: 16,
-    fontWeight: '500',
-    flex: 1,
-  },
 
   /* SWITCH TO LOGIN */
   switchAuthRow: {

@@ -2,14 +2,17 @@ import { apiClient } from './client';
 import { User } from '../types';
 
 export const authApi = {
-  async sendOtp(phone: string): Promise<{ success: boolean; message: string; isNewUser?: boolean }> {
-    const res = await apiClient.post('/auth/otp/request', { phone });
-    return res.data;
-  },
-
-  async verifyOtp(phone: string, otp: string, name?: string): Promise<{ token: string; user: User }> {
-    const res = await apiClient.post('/auth/otp/verify', { phone, code: otp, name });
-    return res.data;
+  /**
+   * Google: log in or create the account. `created` is true for a new account (welcome steps next).
+   * A new HR account also needs `companyName` (otherwise 422 COMPANY_NAME_NEEDED).
+   */
+  async googleLogin(
+    idToken: string,
+    role: 'worker' | 'employer',
+    companyName?: string,
+  ): Promise<{ token: string; user: User; created: boolean }> {
+    const res = await apiClient.post('/auth/google', { idToken, role, companyName });
+    return { ...res.data, created: res.status === 201 };
   },
 
   /** Backend test login (local development only, until the real login method is chosen). */
@@ -18,8 +21,14 @@ export const authApi = {
     return res.data;
   },
 
-  async loginWithEmail(email: string, pass: string): Promise<{ token: string; user: User }> {
-    const res = await apiClient.post('/auth/login', { email, password: pass });
+  /** `role` is the tab the person chose; the server refuses the wrong tab (409 WRONG_ROLE). */
+  async loginWithEmail(email: string, password: string, role: 'worker' | 'employer'): Promise<{ token: string; user: User }> {
+    const res = await apiClient.post('/auth/login', { email, password, role });
+    return res.data;
+  },
+
+  async signupWorker(body: { name: string; phone: string; email: string; password: string }): Promise<{ token: string; user: User }> {
+    const res = await apiClient.post('/auth/signup/worker', body);
     return res.data;
   },
 
@@ -48,8 +57,10 @@ export const authApi = {
     await apiClient.post('/auth/logout');
   },
 
-  async completeOnboarding(userId: string): Promise<void> {
-    await apiClient.post('/auth/onboarding/complete');
+  /** A worker needs a mobile number first (422 PHONE_NEEDED). */
+  async completeOnboarding(): Promise<User> {
+    const res = await apiClient.post('/auth/onboarding/complete');
+    return res.data;
   },
 
   async getMe(token: string): Promise<User> {

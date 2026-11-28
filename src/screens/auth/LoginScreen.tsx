@@ -1,8 +1,8 @@
-import { isValidPhone, errorText } from '../../lib/errors';
+import { errorText } from '../../lib/errors';
 import { LinearGradient } from 'expo-linear-gradient';
 import { gradients } from '../../theme/effects';
 import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   StyleSheet,
@@ -31,7 +31,6 @@ import {
   Mail,
   Lock,
   X,
-  RotateCw,
   Sparkles,
 } from '../../components/ui/icons';
 import { AuthStackParamList } from '../../navigation/types';
@@ -42,6 +41,8 @@ import { useAuthStore } from '../../store/authStore';
 import { t } from '../../lib/i18n';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { typography } from '../../theme/typography';
+import { OrDivider } from '../../components/ui/GoogleButton';
+import { GoogleAuthButton } from '../../components/auth/GoogleAuthButton';
 
 type Props = NativeStackScreenProps<AuthStackParamList, 'Login'>;
 type Audience = 'worker' | 'employer';
@@ -52,15 +53,11 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const { width: screenWidth } = useWindowDimensions();
   const insets = useSafeAreaInsets();
   const { colors, theme, toggleTheme, language, setLanguage, showToast } = useUiStore();
-  const { sendOtp, verifyOtp, loginWithEmail, loginAsDemo } = useAuthStore();
+  const { loginWithEmail, loginAsDemo } = useAuthStore();
 
   const [role, setRole] = useState<Audience>('worker');
-  const [step, setStep] = useState<'phone' | 'code'>('phone');
-  const [phone, setPhone] = useState('');
-  const [code, setCode] = useState(['', '', '', '', '', '']);
-  const [phoneFocused, setPhoneFocused] = useState(false);
 
-  // Employer state (non-controversial brand)
+  // Both tabs log in with email + password (or Google); the tab only tells the server who it expects.
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -70,11 +67,8 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [demoLoading, setDemoLoading] = useState<string | null>(null);
   const [langModalVisible, setLangModalVisible] = useState(false);
-  const [countdown, setCountdown] = useState(30);
 
-  const codeInputs = useRef<any[]>([]);
-
-  const [focusIdx, setFocusIdx] = useState(-1);
+  const passwordRef = useRef<React.ComponentRef<typeof TextInput>>(null);
 
   // Animation values
   const [roleSlideAnim] = useState(() => new Animated.Value(0));
@@ -82,14 +76,6 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
   const [formSlideY] = useState(() => new Animated.Value(0));
 
   // Stretches hero image to cover ~39% of screen height
-
-  useEffect(() => {
-    let timer: any = null;
-    if (step === 'code' && countdown > 0) {
-      timer = setInterval(() => setCountdown((c) => c - 1), 1000);
-    }
-    return () => clearInterval(timer);
-  }, [step, countdown]);
 
   const triggerFormTransition = () => {
     formFadeAnim.stopAnimation();
@@ -120,7 +106,6 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
     Haptics.selectionAsync();
 
     setRole(selected);
-    setStep('phone');
 
     Animated.spring(roleSlideAnim, {
       toValue: selected === 'worker' ? 0 : 1,
@@ -132,92 +117,18 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
     triggerFormTransition();
   };
 
-  const handlePhoneSubmit = async () => {
-    if (!isValidPhone(phone)) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-      showToast(t('Enter a 10-digit mobile number that starts with 6, 7, 8 or 9.'), 'warning');
-      return;
-    }
-    setLoading(true);
-    try {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      const res = await sendOtp(phone);
-      if (res.isNewUser) {
-        // No account for this number yet: send them to sign up instead of creating one silently.
-        showToast(t('No account found for this number. Create one to continue.'), 'info');
-        navigation.navigate('Signup');
-        return;
-      }
-      showToast(res.message, 'info');
-      setStep('code');
-      setCountdown(30);
-      triggerFormTransition();
-    } catch (err: any) {
-      showToast(errorText(err, 'Failed to send the code. Try again.'), 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCodeChange = (text: string, index: number) => {
-    const nextCode = [...code];
-    nextCode[index] = text;
-    setCode(nextCode);
-
-    if (text && index < 5) {
-      codeInputs.current[index + 1]?.focus();
-    }
-
-    if (nextCode.every((digit) => digit.length === 1)) {
-      handleVerifyOtp(nextCode.join(''));
-    }
-  };
-
-  const handleCodeKeyPress = (e: any, index: number) => {
-    if (e.nativeEvent.key === 'Backspace' && !code[index] && index > 0) {
-      codeInputs.current[index - 1]?.focus();
-    }
-  };
-
-  const handleVerifyOtp = async (codeString: string) => {
-    setLoading(true);
-    try {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      await verifyOtp(phone, codeString);
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      showToast(t('Welcome back!'), 'success');
-    } catch (err: any) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
-      showToast(errorText(err, 'That code is not right.'), 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleResendCode = async () => {
-    if (countdown > 0) return;
-    try {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      await sendOtp(phone);
-      setCountdown(30);
-      showToast(t('New code sent to +91 {phone}', { phone }), 'info');
-    } catch {
-      showToast(t('Could not resend the code. Try again.'), 'error');
-    }
-  };
-
   const handleEmailSubmit = async () => {
     if (!email || !password) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-      showToast('Please enter your work email and password', 'warning');
+      showToast(t('Enter your email and password.'), 'warning');
       return;
     }
     setLoading(true);
     try {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      await loginWithEmail(email, password);
+      await loginWithEmail(email.trim(), password, role);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      showToast('Welcome back, Employer!', 'success');
+      showToast(t('Welcome back!'), 'success');
     } catch (err: any) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       showToast(errorText(err, 'Login failed. Check your email and password.'), 'error');
@@ -388,7 +299,7 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
                     I need a job
                   </Text>
                   <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.8} style={[styles.segmentSub, { color: colors.inkMuted }]}>
-                    Worker mobile login
+                    {t('Job seeker login')}
                   </Text>
                 </View>
               </TouchableOpacity>
@@ -439,239 +350,64 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
                 transform: [{ translateY: formSlideY }],
               }}
             >
-              {/* ================= WORKER FORM ================= */}
-              {role === 'worker' && (
-                <View style={styles.formSection}>
-                  {step === 'phone' ? (
-                    <>
-                      <Text style={[styles.inputLabel, { color: colors.ink }]}>
-                        {t('Mobile number')}
-                      </Text>
+              {/* The same form on both tabs, so switching never changes the height. */}
+              <View>
+                <GoogleAuthButton mode="signin" role={role} disabled={loading} />
+                <OrDivider label={t('or')} />
 
-                      <View
-                        style={[
-                          styles.cleanInputContainer,
-                          {
-                            borderColor: phoneFocused ? colors.primary : colors.border,
-                            backgroundColor: colors.surface,
-                          },
-                        ]}
-                      >
-                        <View style={styles.countryPrefixBox}>
-                          <Text style={[styles.prefixText, { color: colors.ink }]}>+91</Text>
-                          <View style={[styles.prefixDivider, { backgroundColor: colors.border }]} />
-                        </View>
-                        <TextInput
-                          value={phone}
-                          onChangeText={(val) => setPhone(val.replace(/\D/g, ''))}
-                          onFocus={() => setPhoneFocused(true)}
-                          onBlur={() => setPhoneFocused(false)}
-                          placeholder="98765 43210"
-                          placeholderTextColor={colors.placeholder}
-                          keyboardType="phone-pad"
-                          maxLength={10}
-                          style={[styles.phoneTextInput, { color: colors.ink }]}
-                        />
-                        {phone.length > 0 && (
-                          <TouchableOpacity
-                            onPress={() => setPhone('')}
-                            accessibilityLabel={t('Clear')}
-                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                            style={{ padding: 4 }}
-                          >
-                            <X size={15} color={colors.inkMuted} />
-                          </TouchableOpacity>
-                        )}
-                      </View>
-
-                      <Text style={[styles.inputHint, { color: colors.inkMuted }]}>
-                        {t("We'll send a 6-digit code by SMS. No password needed.")}
-                      </Text>
-
-                      <TouchableOpacity
-                        onPress={handlePhoneSubmit}
-                        disabled={loading}
-                        style={[
-                          styles.primaryBtn,
-                          { backgroundColor: 'transparent' },
-                          loading && { opacity: 0.7 },
-                        ]}
-                        activeOpacity={0.85}
-                      >
-                        <LinearGradient colors={gradients[theme].brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
-                        {loading ? (
-                          <ActivityIndicator size="small" color="#FFFFFF" />
-                        ) : (
-                          <Text style={styles.primaryBtnText}>{t('Send code')}</Text>
-                        )}
-                      </TouchableOpacity>
-                    </>
-                  ) : (
-                    /* STEP 2: CODE VERIFICATION */
-                    <View style={styles.codeStepContainer}>
-                      <View style={styles.codeInfoRow}>
-                        <Text style={[styles.codeInfoText, { color: colors.inkSecondary }]}>
-                          {t('Code sent to')}{' '}
-                          <Text style={{ fontWeight: '700', color: colors.ink }}>
-                            +91 {phone}
-                          </Text>
-                        </Text>
-                        <TouchableOpacity
-                          onPress={() => {
-                            setStep('phone');
-                            setCode(['', '', '', '', '', '']);
-                            triggerFormTransition();
-                          }}
-                        >
-                          <Text style={[styles.changeNumberText, { color: colors.primary }]}>
-                            {t('Change')}
-                          </Text>
-                        </TouchableOpacity>
-                      </View>
-
-                      <Text style={[styles.inputLabel, { color: colors.ink, marginTop: 12 }]}>
-                        {t('6-digit code')}
-                      </Text>
-
-                      {/* 6 Digit Input Boxes */}
-                      <View style={styles.codeBoxesRow}>
-                        {code.map((digit, idx) => (
-                          <TextInput
-                            key={idx}
-                            ref={(ref) => {
-                              codeInputs.current[idx] = ref;
-                            }}
-                            value={digit}
-                            onChangeText={(val) => handleCodeChange(val.replace(/\D/g, ''), idx)}
-                            onKeyPress={(e) => handleCodeKeyPress(e, idx)}
-                            keyboardType="number-pad"
-                            maxLength={1}
-                            style={[
-                              styles.codeBox,
-                              {
-                                // Typing box: cobalt ring; filled boxes: soft blue.
-                                backgroundColor: focusIdx === idx ? colors.surface : digit ? colors.primarySoft : colors.surfaceMuted,
-                                borderColor: focusIdx === idx ? colors.primary : digit ? colors.primarySoft : colors.border,
-                                borderWidth: focusIdx === idx ? 2 : 1,
-                                color: colors.ink,
-                              },
-                            ]}
-                            selectTextOnFocus
-                            onFocus={() => setFocusIdx(idx)}
-                            onBlur={() => setFocusIdx((f) => (f === idx ? -1 : f))}
-                          />
-                        ))}
-                      </View>
-
-                      <View style={styles.resendRow}>
-                        {countdown > 0 ? (
-                          <Text style={[styles.countdownText, { color: colors.inkSecondary }]}>
-                            Resend in 0:{countdown < 10 ? `0${countdown}` : countdown}
-                          </Text>
-                        ) : (
-                          <TouchableOpacity
-                            onPress={handleResendCode}
-                            style={styles.resendBtn}
-                          >
-                            <RotateCw size={13} color={colors.primary} />
-                            <Text style={[styles.resendBtnText, { color: colors.primary }]}>
-                              Resend code
-                            </Text>
-                          </TouchableOpacity>
-                        )}
-                      </View>
-
-                      <TouchableOpacity
-                        onPress={() => handleVerifyOtp(code.join(''))}
-                        disabled={loading || code.some((d) => !d)}
-                        style={[
-                          styles.primaryBtn,
-                          { backgroundColor: 'transparent', marginTop: 16 },
-                          (loading || code.some((d) => !d)) && { opacity: 0.6 },
-                        ]}
-                        activeOpacity={0.85}
-                      >
-                        <LinearGradient colors={gradients[theme].brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
-                        {loading ? (
-                          <ActivityIndicator size="small" color="#FFFFFF" />
-                        ) : (
-                          <Text style={styles.primaryBtnText}>{t('Log in')}</Text>
-                        )}
-                      </TouchableOpacity>
-                    </View>
-                  )}
-
-                  {/* Sign up prompt */}
-                  <View style={styles.signupPromptRow}>
-                    <Text style={[styles.promptText, { color: colors.inkSecondary }]}>
-                      {t('New here?')}{' '}
-                    </Text>
-                    <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
-                      <Text style={[styles.promptLink, { color: colors.primary }]}>
-                        {t('Create a free job seeker account')}
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              )}
-
-              {/* ================= EMPLOYER FORM ================= */}
-              {role === 'employer' && (
-                <View style={styles.formSection}>
-                  {/* Work Email */}
-                  <Text style={[styles.inputLabel, { color: colors.ink }]}>Work email</Text>
-                  <Text style={{ color: colors.inkMuted, fontSize: 13, marginBottom: 8 }}>{t('Company and admin accounts sign in here.')}</Text>
-                  <View
-                    style={[
-                      styles.cleanInputContainer,
-                      {
-                        borderColor: emailFocused ? colors.primary : colors.border,
-                        backgroundColor: colors.surface,
-                      },
-                    ]}
-                  >
-                    <Mail size={17} color={colors.inkMuted} style={{ marginRight: 10 }} />
+                {/* Email and password in one card: one field to look at, like the worker's number. */}
+                <View
+                  style={[
+                    styles.fieldGroup,
+                    {
+                      borderColor: emailFocused || passwordFocused ? colors.primary : colors.border,
+                      backgroundColor: colors.surface,
+                    },
+                  ]}
+                >
+                  <View style={styles.groupRow}>
+                    <Mail size={17} color={emailFocused ? colors.primary : colors.inkMuted} />
                     <TextInput
                       value={email}
                       onChangeText={setEmail}
                       onFocus={() => setEmailFocused(true)}
                       onBlur={() => setEmailFocused(false)}
-                      placeholder="name@company.com"
+                      placeholder={role === 'worker' ? t('Email') : 'Work email'}
                       placeholderTextColor={colors.placeholder}
                       autoCapitalize="none"
+                      autoComplete="email"
+                      textContentType="username"
                       keyboardType="email-address"
-                      style={[styles.standardInput, { color: colors.ink }]}
+                      returnKeyType="next"
+                      onSubmitEditing={() => passwordRef.current?.focus()}
+                      submitBehavior="submit"
+                      accessibilityLabel={role === 'worker' ? t('Email') : 'Work email'}
+                      style={[styles.groupInput, { color: colors.ink }]}
                     />
                   </View>
-
-                  {/* Password */}
-                  <Text style={[styles.inputLabel, { color: colors.ink, marginTop: 12 }]}>
-                    Password
-                  </Text>
-                  <View
-                    style={[
-                      styles.cleanInputContainer,
-                      {
-                        borderColor: passwordFocused ? colors.primary : colors.border,
-                        backgroundColor: colors.surface,
-                      },
-                    ]}
-                  >
-                    <Lock size={17} color={colors.inkMuted} style={{ marginRight: 10 }} />
+                  <View style={[styles.groupDivider, { backgroundColor: colors.border }]} />
+                  <View style={styles.groupRow}>
+                    <Lock size={17} color={passwordFocused ? colors.primary : colors.inkMuted} />
                     <TextInput
+                      ref={passwordRef}
                       value={password}
                       onChangeText={setPassword}
                       onFocus={() => setPasswordFocused(true)}
                       onBlur={() => setPasswordFocused(false)}
-                      placeholder="Enter password"
+                      placeholder={t('Password')}
                       placeholderTextColor={colors.placeholder}
                       secureTextEntry={!showPassword}
-                      style={[styles.standardInput, { color: colors.ink }]}
+                      autoComplete="current-password"
+                      textContentType="password"
+                      returnKeyType="go"
+                      onSubmitEditing={handleEmailSubmit}
+                      accessibilityLabel={t('Password')}
+                      style={[styles.groupInput, { color: colors.ink }]}
                     />
                     <TouchableOpacity
                       onPress={() => setShowPassword((prev) => !prev)}
                       accessibilityLabel={showPassword ? 'Hide password' : 'Show password'}
-                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                     >
                       {showPassword ? (
                         <EyeOff size={17} color={colors.inkMuted} />
@@ -680,46 +416,38 @@ export const LoginScreen: React.FC<Props> = ({ navigation }) => {
                       )}
                     </TouchableOpacity>
                   </View>
-
-                  {/* Forgot Password Link */}
-                  <TouchableOpacity style={styles.forgotPassBtn} onPress={() => navigation.navigate('ForgotPassword')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-                    <Text style={[styles.forgotPassText, { color: colors.primary }]}>
-                      Forgot password?
-                    </Text>
-                  </TouchableOpacity>
-
-                  {/* Submit Button */}
-                  <TouchableOpacity
-                    onPress={handleEmailSubmit}
-                    disabled={loading}
-                    style={[
-                      styles.primaryBtn,
-                      { backgroundColor: 'transparent', marginTop: 14 },
-                      loading && { opacity: 0.7 },
-                    ]}
-                    activeOpacity={0.85}
-                  >
-                    <LinearGradient colors={gradients[theme].brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
-                    {loading ? (
-                      <ActivityIndicator size="small" color="#FFFFFF" />
-                    ) : (
-                      <Text style={styles.primaryBtnText}>Log in</Text>
-                    )}
-                  </TouchableOpacity>
-
-                  {/* Sign up prompt */}
-                  <View style={styles.signupPromptRow}>
-                    <Text style={[styles.promptText, { color: colors.inkSecondary }]}>
-                      New company?{' '}
-                    </Text>
-                    <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
-                      <Text style={[styles.promptLink, { color: colors.primary }]}>
-                        Register your company
-                      </Text>
-                    </TouchableOpacity>
-                  </View>
                 </View>
-              )}
+                <View style={[styles.underFieldRow, styles.underFieldEnd]}>
+                  <TouchableOpacity onPress={() => navigation.navigate('ForgotPassword')} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                    <Text style={[styles.forgotPassText, { color: colors.primary }]}>{t('Forgot password?')}</Text>
+                  </TouchableOpacity>
+                </View>
+
+                <TouchableOpacity
+                  onPress={handleEmailSubmit}
+                  disabled={loading}
+                  style={[styles.primaryBtn, loading && { opacity: 0.7 }]}
+                  activeOpacity={0.85}
+                >
+                  <LinearGradient colors={gradients[theme].brand} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
+                  {loading ? (
+                    <ActivityIndicator size="small" color="#FFFFFF" />
+                  ) : (
+                    <Text style={styles.primaryBtnText}>{t('Log in')}</Text>
+                  )}
+                </TouchableOpacity>
+
+                <View style={styles.signupPromptRow}>
+                  <Text style={[styles.promptText, { color: colors.inkSecondary }]}>
+                    {role === 'worker' ? t('New here?') : 'New company?'}{' '}
+                  </Text>
+                  <TouchableOpacity onPress={() => navigation.navigate('Signup')}>
+                    <Text style={[styles.promptLink, { color: colors.primary }]}>
+                      {role === 'worker' ? t('Create a free job seeker account') : 'Register your company'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
             </Animated.View>
 
             {/* Quick test logins (backend test login). Development builds only. */}
@@ -963,116 +691,7 @@ const styles = StyleSheet.create({
   },
 
   /* HERO SHOWCASE BODY */
-  heroShowcaseBody: {
-    paddingHorizontal: 18,
-    paddingBottom: 22,
-    gap: 10,
-  },
-  heroTaglineRow: {
-    marginBottom: 2,
-  },
-  heroTaglineText: {
-    fontSize: 13.5,
-    fontWeight: '700',
-    color: 'rgba(255, 255, 255, 0.92)',
-    letterSpacing: -0.2,
-  },
-  mainGlassCard: {
-    backgroundColor: 'rgba(255, 255, 255, 0.96)',
-    borderRadius: 15,
-    padding: 11,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    elevation: 5,
-  },
-  glassCardTopRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  companyGlyphBox: {
-    width: 34,
-    height: 34,
-    borderRadius: 9,
-    backgroundColor: '#2454E6',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  cardTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  jobTitleText: {
-    fontSize: 13.5,
-    fontWeight: '700',
-    color: '#15191E',
-    flex: 1,
-  },
-  payPill: {
-    backgroundColor: '#E6F8ED',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 10,
-    marginLeft: 6,
-  },
-  payPillText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#086337',
-  },
-  locationRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 2,
-  },
-  locationText: {
-    fontSize: 11,
-    color: '#64748B',
-    fontWeight: '500',
-  },
-  glassDivider: {
-    height: 1,
-    backgroundColor: '#EEF0F4',
-    marginVertical: 8,
-  },
-  cardBadgesRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  featureBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  featureBadgeText: {
-    fontSize: 11.5,
-    fontWeight: '700',
-    color: '#2454E6',
-  },
 
-  shortlistFloatingPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    backgroundColor: 'rgba(255, 255, 255, 0.94)',
-    borderRadius: 20,
-    paddingVertical: 4.5,
-    paddingHorizontal: 11,
-    gap: 5,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.14,
-    shadowRadius: 5,
-    elevation: 3,
-  },
-  shortlistPillText: {
-    fontSize: 11.5,
-    fontWeight: '700',
-    color: '#0E9F6E',
-  },
 
   /* FORM CARD (White all the way to screen bottom with no gray cutoff) */
   formContainer: {
@@ -1143,47 +762,6 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
 
-  /* FORM SECTION */
-  formSection: {
-    marginTop: 0,
-  },
-  inputLabel: {
-    fontSize: 12.5,
-    fontWeight: '700',
-    marginBottom: 6,
-  },
-  cleanInputContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    height: 50,
-    borderWidth: 1.5,
-    borderRadius: 12,
-    paddingHorizontal: 12,
-  },
-  countryPrefixBox: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  prefixText: {
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  prefixDivider: {
-    width: 1,
-    height: 20,
-    marginHorizontal: 10,
-  },
-  phoneTextInput: {
-    flex: 1,
-    fontSize: 17,
-    fontWeight: '500',
-    letterSpacing: 0.5,
-  },
-  inputHint: {
-    fontSize: 11.5,
-    marginTop: 5,
-    lineHeight: 16,
-  },
   primaryBtn: {
     overflow: 'hidden',
     height: 48,
@@ -1199,57 +777,6 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
 
-  /* CODE STEP */
-  codeStepContainer: {
-    marginTop: 0,
-  },
-  codeInfoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 2,
-  },
-  codeInfoText: {
-    fontSize: 12.5,
-  },
-  changeNumberText: {
-    fontSize: 12.5,
-    fontWeight: '700',
-  },
-  codeBoxesRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    gap: 8,
-    marginTop: 8,
-  },
-  codeBox: {
-    flex: 1,
-    height: 48,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    textAlign: 'center',
-    fontSize: 20,
-    fontWeight: '700',
-  },
-  resendRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    marginTop: 8,
-  },
-  countdownText: {
-    fontSize: 11.5,
-    fontWeight: '600',
-  },
-  resendBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  resendBtnText: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
 
   /* SIGNUP PROMPT */
   signupPromptRow: {
@@ -1268,14 +795,13 @@ const styles = StyleSheet.create({
   },
 
   /* EMPLOYER INPUTS */
-  standardInput: {
-    flex: 1,
-    fontSize: 14.5,
-  },
-  forgotPassBtn: {
-    alignSelf: 'flex-end',
-    marginTop: 6,
-  },
+  // The line under a field: the SMS hint for workers, "Forgot password?" for HR. Same height in both.
+  underFieldRow: { minHeight: 18, marginTop: 6, flexDirection: 'row', alignItems: 'center' },
+  underFieldEnd: { justifyContent: 'flex-end' },
+  fieldGroup: { borderWidth: 1.5, borderRadius: 12, overflow: 'hidden' },
+  groupRow: { flexDirection: 'row', alignItems: 'center', gap: 10, height: 48, paddingHorizontal: 12 },
+  groupDivider: { height: StyleSheet.hairlineWidth * 2, marginLeft: 39 },
+  groupInput: { flex: 1, fontSize: 15, paddingVertical: 0 },
   forgotPassText: {
     fontSize: 12,
     fontWeight: '600',

@@ -1,4 +1,4 @@
-import { errorText } from '../../lib/errors';
+import { errorText, isValidPhone } from '../../lib/errors';
 import { LinearGradient } from 'expo-linear-gradient';
 import { gradients } from '../../theme/effects';
 import { Chip } from '../../components/ui/Chip';
@@ -17,23 +17,36 @@ import { Button } from '../../components/ui/Button';
 import { useUiStore } from '../../store/uiStore';
 import { useAuthStore } from '../../store/authStore';
 import { workerApi } from '../../api/workerApi';
+import { accountApi } from '../../api/accountApi';
 import { queryKeys } from '../../api/keys';
 import { TRADE_LABEL, EXPERIENCE_LABEL, AVAILABILITY_LABEL, INDIA_STATES } from '../../lib/labels';
 import { joinDob, ageOf, MIN_AGE } from '../../lib/dob';
 import { t } from '../../lib/i18n';
 import type { Trade, ExperienceBand, Availability, WorkerProfile } from '../../types';
 
-const STEPS = 3;
+type StepKind = 'phone' | 'work' | 'details' | 'start';
 
-/** Three short screens. Nothing is pre-selected; every answer is saved to the worker profile. */
+/**
+ * Three short screens. Nothing is pre-selected; every answer is saved to the worker profile.
+ * After "Sign up with Google" there is no mobile number yet, so a first screen asks for it
+ * (companies call it after shortlisting; the server needs it before finishing or applying).
+ */
 export const WorkerWelcomeScreen: React.FC = () => {
   const colors = useUiStore((s) => s.colors);
   const theme = useUiStore((s) => s.theme);
   const showToast = useUiStore((s) => s.showToast);
   const completeOnboarding = useAuthStore((s) => s.completeOnboarding);
+  const updateUser = useAuthStore((s) => s.updateUser);
+  // Decided once: the phone screen stays in the list after the number is saved, so Back works.
+  const [kinds] = useState<StepKind[]>(() =>
+    useAuthStore.getState().user?.phone ? ['work', 'details', 'start'] : ['phone', 'work', 'details', 'start'],
+  );
+  const STEPS = kinds.length;
   const qc = useQueryClient();
 
   const [step, setStep] = useState(0);
+  const kind = kinds[step]!;
+  const [phone, setPhone] = useState('');
   const [trade, setTrade] = useState<Trade | undefined>();
   const [experience, setExperience] = useState<ExperienceBand | undefined>();
   const [dob, setDob] = useState({ d: '', m: '', y: '' });
@@ -43,22 +56,36 @@ export const WorkerWelcomeScreen: React.FC = () => {
   const [pay, setPay] = useState('');
   const [error, setError] = useState<string | undefined>();
 
+  const savePhone = useMutation({
+    mutationFn: (number: string) => accountApi.savePhone(number),
+    onSuccess: (user) => {
+      updateUser({ phone: user.phone });
+      setStep(step + 1);
+    },
+    onError: (e) => setError(errorText(e, 'Could not save. Check your connection and try again.')),
+  });
+
   const save = useMutation({
-    mutationFn: (changes: Partial<WorkerProfile>) => workerApi.updateProfile(changes),
-    onSuccess: (_r, changes) => {
+    mutationFn: async (changes: Partial<WorkerProfile>) => {
+      await workerApi.updateProfile(changes);
+      await completeOnboarding({ trade: changes.trade, city: changes.location?.city });
+    },
+    onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.worker.all });
-      completeOnboarding({ trade: changes.trade, city: changes.location?.city });
       showToast(t('Your profile is ready.'), 'success');
     },
     onError: (e) => showToast(errorText(e, 'Could not save. Check your connection and try again.'), 'error'),
   });
 
   const validate = (): string | undefined => {
-    if (step === 0) {
+    if (kind === 'phone' && !isValidPhone(phone)) {
+      return t('Enter a 10-digit mobile number that starts with 6, 7, 8 or 9.');
+    }
+    if (kind === 'work') {
       if (!trade) return t('Choose your trade.');
       if (!experience) return t('Choose how much experience you have.');
     }
-    if (step === 1) {
+    if (kind === 'details') {
       const iso = joinDob(dob);
       if (!iso) return t('Enter your date of birth.');
       if (iso === 'invalid') return t('Enter a real date, like 15 / 08 / 1998.');
@@ -66,7 +93,7 @@ export const WorkerWelcomeScreen: React.FC = () => {
       if (city.trim().length < 2) return t('Enter your city or district.');
       if (!state) return t('Choose your state.');
     }
-    if (step === 2) {
+    if (kind === 'start') {
       if (!availability) return t('Choose when you can join.');
       const p = pay.trim() ? Number(pay) : undefined;
       if (p !== undefined && (p < 1000 || p > 500000)) return t('Enter the monthly pay in rupees, like 25000.');
@@ -78,6 +105,7 @@ export const WorkerWelcomeScreen: React.FC = () => {
     const e = validate();
     setError(e);
     if (e) return Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {});
+    if (kind === 'phone') return savePhone.mutate(phone);
     if (step < STEPS - 1) return setStep(step + 1);
     const iso = joinDob(dob);
     save.mutate({
@@ -95,12 +123,18 @@ export const WorkerWelcomeScreen: React.FC = () => {
     setStep(step - 1);
   };
 
-  const titles = [t('What work do you do?'), t('A few details about you'), t('When can you start?')];
-  const hints = [
-    t('Employers search by trade and experience.'),
-    t('We need this to match you with jobs near you.'),
-    t('You can change all of this later in your profile.'),
-  ];
+  const titles: Record<StepKind, string> = {
+    phone: t('Your mobile number'),
+    work: t('What work do you do?'),
+    details: t('A few details about you'),
+    start: t('When can you start?'),
+  };
+  const hints: Record<StepKind, string> = {
+    phone: t('Companies call this number when they shortlist you. We never show it publicly.'),
+    work: t('Employers search by trade and experience.'),
+    details: t('We need this to match you with jobs near you.'),
+    start: t('You can change all of this later in your profile.'),
+  };
 
   return (
     <Screen edges={['top', 'bottom']}>
@@ -125,10 +159,27 @@ export const WorkerWelcomeScreen: React.FC = () => {
       </View>
 
       <KeyboardScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
-        <Text style={[styles.title, { color: colors.ink }]}>{titles[step]}</Text>
-        <Text style={[styles.hint, { color: colors.inkSecondary }]}>{hints[step]}</Text>
+        <Text style={[styles.title, { color: colors.ink }]}>{titles[kind]}</Text>
+        <Text style={[styles.hint, { color: colors.inkSecondary }]}>{hints[kind]}</Text>
 
-        {step === 0 && (
+        {kind === 'phone' && (
+          <Input
+            label={t('Mobile number')}
+            value={phone}
+            onChangeText={(v) => setPhone(v.replace(/\D/g, '').slice(0, 10))}
+            leftIcon={<Text style={[styles.prefix, { color: colors.ink }]}>+91</Text>}
+            placeholder="98765 43210"
+            keyboardType="phone-pad"
+            autoComplete="tel-national"
+            textContentType="telephoneNumber"
+            maxLength={10}
+            autoFocus
+            returnKeyType="next"
+            onSubmitEditing={next}
+          />
+        )}
+
+        {kind === 'work' && (
           <>
             <Label text={t('Your trade')} />
             <Chips
@@ -145,7 +196,7 @@ export const WorkerWelcomeScreen: React.FC = () => {
           </>
         )}
 
-        {step === 1 && (
+        {kind === 'details' && (
           <>
             <Label text={t('Date of birth')} />
             <View style={styles.dobRow}>
@@ -180,7 +231,7 @@ export const WorkerWelcomeScreen: React.FC = () => {
           </>
         )}
 
-        {step === 2 && (
+        {kind === 'start' && (
           <>
             <Label text={t('I can join')} />
             <Chips
@@ -207,7 +258,7 @@ export const WorkerWelcomeScreen: React.FC = () => {
           icon={step === STEPS - 1 ? undefined : <ArrowRight size={18} color="#FFFFFF" />}
           iconPosition="right"
           onPress={next}
-          loading={save.isPending}
+          loading={save.isPending || savePhone.isPending}
         />
       </View>
     </Screen>
@@ -247,5 +298,6 @@ const styles = StyleSheet.create({
   dobSmall: { flex: 1 },
   dobYear: { flex: 1.5 },
   error: { fontSize: 14, marginTop: 8 },
+  prefix: { fontSize: 16, fontWeight: '700' },
   footer: { paddingHorizontal: 20, paddingBottom: 12, paddingTop: 8 },
 });

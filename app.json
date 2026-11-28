@@ -70,7 +70,8 @@
           "color": "#2454E6",
           "defaultChannel": "updates"
         }
-      ]
+      ],
+      "react-native-nitro-google-signin"
     ]
   }
 }

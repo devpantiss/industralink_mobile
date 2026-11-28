@@ -43,8 +43,8 @@ export const EmployerWelcomeScreen: React.FC = () => {
   const [error, setError] = useState<string | undefined>();
 
   const save = useMutation({
-    mutationFn: () =>
-      employerApi.updateCompany({
+    mutationFn: async () => {
+      await employerApi.updateCompany({
         name: name.trim(),
         hiringType,
         sector,
@@ -52,10 +52,11 @@ export const EmployerWelcomeScreen: React.FC = () => {
         location: { city: city.trim(), state: state! },
         hrName: hrName.trim(),
         hrPhone,
-      }),
+      });
+      await completeOnboarding({ companyName: name.trim(), city: city.trim() });
+    },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: queryKeys.employer.company });
-      completeOnboarding({ companyName: name.trim(), city: city.trim() });
       showToast(t('Company saved. Add your GST certificate on the Company page to get approved.'), 'success');
     },
     onError: (e) => showToast(errorText(e, 'Could not save. Check your connection and try again.'), 'error'),

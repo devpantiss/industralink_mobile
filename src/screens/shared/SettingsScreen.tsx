@@ -1,4 +1,4 @@
-import { errorText } from '../../lib/errors';
+import { errorText, isValidPhone } from '../../lib/errors';
 import { Toggle } from '../../components/ui/Toggle';
 import { KeyboardScrollView } from '../../components/ui/KeyboardScrollView';
 import React, { useEffect, useState } from 'react';
@@ -29,7 +29,7 @@ import { typography } from '../../theme/typography';
 
 export const SettingsScreen: React.FC = () => {
   const { colors, themePref, setThemePref, language, setLanguage, showToast } = useUiStore();
-  const { user, role, logout } = useAuthStore();
+  const { user, role, logout, updateUser } = useAuthStore();
   const currentLang = language;
   const qc = useQueryClient();
   const navigation = useNavigation<any>();
@@ -55,7 +55,6 @@ export const SettingsScreen: React.FC = () => {
   });
   const platform = platformQuery.data;
 
-  // Password (company and admin accounts)
   // Phone notifications. Read again when coming back, e.g. from the phone's own settings.
   const appActive = useAppActive();
   const [push, setPush] = useState<PushState | null>(null);
@@ -75,18 +74,40 @@ export const SettingsScreen: React.FC = () => {
     }
   };
 
+  // Password: change it, or set a first one on an account made with Google (then both work).
+  const hasPassword = user?.hasPassword !== false;
   const [curPw, setCurPw] = useState('');
   const [newPw, setNewPw] = useState('');
   const [pwError, setPwError] = useState<string>();
   const changePw = useMutation({
-    mutationFn: () => accountApi.changePassword(curPw, newPw),
+    mutationFn: () => {
+      if (newPw.length < 8) throw new Error(t('Use at least 8 characters for your password.'));
+      return accountApi.changePassword(hasPassword ? curPw : undefined, newPw);
+    },
     onSuccess: () => {
       setCurPw('');
       setNewPw('');
       setPwError(undefined);
-      showToast('Password changed.', 'success');
+      updateUser({ hasPassword: true });
+      showToast(hasPassword ? t('Password changed. Other devices are logged out.') : t('Password set.'), 'success');
     },
     onError: (e) => setPwError(errorText(e, 'Could not change the password.')),
+  });
+
+  // Worker's mobile number: companies call it after shortlisting.
+  const [phone, setPhone] = useState(user?.phone ?? '');
+  const [phoneError, setPhoneError] = useState<string>();
+  const savePhone = useMutation({
+    mutationFn: () => {
+      if (!isValidPhone(phone)) throw new Error(t('Enter a 10-digit mobile number that starts with 6, 7, 8 or 9.'));
+      return accountApi.savePhone(phone);
+    },
+    onSuccess: (saved) => {
+      setPhoneError(undefined);
+      updateUser({ phone: saved.phone });
+      showToast(t('Mobile number saved.'), 'success');
+    },
+    onError: (e) => setPhoneError(errorText(e, 'Could not save. Check your connection and try again.')),
   });
 
   const deleteMutation = useMutation({
@@ -256,31 +277,69 @@ export const SettingsScreen: React.FC = () => {
         </Card>
 
 
-        {/* Password (company and admin accounts; workers sign in with an SMS code) */}
-        {role !== 'worker' && (
+        {role === 'worker' && (
           <Card style={styles.card}>
-            <SectionTitle icon={Lock} tone={colors.tiles.rose}>Change password</SectionTitle>
+            <SectionTitle icon={Smartphone} tone={colors.tiles.green}>{t('Mobile number')}</SectionTitle>
+            <Text style={[typography.caption, { color: colors.inkSecondary, marginBottom: 8 }]}>
+              {t('Companies call this number when they shortlist you.')}
+            </Text>
             <Input
-              label="Current password"
+              value={phone}
+              onChangeText={(v) => setPhone(v.replace(/\D/g, '').slice(0, 10))}
+              keyboardType="phone-pad"
+              maxLength={10}
+              placeholder="98765 43210"
+              error={phoneError}
+              leftIcon={<Text style={[typography.body, { color: colors.ink, fontWeight: '700' }]}>+91</Text>}
+            />
+            <Button
+              label={t('Save number')}
+              variant="outline"
+              onPress={() => savePhone.mutate()}
+              loading={savePhone.isPending}
+              disabled={phone === (user?.phone ?? '')}
+            />
+          </Card>
+        )}
+
+        {/* Password: every account. Accounts made with Google can add one. */}
+        <Card style={styles.card}>
+          <SectionTitle icon={Lock} tone={colors.tiles.rose}>
+            {hasPassword ? t('Change password') : t('Set a password')}
+          </SectionTitle>
+          {!hasPassword && (
+            <Text style={[typography.caption, { color: colors.inkSecondary, marginBottom: 8 }]}>
+              {t('You sign in with Google. Add a password to also log in with your email.')}
+            </Text>
+          )}
+          {hasPassword && (
+            <Input
+              label={t('Current password')}
               value={curPw}
               onChangeText={setCurPw}
               secureTextEntry
               autoCapitalize="none"
+              autoComplete="current-password"
               leftIcon={<Lock size={17} color={colors.inkMuted} />}
             />
-            <Input
-              label="New password"
-              value={newPw}
-              onChangeText={setNewPw}
-              secureTextEntry
-              autoCapitalize="none"
-              autoComplete="new-password"
-              error={pwError}
-              leftIcon={<Lock size={17} color={colors.inkMuted} />}
-            />
-            <Button label="Change password" variant="outline" onPress={() => changePw.mutate()} loading={changePw.isPending} />
-          </Card>
-        )}
+          )}
+          <Input
+            label={t('New password (8+ characters)')}
+            value={newPw}
+            onChangeText={setNewPw}
+            secureTextEntry
+            autoCapitalize="none"
+            autoComplete="new-password"
+            error={pwError}
+            leftIcon={<Lock size={17} color={colors.inkMuted} />}
+          />
+          <Button
+            label={hasPassword ? t('Change password') : t('Set password')}
+            variant="outline"
+            onPress={() => changePw.mutate()}
+            loading={changePw.isPending}
+          />
+        </Card>
 
         {role !== 'admin' && (
           <Card style={styles.card} onPress={() => navigation.navigate('Help')}>

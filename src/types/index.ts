@@ -54,6 +54,9 @@ export interface User {
   email?: string;
   status: AccountStatus;
   onboarded: boolean;
+  /** Settings shows "Change password", or "Set a password" for an account made with Google. */
+  hasPassword?: boolean;
+  hasGoogle?: boolean;
   verified?: boolean;
   companyId?: string;
   companyName?: string;

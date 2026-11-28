@@ -4,7 +4,6 @@ import { t } from './i18n';
 export const isValidPhone = (p: string) => /^[6-9]\d{9}$/.test(p);
 
 const MESSAGES: Record<string, string> = {
-  WRONG_OTP: 'That code is not right. Check the SMS and try again.',
   BLOCKED: 'This account has been blocked. Contact help if you think this is a mistake.',
   JOB_CLOSED: 'This job is no longer open.',
   ALREADY_APPLIED: 'You have already applied for this job.',
